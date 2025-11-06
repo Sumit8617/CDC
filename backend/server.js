@@ -1,33 +1,19 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import authRoutes from './routes/authRoutes.js';
-import quizRoutes from './routes/quizRoutes.js';
-import resultRoutes from './routes/resultRoutes.js';
-import { connDB } from './config/db.js';
-import cookieParser from 'cookie-parser'
+import "./config/Envfiles.config.js";
+import { app } from "./app.js";
+import { connectDB } from "./DB/Db.db.js";
 
-dotenv.config();
 const PORT = process.env.PORT || 5000;
 
-const app = express();
+connectDB()
+  .then(() => {
+    app.get("/", (req, res) => {
+      res.send("Welcome to our Server");
+    });
 
-app.use(cookieParser())
-app.use(express.urlencoded({extended:true, limit: "100kb"}));
-app.use(cors({
-    limit : "100kb",
-    origin: "http://localhost:3000",
-    credentials: true,
-}));
-app.use(express.json({
-    limit: "100kb",
-}));
-
-app.use("/api/auth",authRoutes);
-app.use("/api/quiz",quizRoutes);
-app.use("/api/result",resultRoutes);
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    connDB()
-});
+    app.listen(PORT, () => {
+      console.log(`Server is Running on PORT => http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("ERR While Running the Server", err);
+  });
