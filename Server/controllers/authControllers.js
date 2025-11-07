@@ -2,51 +2,23 @@ import bcrypt from "bcryptjs";
 import { generateToken } from "../config/jwt.js";
 import { User } from "../models/userModel.js";
 import cloudinary from "../config/cloudinary.js";
-import { asynchandler, APIERR, APIRES } from "../Utils/index.js";
+import { asynchandler, APIERR, APIRES, sendMail } from "../Utils/index.js";
+import { cookieOptions } from "../config/Cookie.config.js";
 
-// export const signup = async (req, res) => {
-//     const {name,email,password} = req.body
+const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+    await user.hashRefreshToken(refreshToken);
+    await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.log("Err While Generating the Tokens", error);
+  }
+});
 
-//     try {
-//         if(!name || !email || !password){
-//             return res.status(400).json("Invalid credentials")
-//         }
-//         if(password.length<6){
-//             return res.status(400).json({message:"Password must be at least 6 characters long"})
-//         }
-
-//         const user = await User.findOne({email})
-//         if (user) return res.status(400).json({ message: "Email already Exist" });
-
-//         const salt = await bcrypt.genSalt(10)
-//         const hashPassword = await bcrypt.hash(password,salt)
-
-//         const newUser = new User({
-//             name,
-//             email,
-//             password:hashPassword
-//         })
-
-//         if(newUser){
-//             generateToken(newUser._id,res);
-//             await newUser.save()
-//             return res.status(200).json({
-//                 _id:newUser._id,
-//                 email:newUser.email,
-//                 name:newUser.name,
-//                 profilePic:newUser.profilePic
-//             })
-//         }else{
-//             return res.status(500).json({message:"Invalid user data"})
-//         }
-//     } catch (error) {
-//         console.log("Error in signup Controller",error)
-//         return res.status(500).json({message:"Internal server error"})
-//     }
-
-// }
-
-export const signup = asynchandler(async (req, res) => {
+const signup = asynchandler(async (req, res) => {
   const { name, email, mobileNumber, password } = req.body;
   console.log("Coming from the Signup Body", req.body);
 
@@ -65,45 +37,96 @@ export const signup = asynchandler(async (req, res) => {
   if (existeduser) {
     throw new APIERR(400, "User already exist. Please login instead of Signup");
   }
+
+  // Ensure that the OTP is verified
+  const isVerified = res.cookies?.isEmailVerified;
+  if (isVerified) {
+    throw new APIERR(400, "Please verify your email");
+  }
+
+  // Create user
+  const createUser = User.create({
+    name,
+    email,
+    mobileNumber,
+    password,
+  });
+
+  const createdUser = User.find({ mobileNumber }).select(
+    "-password -refreshToken"
+  );
+
+  // Set the Access Token
+  const { accessToken } = generateAccessAndRefreshTokens(createUser._id);
+  res.cookie("accessToken", accessToken, cookieOptions);
+
+  if (!accessToken) {
+    throw new APIERR(502, "Internal Server ERR! While Creating the user");
+  }
+
+  // Send welcome message to the user after successfull signup
+  const templateId = process.env.EMAILJS_WELCOME_MESSAGE_TEMPLATE_ID;
+  const templateData = [
+    (name = fullName),
+    email,
+    (appLink = ``),
+    (supportlink = ``),
+    (currentYear = new Date().getFullYear()),
+  ];
+
+  try {
+    const mailResponse = await sendMail(templateId, templateData);
+    console.log("Successfully Sent the Welcome message", mailResponse);
+  } catch (error) {
+    console.error("ERR While Sending the Welcome Message mail", error);
+  }
+
+  // Final Response
+  res
+    .status(200)
+    .json(new APIRES(200, createdUser, "Successfully Create the User"));
 });
 
-export const login = async (req, res) => {
-  const { email, password } = req.body;
+const login = asynchandler(async (req, res) => {
+  const { mobileNumber, password } = req.body;
+  console.log("Coming from login Body", req.body);
 
-  try {
-    if (!email || !password) {
-      return res.status(400).json("Invalid Credentials");
-    }
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Email not found" });
-    }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid Credentials" });
-    }
-    generateToken(user._id, res);
-    return res.status(200).json({
-      message: "Login successfully",
-      user: { _id: user._id, name: user.name, email: user.email },
-    });
-  } catch (error) {
-    console.log("Error in Login Controller", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+  if (!mobileNumber || !password) {
+    throw new APIERR(400, "Please fill the required Fields");
   }
-};
 
-export const logout = async (req, res) => {
-  try {
-    res.cookie("jwt", "", { maxAge: 0 });
-    return res.status(200).json("Logged out Successfully");
-  } catch (error) {
-    console.log("Error in logout Controller", error);
-    return res.status(400).json({ message: "Internal Server Error" });
+  const user = await User.findOne({ mobileNumber });
+  if (!user) {
+    throw new APIERR(
+      400,
+      "No account found with this mobile. Please Signup first"
+    );
   }
-};
 
-export const updateProfile = async (req, res) => {
+  // Match the password
+  const isPasswordCorrect = User.isPasswordValid(password);
+  if (!isPasswordCorrect) {
+    throw new APIERR(400, "Wrong Password");
+  }
+
+  const { accessToken, refreshToken } = generateAccessAndRefreshTokens(
+    user._id
+  );
+
+  res.cookie("accessToken", accessToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+
+  res.status(200).json(new APIRES(200, "Successfully logged in"));
+});
+
+const logout = asynchandler(async (res) => {
+  res.cookie("refreshToken", "", {
+    maxAge: 0,
+  });
+  res.status(200).json(new APIRES(200, "Successfully log out"));
+});
+
+const updateProfile = async (req, res) => {
   try {
     const { profilePic } = req.body;
     const userId = req.user._id;
@@ -123,7 +146,7 @@ export const updateProfile = async (req, res) => {
   }
 };
 
-export const checkAuth = (req, res) => {
+const checkAuth = (req, res) => {
   try {
     res.status(200).json(req.user);
   } catch (error) {
@@ -131,3 +154,5 @@ export const checkAuth = (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export { signup, login, logout, updateProfile, checkAuth };
