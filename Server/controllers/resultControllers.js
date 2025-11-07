@@ -1,6 +1,6 @@
 import Result from "../models/resultModel.js";
 import Quiz from "../models/quizModel.js";
-import User from "../models/userModel.js";
+import {User} from "../models/userModel.js";
 
 export const submitResult = async (req,res) =>{
     try {

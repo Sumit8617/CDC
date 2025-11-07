@@ -9,6 +9,7 @@ try {
   console.error("Invalid COLLEGE_EMAIL_DOMAINS format in .env");
   allowedDomains = [];
 }
+
 const userSchema = new mongoose.Schema(
   {
     name: {
