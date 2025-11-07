@@ -2,7 +2,6 @@ import { asynchandler, APIERR, APIRES } from "../index.js";
 
 const verifyOTP = asynchandler(async (req, res) => {
   const { otp } = req.body;
-  console.log("Coming from the Verify OTP Body =>", otp);
 
   const storedOTP = req.cookies?.OTP || "NO OTP FOUND";
   if (!storedOTP) {
@@ -20,7 +19,15 @@ const verifyOTP = asynchandler(async (req, res) => {
   // If otp verified raise a flag that the email is verified
   res.cookie("isEmailVerified", true, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" ? true : false,
+    secure: true,
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
+    path: "/",
+  });
+
+  // Clear the OTP Cookie from the browser after email verified
+  res.clearCookie("OTP", {
+    httpOnly: true,
+    secure: true,
     sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
     path: "/",
   });

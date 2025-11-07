@@ -30,8 +30,8 @@ import authRoutes from "./routes/authRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import resultRoutes from "./routes/resultRoutes.js";
 
-app.use(authRoutes);
-app.use(quizRoutes);
-app.use(resultRoutes);
+app.use('/api/v1/user', authRoutes);
+app.use('/api/v1/quiz', quizRoutes);
+app.use('/api/v1/result' ,resultRoutes);
 
 export { app };

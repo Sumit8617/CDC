@@ -2,18 +2,22 @@ import { asynchandler, APIERR, APIRES, sendMail } from "../index.js";
 
 const sendOTP = asynchandler(async (req, res) => {
   const { name, email } = req.body;
-  console.log("Coming from the Send OTP Body", req.body);
 
   if (!name || !email) {
     throw new APIERR(400, "Please provide the required fields");
   }
 
+  const generatedOTP = Math.floor(1000 + Math.random() * 9000);
+
   const templateId = process.env.EMAILJS_SENDOTP_TEMPLATE_ID;
+
+  const expiry = process.env.OTP_EXPIRY;
 
   const templateData = {
     to_name: name,
     to_email: email,
-    expiry: process.env.OTP_EXPIRY,
+    otp: generatedOTP,
+    expiry,
     date: new Date().getFullYear(),
   };
 
@@ -22,12 +26,9 @@ const sendOTP = asynchandler(async (req, res) => {
     throw new APIERR(500, "Err While Sending the OTP");
   }
 
-  const generatedOTP = Math.floor(1000 + Math.random() * 9000);
-  console.log("Generated OTP is =>", generatedOTP);
-
   res.cookie("OTP", generatedOTP, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" ? true : false,
+    secure: true,
     sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
     path: "/",
     maxAge: expiry * 60 * 1000,

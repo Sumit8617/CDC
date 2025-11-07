@@ -1,7 +1,7 @@
 class APIERR extends Error {
   constructor(
-    message = "Something Went Wrong",
     status,
+    message = "Something Went Wrong",
     errors = [],
     stack = ""
   ) {

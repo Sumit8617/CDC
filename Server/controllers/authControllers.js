@@ -12,6 +12,7 @@ const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
     const refreshToken = user.generateRefreshToken();
     await user.hashRefreshToken(refreshToken);
     await user.save({ validateBeforeSave: false });
+    console.log("Returning Tokens", accessToken, refreshToken);
     return { accessToken, refreshToken };
   } catch (error) {
     console.log("Err While Generating the Tokens", error);
@@ -20,10 +21,11 @@ const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
 
 const signup = asynchandler(async (req, res) => {
   const { name, email, mobileNumber, password } = req.body;
-  console.log("Coming from the Signup Body", req.body);
 
   if (
-    [name, email, mobileNumber, password].some((f) => !f || f.trim() === "")
+    [name, email, mobileNumber, password].some(
+      (f) => !f || String(f).trim() === ""
+    )
   ) {
     throw new APIERR(400, "Please provide the required fields");
   }
@@ -33,41 +35,43 @@ const signup = asynchandler(async (req, res) => {
   }
 
   //   Find that if the user already exist or not
-  const existeduser = User.findOne({ mobileNumber });
+  const existeduser = await User.findOne({ mobileNumber });
   if (existeduser) {
     throw new APIERR(400, "User already exist. Please login instead of Signup");
   }
 
   // Ensure that the OTP is verified
-  const isVerified = res.cookies?.isEmailVerified;
-  if (isVerified) {
+
+  const isVerified = req.cookies?.isEmailVerified;
+  if (!isVerified) {
     throw new APIERR(400, "Please verify your email");
   }
 
   // Create user
-  const createUser = User.create({
+  const createUser = await User.create({
     name,
     email,
     mobileNumber,
     password,
   });
 
-  const createdUser = User.find({ mobileNumber }).select(
+  const createdUser = await User.find({ mobileNumber }).select(
     "-password -refreshToken"
   );
 
   // Set the Access Token
-  const { accessToken } = generateAccessAndRefreshTokens(createUser._id);
+  const { accessToken } = await generateAccessAndRefreshTokens(createUser._id);
+  console.log("Coming from ACCESS TOKEN =>", accessToken);
   res.cookie("accessToken", accessToken, cookieOptions);
 
   if (!accessToken) {
-    throw new APIERR(502, "Internal Server ERR! While Creating the user");
+    throw new APIERR(502, "Internal Server ERR! While setting the accesstoken");
   }
 
   // Send welcome message to the user after successfull signup
   const templateId = process.env.EMAILJS_WELCOME_MESSAGE_TEMPLATE_ID;
   const templateData = [
-    (name = fullName),
+    name,
     email,
     (appLink = ``),
     (supportlink = ``),
@@ -75,8 +79,7 @@ const signup = asynchandler(async (req, res) => {
   ];
 
   try {
-    const mailResponse = await sendMail(templateId, templateData);
-    console.log("Successfully Sent the Welcome message", mailResponse);
+    await sendMail(templateId, templateData);
   } catch (error) {
     console.error("ERR While Sending the Welcome Message mail", error);
   }
