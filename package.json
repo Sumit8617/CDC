@@ -12,6 +12,7 @@
   "type": "module",
   "license": "ISC",
   "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.8.0",
     "cookie-parser": "^1.4.7",
