@@ -1,4 +1,4 @@
-import { asynchandler, APIERR, APIRES, sendMail } from "../index.js";
+import { asynchandler, APIERR, APIRES, sendMail } from "../index.utils.js";
 
 const sendOTP = asynchandler(async (req, res) => {
   const { name, email } = req.body;
@@ -20,8 +20,6 @@ const sendOTP = asynchandler(async (req, res) => {
     expiry,
     date: new Date().getFullYear(),
   };
-
-  console.log(generatedOTP);
 
   const sendingOTP = await sendMail(templateId, templateData);
   if (!sendingOTP) {

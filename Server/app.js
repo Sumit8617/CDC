@@ -26,9 +26,9 @@ app.use(
 
 app.use(cookieParser());
 
-import authRoutes from "./routes/authRoutes.js";
-import quizRoutes from "./routes/quizRoutes.js";
-import resultRoutes from "./routes/resultRoutes.js";
+import authRoutes from "./Routes/Auth.routes.js";
+import quizRoutes from "./Routes/Quiz.routes.js";
+import resultRoutes from "./Routes/Result.routes.js";
 
 app.use('/api/v1/user', authRoutes);
 app.use('/api/v1/quiz', quizRoutes);

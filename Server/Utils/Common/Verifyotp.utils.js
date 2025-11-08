@@ -1,4 +1,4 @@
-import { asynchandler, APIERR, APIRES } from "../index.js";
+import { asynchandler, APIERR, APIRES } from "../index.utils.js";
 
 const verifyOTP = asynchandler(async (req, res) => {
   const { otp } = req.body;

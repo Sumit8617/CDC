@@ -1,8 +1,11 @@
-import bcrypt from "bcryptjs";
-import { generateToken } from "../config/jwt.js";
-import { User } from "../models/userModel.js";
-import cloudinary from "../config/cloudinary.js";
-import { asynchandler, APIERR, APIRES, sendMail } from "../Utils/index.js";
+import { User } from "../Models/User.models.js";
+import { cloudinary } from "../Config/Cloudinary.config.js";
+import {
+  asynchandler,
+  APIERR,
+  APIRES,
+  sendMail,
+} from "../Utils/index.utils.js";
 import { cookieOptions } from "../config/Cookie.config.js";
 
 const generateAccessAndRefreshTokens = asynchandler(async (userId) => {

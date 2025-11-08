@@ -1,5 +1,5 @@
 import emailjs from "@emailjs/nodejs";
-import { APIERR, APIRES } from "../index.js";
+import { APIERR, APIRES } from "../index.utils.js";
 
 // Function to send email using EmailJS
 export const sendMail = async (templateId, templateData) => {

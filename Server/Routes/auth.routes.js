@@ -6,9 +6,9 @@ import {
   logout,
   updateProfile,
   checkAuth,
-} from "../controllers/authControllers.js";
-import { protectRoute } from "../middleware/authMiddleware.js";
-import { sendOTP, verifyOTP } from "../Utils/index.js";
+} from "../Controllers/Auth.controllers.js";
+import { protectRoute } from "../Middleware/Auth.middleware.js";
+import { sendOTP, verifyOTP } from "../Utils/index.utils.js";
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ const signupLimiter = rateLimit({
     success: false,
     message: "Too many signup attempts from this IP, please try again later.",
   },
-  standardHeaders: true, 
+  standardHeaders: true,
   legacyHeaders: false,
 });
 
