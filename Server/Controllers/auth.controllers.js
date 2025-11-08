@@ -15,6 +15,7 @@ const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
     const refreshToken = user.generateRefreshToken();
     await user.hashRefreshToken(refreshToken);
     await user.save({ validateBeforeSave: false });
+    console.log("Tokens created =>", refreshToken, accessToken);
     return { accessToken, refreshToken };
   } catch (error) {
     console.log("Err While Generating the Tokens", error);
@@ -94,7 +95,6 @@ const signup = asynchandler(async (req, res) => {
 
 const login = asynchandler(async (req, res) => {
   const { mobileNumber, password } = req.body;
-  console.log("Coming from login Body", req.body);
 
   if (!mobileNumber || !password) {
     throw new APIERR(400, "Please fill the required Fields");
@@ -109,18 +109,16 @@ const login = asynchandler(async (req, res) => {
   }
 
   // Match the password
-  const isPasswordCorrect = User.isPasswordValid(password);
+  const isPasswordCorrect = await user.isPasswordValid(password);
   if (!isPasswordCorrect) {
     throw new APIERR(400, "Wrong Password");
   }
 
-  const { accessToken, refreshToken } = generateAccessAndRefreshTokens(
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     user._id
   );
-
   res.cookie("accessToken", accessToken, cookieOptions);
   res.cookie("refreshToken", refreshToken, cookieOptions);
-
   res.status(200).json(new APIRES(200, "Successfully logged in"));
 });
 
@@ -131,6 +129,7 @@ const logout = asynchandler(async (res) => {
   res.status(200).json(new APIRES(200, "Successfully log out"));
 });
 
+// TODO: Convert to working phase
 const updateProfile = async (req, res) => {
   try {
     const { profilePic } = req.body;
