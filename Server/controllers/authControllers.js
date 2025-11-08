@@ -12,7 +12,6 @@ const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
     const refreshToken = user.generateRefreshToken();
     await user.hashRefreshToken(refreshToken);
     await user.save({ validateBeforeSave: false });
-    console.log("Returning Tokens", accessToken, refreshToken);
     return { accessToken, refreshToken };
   } catch (error) {
     console.log("Err While Generating the Tokens", error);
@@ -61,7 +60,6 @@ const signup = asynchandler(async (req, res) => {
 
   // Set the Access Token
   const { accessToken } = await generateAccessAndRefreshTokens(createUser._id);
-  console.log("Coming from ACCESS TOKEN =>", accessToken);
   res.cookie("accessToken", accessToken, cookieOptions);
 
   if (!accessToken) {
@@ -70,13 +68,14 @@ const signup = asynchandler(async (req, res) => {
 
   // Send welcome message to the user after successfull signup
   const templateId = process.env.EMAILJS_WELCOME_MESSAGE_TEMPLATE_ID;
-  const templateData = [
+
+  const templateData = {
     name,
     email,
-    (appLink = ``),
-    (supportlink = ``),
-    (currentYear = new Date().getFullYear()),
-  ];
+    appLink: ``,
+    supportLink: ``,
+    currentYear: new Date().getFullYear(),
+  };
 
   try {
     await sendMail(templateId, templateData);

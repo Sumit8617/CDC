@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 
 // Parse allowed domains from .env safely
 let allowedDomains = [];
@@ -37,11 +37,13 @@ const userSchema = new mongoose.Schema(
         message: () =>
           `Only official college emails (${allowedDomains.join(", ")}) are accepted`,
       },
+      index: true,
     },
     mobileNumber: {
       type: String,
       required: true,
       unique: [true, "Mobile Number must be Unique"],
+      index: true,
     },
     password: {
       type: String,
@@ -82,7 +84,7 @@ userSchema.methods.generateAccessToken = function () {
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: process.env.ACCESS_TOKEN_SECRET,
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
     }
   );
 };

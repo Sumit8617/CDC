@@ -21,10 +21,12 @@ const sendOTP = asynchandler(async (req, res) => {
     date: new Date().getFullYear(),
   };
 
-  const sendingOTP = await sendMail(templateId, templateData);
-  if (!sendingOTP) {
-    throw new APIERR(500, "Err While Sending the OTP");
-  }
+  console.log(generatedOTP);
+
+  // const sendingOTP = await sendMail(templateId, templateData);
+  // if (!sendingOTP) {
+  //   throw new APIERR(500, "Err While Sending the OTP");
+  // }
 
   res.cookie("OTP", generatedOTP, {
     httpOnly: true,
