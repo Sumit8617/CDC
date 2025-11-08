@@ -23,10 +23,10 @@ const sendOTP = asynchandler(async (req, res) => {
 
   console.log(generatedOTP);
 
-  // const sendingOTP = await sendMail(templateId, templateData);
-  // if (!sendingOTP) {
-  //   throw new APIERR(500, "Err While Sending the OTP");
-  // }
+  const sendingOTP = await sendMail(templateId, templateData);
+  if (!sendingOTP) {
+    throw new APIERR(500, "Err While Sending the OTP");
+  }
 
   res.cookie("OTP", generatedOTP, {
     httpOnly: true,

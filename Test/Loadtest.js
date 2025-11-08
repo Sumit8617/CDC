@@ -2,8 +2,18 @@ import http from "k6/http";
 import { sleep } from "k6";
 
 export const options = {
-  vus: 10, // number of virtual users
-  duration: "60s", // test duration
+  scenarios: {
+    signup_test: {
+      executor: "ramping-arrival-rate",
+      startRate: 0, // requests per second
+      timeUnit: "1m", // rate is per minute
+      preAllocatedVUs: 1, // number of VUs to start with
+      maxVUs: 1, // maximum VUs
+      stages: [
+        { target: 5, duration: "1m" }, // 5 requests per minute
+      ],
+    },
+  },
 };
 
 // Base user templates
