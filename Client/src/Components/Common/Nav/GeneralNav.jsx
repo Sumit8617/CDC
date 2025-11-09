@@ -1,19 +1,14 @@
 import React from "react";
-import { AdminNav, UserNav } from "../../index";
+import { AdminNav, UserNav, ViewersNav } from "../../index";
 const GeneralNav = () => {
   // INFO: This is a Dumyy test for the nav bar
-  const showNavAccordingToUser = (user = "user") => {
+  const showNavAccordingToUser = (user = "") => {
     if (user === "admin") return <AdminNav />;
     if (user === "user") return <UserNav />;
-    return null;
+    return <ViewersNav />;
   };
 
-  return (
-    <>
-      <h1>Header</h1>
-      {showNavAccordingToUser()}
-    </>
-  );
+  return showNavAccordingToUser();
 };
 
 export default GeneralNav;

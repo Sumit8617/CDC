@@ -1,7 +1,11 @@
 import React from "react";
 
 const UserNav = () => {
-  return <div>This is the User Navbar</div>;
+  return (
+    <>
+      <h1>Carrier and Development Cell</h1>
+    </>
+  );
 };
 
 export default UserNav;
