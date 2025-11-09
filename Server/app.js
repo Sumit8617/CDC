@@ -26,12 +26,12 @@ app.use(
 
 app.use(cookieParser());
 
-import authRoutes from "./Routes/Auth.routes.js";
-import quizRoutes from "./Routes/Quiz.routes.js";
-import resultRoutes from "./Routes/Result.routes.js";
+import authRoutes from "./Service/Routes/Auth.routes.js";
+import quizRoutes from "./Service/Routes/Quiz.routes.js";
+import resultRoutes from "./Service/Routes/Result.routes.js";
 
-app.use('/api/v1/user', authRoutes);
-app.use('/api/v1/quiz', quizRoutes);
-app.use('/api/v1/result' ,resultRoutes);
+app.use("/api/v1/user", authRoutes);
+app.use("/api/v1/quiz", quizRoutes);
+app.use("/api/v1/result", resultRoutes);
 
 export { app };

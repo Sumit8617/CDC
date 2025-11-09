@@ -1,12 +1,12 @@
 import { User } from "../Models/User.models.js";
-import { cloudinary } from "../Config/Cloudinary.config.js";
+import { cloudinary } from "../../Config/Cloudinary.config.js";
 import {
   asynchandler,
   APIERR,
   APIRES,
   sendMail,
-} from "../Utils/index.utils.js";
-import { cookieOptions } from "../config/Cookie.config.js";
+} from "../../Utils/index.utils.js";
+import { cookieOptions } from "../../config/Cookie.config.js";
 
 const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
   try {

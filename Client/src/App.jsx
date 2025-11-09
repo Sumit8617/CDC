@@ -1,11 +1,17 @@
-import React from 'react'
-
+import React from "react";
+import { Outlet } from "react-router-dom";
+import { Nav, Footer } from "./Components/index";
+import Layout from "./Layout/Layout";
 const App = () => {
   return (
-    <div className='text-center font-bold text-2xl underline'>
-      This is the APP
-    </div>
-  )
-}
+    <>
+      <Nav />
+      <Layout>
+        <Outlet />
+      </Layout>
+      <Footer />
+    </>
+  );
+};
 
-export default App
+export default App;
