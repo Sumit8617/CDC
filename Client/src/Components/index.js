@@ -2,10 +2,14 @@ import GeneralNav from "./Common/Nav/GeneralNav";
 import AdminNav from "./Common/Nav/AdminNav";
 import UserNav from "./Common/Nav/UserNav";
 import ViewersNav from "./Common/Nav/ViewersNav";
-import HeroSection from "./Common/Hero/Hero";
+import HeroSection from "./Common/Hero/ViewersHero";
 import Footer from "./Common/Footer";
 import Button from "./Common/Button";
 import Input from "./Input";
+import ResponsiveUnderline from "./Common/Underline";
+import Card from "./Common/Card";
+import HowItWorks from "./Common/HowItWorks";
+import Testimonials from "./Testimonials/UserReview";
 
 export {
   GeneralNav,
@@ -16,4 +20,8 @@ export {
   Footer,
   Button,
   Input,
+  ResponsiveUnderline,
+  Card,
+  HowItWorks,
+  Testimonials,
 };

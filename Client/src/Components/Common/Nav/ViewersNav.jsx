@@ -5,7 +5,7 @@ const ViewersNav = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="w-full bg-white border-b border-gray-200 fixed top-0 left-0 z-50">
+    <nav className="w-full bg-white border-b border-gray-200 fixed top-0 left-0 z-50 shadow">
       <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-6">
         <div className="flex items-center space-x-2">
           <h1 className="text-xl font-semibold text-gray-800">
