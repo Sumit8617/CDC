@@ -23,10 +23,10 @@ const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
 });
 
 const signup = asynchandler(async (req, res) => {
-  const { name, email, mobileNumber, password } = req.body;
+  const { name, email, mobileNumber, password, role } = req.body;
 
   if (
-    [name, email, mobileNumber, password].some(
+    [name, email, mobileNumber, password, role].some(
       (f) => !f || String(f).trim() === ""
     )
   ) {
@@ -56,6 +56,7 @@ const signup = asynchandler(async (req, res) => {
     email,
     mobileNumber,
     password,
+    role,
   });
 
   const createdUser = await User.find({ mobileNumber }).select(
@@ -83,6 +84,7 @@ const signup = asynchandler(async (req, res) => {
 
   try {
     await sendMail(templateId, templateData);
+    console.log("Email Sent");
   } catch (error) {
     console.error("ERR While Sending the Welcome Message mail", error);
   }

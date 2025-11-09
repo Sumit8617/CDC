@@ -54,10 +54,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    isAdmin: {
-      type: Boolean,
-      default: false,
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
     },
+    refreshToken: {
+      type : String
+    }
   },
   { timestamps: true }
 );
