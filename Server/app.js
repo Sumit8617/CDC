@@ -19,34 +19,26 @@ app.use(express.json({limit: "100kb",}));
 app.use(urlencoded({limit: "100kb",extended: true,}));
 app.use(cookieParser());
 
-app.use("/api",async(req,res,next)=>{
-    try {
-        const decision = await aj.protect(req,{
-        requested: 1,          //specifies each element consumes one token
-    });
+app.use("/api", async (req, res, next) => {
+  try {
+    const decision = await aj.protect(req, { requested: 1 });
 
-    if(decision.isDenied()){
-        if(decision.reason.isRateLimit()){
-            res.status(429).json({error:"Too many requests. Please try again later."})
-        }else if(decision.reason.isBot()){
-            res.status(403).json({error:"Bots are not allowed"})
-        }else{
-            res.status(403).json({error:"Request denied"})
-        }
-        return
+    if (decision.isDenied()) {
+      if (decision.reason.isRateLimit()) {
+        return res.status(429).json({ error: "Too many requests. Please try again later." });
+      } else if (decision.reason.isShield()) {
+        return res.status(403).json({ error: "Request blocked by security shield." });
+      } else {
+        return res.status(403).json({ error: "Request denied." });
+      }
     }
 
-    //check for spoofed bots
-    if (decision.results && decision.results.some(r => r.reason.isBot() && r.reason.isSpoofed())) {
-      return res.status(403).json({ error: "Spoofed bot detected" });
-    }
-
-    next()
-    } catch (error) {
-        console.log("Arcjet error",error)
-        next(error)
-    }
-})
+    next();
+  } catch (error) {
+    console.error("Arcjet error:", error);
+    next(error);
+  }
+});
 
 app.use("/api/v1/user", authRoutes);
 app.use("/api/v1/quiz", quizRoutes);
