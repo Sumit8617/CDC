@@ -1,4 +1,4 @@
-import arcjet, { shield, detectBot, tokenBucket } from "@arcjet/node";
+import arcjet, { shield, tokenBucket } from "@arcjet/node";
 import '../config/Envfiles.config.js'
 
 export const aj = arcjet({
@@ -7,13 +7,7 @@ export const aj = arcjet({
     rules:[
         
         shield({mode:"LIVE"}),
-        detectBot({
-            mode:"LIVE",
-            
-            allow: [
-            "CATEGORY:SEARCH_ENGINE", 
-            ],
-        }),
+        
 
         tokenBucket({
             mode: "LIVE", 
