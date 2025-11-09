@@ -1,6 +1,10 @@
 import express, { urlencoded } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import {aj} from "./lib/arcjet.js";
+import authRoutes from "./Service/Routes/Auth.routes.js";
+import quizRoutes from "./Service/Routes/Quiz.routes.js";
+import resultRoutes from "./Service/Routes/Result.routes.js";
 
 const app = express();
 
@@ -11,24 +15,38 @@ app.use(
   })
 );
 
-app.use(
-  express.json({
-    limit: "100kb",
-  })
-);
-
-app.use(
-  urlencoded({
-    limit: "100kb",
-    extended: true,
-  })
-);
-
+app.use(express.json({limit: "100kb",}));
+app.use(urlencoded({limit: "100kb",extended: true,}));
 app.use(cookieParser());
 
-import authRoutes from "./Service/Routes/Auth.routes.js";
-import quizRoutes from "./Service/Routes/Quiz.routes.js";
-import resultRoutes from "./Service/Routes/Result.routes.js";
+app.use("/api",async(req,res,next)=>{
+    try {
+        const decision = await aj.protect(req,{
+        requested: 1,          //specifies each element consumes one token
+    });
+
+    if(decision.isDenied()){
+        if(decision.reason.isRateLimit()){
+            res.status(429).json({error:"Too many requests. Please try again later."})
+        }else if(decision.reason.isBot()){
+            res.status(403).json({error:"Bots are not allowed"})
+        }else{
+            res.status(403).json({error:"Request denied"})
+        }
+        return
+    }
+
+    //check for spoofed bots
+    if (decision.results && decision.results.some(r => r.reason.isBot() && r.reason.isSpoofed())) {
+      return res.status(403).json({ error: "Spoofed bot detected" });
+    }
+
+    next()
+    } catch (error) {
+        console.log("Arcjet error",error)
+        next(error)
+    }
+})
 
 app.use("/api/v1/user", authRoutes);
 app.use("/api/v1/quiz", quizRoutes);
