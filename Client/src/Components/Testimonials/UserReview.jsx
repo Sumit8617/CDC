@@ -67,7 +67,7 @@ const Testimonials = () => {
   }, [visibleCards]);
 
   return (
-    <section className="py-24 bg-gray-50">
+    <section className="py-24 bg-gray-50" id="review">
       <div className="max-w-7xl mx-auto px-6 text-center overflow-hidden">
         {/* Header */}
         <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 font-popins">

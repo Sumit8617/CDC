@@ -26,7 +26,7 @@ const Button = forwardRef(
       outline:
         "border border-yellow-500 text-yellow-600 bg-transparent hover:bg-yellow-50 focus:ring-yellow-400",
       green:
-        "bg-green-600 text-white shadow-lg hover:bg-green-700 focus:ring-green-400",
+        "bg-green-700 text-white shadow-lg hover:bg-green-700 focus:ring-green-400",
       danger:
         "bg-red-500 text-white shadow-lg hover:bg-red-600 focus:ring-red-400",
       indigo:

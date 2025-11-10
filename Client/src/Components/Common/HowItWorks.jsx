@@ -5,7 +5,10 @@ import { BookOpen, Trophy, TrendingUp } from "lucide-react";
 
 const HowItWorks = () => {
   return (
-    <section className="py-24 bg-gray-50 shadow-xl rounded-md">
+    <section
+      className="py-24 bg-linear-to-b from-gray-100 to-gray-200 rounded-md"
+      id="how-it-works"
+    >
       <div className="max-w-6xl mx-auto px-6 text-center">
         {/* Header */}
         <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 font-popins">

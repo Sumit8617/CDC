@@ -10,7 +10,7 @@ const Layout = ({ children }) => {
       </header>
 
       {/* Page Content */}
-      <main className="grow pt-20 px-4 sm:px-6 lg:px-8 flex justify-center">
+      <main className="grow pt-16 px-4 sm:px-6 lg:px-8 flex justify-center">
         <div className="w-full max-w-8xl mx-auto">{children}</div>
       </main>
 

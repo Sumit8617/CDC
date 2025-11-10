@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { ArrowRight, Zap, UserStar } from "lucide-react";
 import CountUp from "react-countup";
 import { Button, ResponsiveUnderline } from "../../index";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
@@ -13,7 +15,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative flex flex-col items-center justify-center text-center min-h-[90vh] pt-16 pb-24 px-4 sm:px-8 bg-linear-to-b from-white to-gray-100 text-gray-900 overflow-hidden rounded-md shadow-md">
+    <section className="relative flex flex-col items-center justify-center text-center min-h-[90vh] pt-16 pb-24 px-4 sm:px-8 bg-linear-to-b from-white to-gray-200 text-gray-900 overflow-hidden rounded-md shadow-md">
       {/* Subtle Radial Background */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.08),transparent_70%)]"></div>
@@ -22,12 +24,12 @@ const HeroSection = () => {
       {/* Badge */}
       <div className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-indigo-200 shadow-sm">
         <Zap className="h-4 w-4" />
-        <span>Join 10,000+ students</span>
+        <span>Join 10,000+ students from DB</span>
       </div>
 
       {/* Heading */}
       <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold max-w-4xl leading-tight tracking-tight relative font-ubuntu">
-        Sharpen Your Mind with{" "}
+        Sharpen Your Mind With{" "}
         <span className="relative inline-block text-indigo-600">
           <ResponsiveUnderline animate={animate} />
         </span>{" "}
@@ -47,7 +49,8 @@ const HeroSection = () => {
           variant="primary"
           size="lg"
           round="lg"
-          className="flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
+          onClick={() => navigate("/signup")}
+          className="flex items-center gap-2 text-white"
         >
           Get Started Free <ArrowRight size={18} />
         </Button>
@@ -56,7 +59,8 @@ const HeroSection = () => {
           variant="outline"
           size="lg"
           round="lg"
-          className="border border-gray-300 text-gray-800 hover:bg-gray-100"
+          onClick={() => navigate("/login")}
+          className="border border-gray-300 text-white"
         >
           Sign In to Your Account
         </Button>
