@@ -13,13 +13,17 @@ const Card = ({
   children,
   round = "md",
   layout = "vertical",
+  padding = "",
+  margin = "", 
 }) => {
   // Base layout styles
   const baseStyles = clsx(
-    "rounded-2xl p-6 transition-all duration-300",
+    "transition-all duration-300",
     layout === "vertical"
       ? "flex flex-col justify-center items-center text-center"
-      : "flex flex-row justify-between items-center text-left"
+      : "flex flex-row justify-between items-center text-left",
+    padding,
+    margin
   );
 
   const variants = {

@@ -22,8 +22,8 @@ const Layout = ({ children }) => {
       <div className="flex min-h-screen bg-gray-50 text-gray-900">
         <GeneralNav />
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
-          {children}
+        <main className="flex-1 overflow-auto flex justify-center">
+          <div className="w-full p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
     );

@@ -76,16 +76,17 @@ const UserDashboard = ({ userName = "Subhas" }) => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-8 sm:mb-10">
         {stats.map((stat) => (
           <Card
-            // TODO:Fix the text in Small Screen
             key={stat.label}
-            className="relative p-4 sm:p-6 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300"
+            padding="p-3 sm:p-6"
+            className="relative border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300
+                 w-full xs:w-[48%] sm:w-[45%] md:w-[30%] lg:w-[22%]"
           >
             {/* Icon */}
             <div
-              className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl ${stat.bg}`}
+              className={`absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl ${stat.bg}`}
             >
               {stat.icon}
             </div>
@@ -95,7 +96,7 @@ const UserDashboard = ({ userName = "Subhas" }) => {
               <p className="text-gray-600 text-[10px] xs:text-[11px] sm:text-sm font-medium leading-snug truncate sm:whitespace-normal">
                 {stat.label}
               </p>
-              <h3 className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2 wrap-break-word leading-tight">
+              <h3 className="text-lg sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2 leading-tight wrap-break-words">
                 {stat.value}
               </h3>
             </div>
