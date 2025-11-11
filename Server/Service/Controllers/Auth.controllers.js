@@ -6,7 +6,7 @@ import {
   APIRES,
   sendMail,
 } from "../../Utils/index.utils.js";
-import { cookieOptions } from "../../config/Cookie.config.js";
+import { cookieOptions } from "../../Config/Cookie.config.js";
 
 const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
   try {

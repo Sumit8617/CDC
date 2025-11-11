@@ -1,14 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AdminNav, UserNav, ViewersNav } from "../../index";
-const GeneralNav = () => {
-  // INFO: This is a Dumyy test for the nav bar
-  const showNavAccordingToUser = (user = "") => {
-    if (user === "admin") return <AdminNav />;
-    if (user === "user") return <UserNav />;
-    return <ViewersNav />;
-  };
 
-  return showNavAccordingToUser();
+const GeneralNav = () => {
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    // Get role from localStorage (you should set this during login/signup)
+    const storedRole = "user";
+    setRole(storedRole);
+  }, []);
+
+  if (!role) return null; // Prevent flashing while loading role
+
+  if (role === "admin") return <AdminNav />;
+  if (role === "user") return <UserNav />;
+  return <ViewersNav />;
 };
 
 export default GeneralNav;

@@ -1,7 +1,33 @@
 import React from "react";
+import { useLocation } from "react-router-dom";
 import { GeneralNav, Footer } from "../Components/index";
 
 const Layout = ({ children }) => {
+  const location = useLocation();
+
+  // Define routes that should use Sidebar layout instead of General layout
+  const dashboardRoutes = [
+    "/",
+    "/contests",
+    "/leaderboard",
+    "/profile",
+    "/contest-history",
+  ];
+
+  const isDashboardPage = dashboardRoutes.some((path) =>
+    location.pathname.startsWith(path)
+  );
+
+  // --- Dashboard Layout (Sidebar already handles spacing) ---
+  if (isDashboardPage) {
+    return (
+      <div className="min-h-screen bg-gray-50 text-gray-900 overflow-hidden">
+        {children}
+      </div>
+    );
+  }
+
+  // --- General Public Layout (Navbar + Footer) ---
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
       {/* Fixed Navbar */}

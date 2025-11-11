@@ -1,5 +1,5 @@
 import arcjet, { shield, tokenBucket } from "@arcjet/node";
-import "../config/Envfiles.config.js";
+import "../Config/Envfiles.config";
 
 export const aj = arcjet({
   key: process.env.ARCJET_KEY,

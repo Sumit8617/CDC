@@ -11,12 +11,16 @@ const Card = ({
   variant = "default",
   className = "",
   children,
+  round = "md",
+  layout = "vertical",
 }) => {
-  console.log("Card Height", height);
-  console.log("Card Width", width);
-
-  const baseStyles =
-    "rounded-2xl p-6 flex flex-col justify-center items-center text-center transition-all duration-300";
+  // Base layout styles
+  const baseStyles = clsx(
+    "rounded-2xl p-6 transition-all duration-300",
+    layout === "vertical"
+      ? "flex flex-col justify-center items-center text-center"
+      : "flex flex-row justify-between items-center text-left"
+  );
 
   const variants = {
     default: "bg-white shadow-md hover:shadow-lg",
@@ -28,19 +32,30 @@ const Card = ({
       "bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg hover:shadow-xl hover:brightness-105",
   };
 
+  const rounds = {
+    none: "rounded-none",
+    sm: "rounded-md",
+    md: "rounded-xl",
+    lg: "rounded-2xl",
+    full: "rounded-full",
+  };
+
   return (
     <div
-      className={clsx(baseStyles, variants[variant], className)}
+      className={clsx(baseStyles, variants[variant], rounds[round], className)}
       style={{
         height:
           height.includes("rem") || height.includes("px")
             ? height
-            : `${height}rem`,
+            : height === "auto"
+              ? "auto"
+              : `${height}rem`,
         width:
           width.includes("rem") || width.includes("px") ? width : `${width}rem`,
       }}
     >
-      {(icon || title) && (
+      {/* Title + Icon section */}
+      {(icon || title) && layout === "vertical" && (
         <div className="flex flex-col items-center mb-3">
           {icon && <div className="text-indigo-500 text-3xl mb-2">{icon}</div>}
           {title && (
@@ -56,7 +71,8 @@ const Card = ({
         </div>
       )}
 
-      {description ? (
+      {/* Description or children */}
+      {description && layout === "vertical" ? (
         <p
           className={clsx(
             "text-gray-600 text-sm leading-relaxed",
@@ -66,7 +82,7 @@ const Card = ({
           {description}
         </p>
       ) : (
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 w-full">{children}</div>
       )}
 
       {footer && <div className="mt-4">{footer}</div>}
