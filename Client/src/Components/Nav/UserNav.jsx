@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Home, Trophy, History, Zap, User, LogOut } from "lucide-react";
-import { Button, Card } from "../../index";
+import { Button, Card } from "../index";
 import { useNavigate } from "react-router-dom";
 
 const Sidebar = () => {

@@ -1,6 +1,5 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
-import { Sidebar } from "../Components/index";
 import { GeneralNav, Footer } from "../Components/index";
 
 const Layout = ({ children }) => {
@@ -21,9 +20,7 @@ const Layout = ({ children }) => {
   if (isDashboardPage) {
     return (
       <div className="flex min-h-screen bg-gray-50 text-gray-900">
-        {/* Sidebar */}
-        <Sidebar />
-
+        <GeneralNav />
         {/* Page Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           {children}

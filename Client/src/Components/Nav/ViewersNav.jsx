@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { Button } from "../../index";
+import { Button } from "../index";
 import { useNavigate } from "react-router-dom";
 const ViewersNav = () => {
   const [isOpen, setIsOpen] = useState(false);

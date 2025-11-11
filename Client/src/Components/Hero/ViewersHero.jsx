@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowRight, Zap, UserStar } from "lucide-react";
 import CountUp from "react-countup";
-import { Button, ResponsiveUnderline } from "../../index";
+import { Button, ResponsiveUnderline } from "../index";
 import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
