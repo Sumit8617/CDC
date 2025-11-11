@@ -5,3 +5,15 @@
   --font-ubuntu: "Ubuntu", sans-serif;
   --font-popins: "Poppins", sans-serif;
 }
+
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none; /* Firefox */
+}

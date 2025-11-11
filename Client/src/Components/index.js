@@ -10,7 +10,7 @@ import ResponsiveUnderline from "./Common/Underline";
 import Card from "./Common/Card";
 import HowItWorks from "./Common/HowItWorks";
 import Testimonials from "./Testimonials/UserReview";
-import UserDashboard from "./Common/Dashboard/UserDashboard";
+import UserDashboard from "./Dashboard/UserDashboard";
 import Sidebar from "./Common/Nav/UserNav";
 
 export {

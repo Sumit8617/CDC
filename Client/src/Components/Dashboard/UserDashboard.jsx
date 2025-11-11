@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Flame, Award, Target, TrendingUp } from "lucide-react";
-import { Card, Button } from "../../index";
+import { Card, Button } from "../index";
 import {
   AreaChart,
   Area,
@@ -105,7 +105,7 @@ const UserDashboard = ({ userName = "Subhas" }) => {
 
       {/* Tabs */}
       <div className="w-full overflow-x-auto hide-scrollbar p-2 mb-6">
-        <div className="flex min-w-max sm:min-w-0 gap-2 sm:gap-3 border-b-2 border-gray-500 pb-3">
+        <div className="flex min-w-max sm:min-w-0 gap-2 sm:gap-3 border-b-2 border-gray-500 p-3">
           {tabs.map((tab) => (
             <Button
               key={tab}
