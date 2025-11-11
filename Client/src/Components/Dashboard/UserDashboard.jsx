@@ -51,6 +51,16 @@ const UserDashboard = ({ userName = "Subhas" }) => {
     { week: "Week 4", score: 80, percentile: 80 },
     { week: "Week 5", score: 78, percentile: 85 },
     { week: "Week 6", score: 85, percentile: 90 },
+    { week: "Week 7", score: 25, percentile: 90 },
+    { week: "Week 8", score: 25, percentile: 90 },
+    { week: "Week 9", score: 25, percentile: 90 },
+    { week: "Week 10", score: 50, percentile: 90 },
+    { week: "Week 11", score: 45, percentile: 90 },
+    { week: "Week 12", score: 75, percentile: 90 },
+    { week: "Week 13", score: 5, percentile: 90 },
+    { week: "Week 14", score: 85, percentile: 90 },
+    { week: "Week 15", score: 55, percentile: 90 },
+    { week: "Week 16", score: 95, percentile: 90 },
   ];
 
   return (

@@ -12,6 +12,8 @@ const Signup = () => {
       mobileNumber: "",
       password: "",
       confirmPassword: "",
+      dob: "",
+      rollNumber : "",
       role: "user",
     },
   });
@@ -34,15 +36,15 @@ const Signup = () => {
   const password = watch("password");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-5xl bg-white rounded-xl shadow-lg p-8 md:p-10">
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-5xl rounded-xl shadow-lg p-8 md:p-10 border-2 border-gray-200">
         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
           Create Your Account
         </h2>
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <Input
                 name="fullName"
                 label="Full Name"
@@ -84,6 +86,22 @@ const Signup = () => {
                 type="number"
                 placeholder="Mobile"
                 rules={{ required: "Mobile number is required" }}
+              />
+
+              <Input
+                name="rollNumber"
+                label="Enter your Roll Number"
+                type="number"
+                placeholder="Roll "
+                rules={{ required: "Roll number is required" }}
+              />
+
+              <Input
+                name="dob"
+                label="Enter your Birth Date"
+                type="date"
+                placeholder="DOB"
+                rules={{ required: "DOB number is required" }}
               />
 
               <Input
@@ -129,7 +147,9 @@ const Signup = () => {
                   errors.role ? "border-red-500" : "border-gray-300"
                 }`}
               >
-                <option value="" disabled>-- Select your role --</option>
+                <option value="" disabled>
+                  -- Select your role --
+                </option>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>

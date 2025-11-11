@@ -4,8 +4,8 @@ import { Button, Card } from "../index";
 import { useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
-  const [active, setActive] = useState("Home"); // active for desktop sidebar
-  const [popup, setPopup] = useState(null); // active for mobile popup
+  const [active, setActive] = useState("Home");
+  const [popup, setPopup] = useState(null);
   const navigate = useNavigate();
 
   const menuItems = [
@@ -52,8 +52,8 @@ const Sidebar = () => {
         round="none"
       >
         {/* Top Section */}
-        <div className="flex flex-col">
-          <div className="flex flex-col mb-8 border-b-2 border-gray-800 pb-3">
+        <div className="flex flex-col w-full">
+          <div className="flex flex-col mt-2.5 mb-10 border-b-2 border-gray-200 pb-3">
             <div className="flex items-center space-x-2 mb-1">
               <h1 className="text-xl font-semibold text-gray-900">
                 {import.meta.env.VITE_APP_NAME || "AptiQuest"}

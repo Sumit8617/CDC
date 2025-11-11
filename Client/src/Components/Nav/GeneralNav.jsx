@@ -9,8 +9,6 @@ const GeneralNav = () => {
     setRole(storedRole);
   }, []);
 
-  if (!role) return null; // Prevent flashing while loading role
-
   if (role === "admin") return <AdminNav />;
   if (role === "user") return <Sidebar />;
   return <ViewersNav />;
