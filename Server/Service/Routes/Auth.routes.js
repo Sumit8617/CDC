@@ -6,7 +6,7 @@ import {
   updateProfile,
   checkAuth,
 } from "../Controllers/Auth.controllers.js";
-import { protectRoute } from "../Middleware/Auth.middleware.js";
+import { protectRoute } from "../../Middleware/Auth.middleware.js";
 import { sendOTP, verifyOTP } from "../../Utils/index.utils.js";
 
 const router = express.Router();

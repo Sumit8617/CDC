@@ -22,10 +22,11 @@ const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
 });
 
 const signup = asynchandler(async (req, res) => {
-  const { name, email, mobileNumber, password, role } = req.body;
+  const { fullName, email, mobileNumber, password, role, rollNumber, dob } =
+    req.body;
 
   if (
-    [name, email, mobileNumber, password, role].some(
+    [fullName, email, mobileNumber, password, role, rollNumber, dob].some(
       (f) => !f || String(f).trim() === ""
     )
   ) {
@@ -51,11 +52,13 @@ const signup = asynchandler(async (req, res) => {
 
   // Create user
   const createUser = await User.create({
-    name,
+    fullName,
     email,
     mobileNumber,
     password,
     role,
+    rollNumber,
+    dob,
   });
 
   const createdUser = await User.find({ mobileNumber }).select(
@@ -74,7 +77,7 @@ const signup = asynchandler(async (req, res) => {
   const templateId = process.env.EMAILJS_WELCOME_MESSAGE_TEMPLATE_ID;
 
   const templateData = {
-    name,
+    name : fullName,
     email,
     appLink: ``,
     supportLink: ``,

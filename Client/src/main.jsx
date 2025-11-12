@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Provider } from "react-redux";
 import {
   Home,
   Contest,
@@ -20,7 +21,9 @@ import {
   AdminAnalytics,
   AdminProfile,
   AdminSettings,
+  AdminLogin,
 } from "./Pages/index.js";
+import { store } from "./Store/Store.js";
 
 const router = createBrowserRouter([
   {
@@ -91,12 +94,18 @@ const router = createBrowserRouter([
         path: "/admin/settings",
         element: <AdminSettings />,
       },
+      {
+        path: "/admin/login",
+        element: <AdminLogin />,
+      },
     ],
   },
 ]);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>
 );

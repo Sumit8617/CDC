@@ -14,6 +14,7 @@ import ManageUsers from "./Admin/UserData";
 import AdminAnalytics from "./Admin/Analytics";
 import AdminProfile from "./Admin/AdminProfile";
 import AdminSettings from "./Admin/AdminSettings";
+import AdminLogin from "./Admin/AdminLogin";
 
 export {
   Home,
@@ -32,4 +33,5 @@ export {
   AdminAnalytics,
   AdminProfile,
   AdminSettings,
+  AdminLogin,
 };

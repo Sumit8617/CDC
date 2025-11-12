@@ -9,4 +9,3 @@ export const asynchandler = (requestHandler) => async (req, res, next) => {
     });
   }
 };
-

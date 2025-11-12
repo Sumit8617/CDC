@@ -1,9 +1,10 @@
 import { asynchandler, APIERR, APIRES, sendMail } from "../index.utils.js";
 
 const sendOTP = asynchandler(async (req, res) => {
-  const { name, email } = req.body;
+  const { fullName, email } = req.body;
+  console.log("Coming from Body", fullName, email)
 
-  if (!name || !email) {
+  if (!fullName || !email) {
     throw new APIERR(400, "Please provide the required fields");
   }
 
@@ -14,17 +15,17 @@ const sendOTP = asynchandler(async (req, res) => {
   const expiry = process.env.OTP_EXPIRY;
 
   const templateData = {
-    to_name: name,
+    to_name: fullName,
     to_email: email,
     otp: generatedOTP,
     expiry,
     date: new Date().getFullYear(),
   };
 
-  const sendingOTP = await sendMail(templateId, templateData);
-  if (!sendingOTP) {
-    throw new APIERR(500, "Err While Sending the OTP");
-  }
+  // const sendingOTP = await sendMail(templateId, templateData);
+  // if (!sendingOTP) {
+  //   throw new APIERR(500, "Err While Sending the OTP");
+  // }
 
   res.cookie("OTP", generatedOTP, {
     httpOnly: true,

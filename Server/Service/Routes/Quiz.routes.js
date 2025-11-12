@@ -1,5 +1,5 @@
 import express from "express";
-import { protectRoute } from "../Middleware/Auth.middleware.js";
+import { protectRoute } from "../../Middleware/Auth.middleware.js";
 import {
   createQuiz,
   getAllQuiz,

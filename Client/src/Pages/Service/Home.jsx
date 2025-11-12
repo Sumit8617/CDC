@@ -10,11 +10,11 @@ import {
 } from "../../Components/index";
 
 const Home = () => {
-  const [userRole, setUserRole] = useState("user");
+  const [userRole, setUserRole] = useState("admin");
 
   // Simulate fetching user role from localStorage (or auth context)
   useEffect(() => {
-    const role = "admin";
+    const role = "user";
     setUserRole(role);
   }, []);
 

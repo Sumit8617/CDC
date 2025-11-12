@@ -4,7 +4,7 @@ import {
   submitResult,
   getMyResult,
 } from "../Controllers/Result.controllers.js";
-import { protectRoute } from "../Middleware/Auth.middleware.js";
+import { protectRoute } from "../../Middleware/Auth.middleware.js";
 
 const router = express.Router();
 

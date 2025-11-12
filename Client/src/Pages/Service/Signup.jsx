@@ -2,6 +2,7 @@ import React from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Button, Input } from "../../Components/index";
 import { useNavigate } from "react-router-dom";
+import useSignup from "../../Hooks/AuthHooks";
 
 const Signup = () => {
   const methods = useForm({
@@ -13,7 +14,7 @@ const Signup = () => {
       password: "",
       confirmPassword: "",
       dob: "",
-      rollNumber : "",
+      rollNumber: "",
       role: "user",
     },
   });
@@ -25,15 +26,71 @@ const Signup = () => {
     register,
     formState: { errors },
   } = methods;
+
   const navigate = useNavigate();
 
-  const onSubmit = (data) => {
-    console.log("Signup Data:", data);
-    navigate("/");
-    reset();
-  };
+  const {
+    handleSignup,
+    handleSendOtp,
+    handleVerifyOtp,
+    loading,
+    error,
+    success,
+    otpSent,
+    otpVerified,
+  } = useSignup();
 
   const password = watch("password");
+
+  // === OTP Send Handler ===
+  const onSendOtp = async () => {
+    const fullName = methods.getValues("fullName");
+    const email = methods.getValues("email");
+    if (!email || !fullName) {
+      alert("Please enter your email and fullName before sending OTP.");
+      return;
+    }
+    try {
+      await handleSendOtp({ email, fullName });
+      alert("OTP sent successfully to your email!");
+    } catch (err) {
+      console.error("Error sending OTP:", err);
+      alert("Failed to send OTP.");
+    }
+  };
+
+  // === OTP Verify Handler ===
+  const onVerifyOtp = async () => {
+    const otp = methods.getValues("otp");
+    if (!otp) {
+      alert("Please enter both email and OTP to verify.");
+      return;
+    }
+    try {
+      await handleVerifyOtp(otp);
+      alert("OTP verified successfully!");
+    } catch (err) {
+      console.error("OTP verification failed:", err);
+      alert("Invalid OTP. Please try again.");
+    }
+  };
+
+  // === Signup Handler ===
+  const onSubmit = async (data) => {
+    try {
+      if (!otpVerified) {
+        alert("Please verify your OTP before signing up.");
+        return;
+      }
+      await handleSignup(data);
+      navigate("/");
+      reset();
+      console.log("Sign UP User Data =>", data);
+    } catch (err) {
+      console.log("Sign UP User Data =>", data);
+      console.error("Error during signup:", err);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -45,6 +102,7 @@ const Signup = () => {
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {/* Full Name */}
               <Input
                 name="fullName"
                 label="Full Name"
@@ -58,20 +116,46 @@ const Signup = () => {
                 }}
               />
 
-              <Input
-                name="email"
-                label="College Email"
-                type="email"
-                placeholder="Enter your college mail"
-                rules={{
-                  required: "Please enter your college mail",
-                  pattern: {
-                    value: /^\S+@\S+\.\S+$/,
-                    message: "Please enter a valid email address",
-                  },
-                }}
-              />
+              {/* === Email with OTP Buttons === */}
+              <div className="flex flex-col">
+                <Input
+                  name="email"
+                  label="College Email"
+                  type="email"
+                  placeholder="Enter your college mail"
+                  rules={{
+                    required: "Please enter your college mail",
+                    pattern: {
+                      value: /^\S+@\S+\.\S+$/,
+                      message: "Please enter a valid email address",
+                    },
+                  }}
+                />
 
+                {/* SEND AND VERIFY OTP BUTTON */}
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onSendOtp}
+                    disabled={loading || otpSent}
+                  >
+                    {otpSent ? "OTP Sent" : "Send OTP"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onVerifyOtp}
+                    disabled={!otpSent || otpVerified}
+                  >
+                    {otpVerified ? "Verified" : "Verify OTP"}
+                  </Button>
+                </div>
+              </div>
+              {/* OTP  */}
               <Input
                 name="otp"
                 label="Verify OTP"
@@ -79,7 +163,7 @@ const Signup = () => {
                 placeholder="OTP"
                 rules={{ required: "OTP is required" }}
               />
-
+              {/* Mobile Number */}
               <Input
                 name="mobileNumber"
                 label="Enter your Mobile Number"
@@ -87,23 +171,23 @@ const Signup = () => {
                 placeholder="Mobile"
                 rules={{ required: "Mobile number is required" }}
               />
-
+              {/* Roll Number */}
               <Input
                 name="rollNumber"
                 label="Enter your Roll Number"
                 type="number"
-                placeholder="Roll "
+                placeholder="Roll"
                 rules={{ required: "Roll number is required" }}
               />
-
+              {/* DOB */}
               <Input
                 name="dob"
                 label="Enter your Birth Date"
                 type="date"
                 placeholder="DOB"
-                rules={{ required: "DOB number is required" }}
+                rules={{ required: "DOB is required" }}
               />
-
+              {/* Password */}
               <Input
                 name="password"
                 label="Password"
@@ -117,7 +201,7 @@ const Signup = () => {
                   },
                 }}
               />
-
+              {/* Confirm Password */}
               <Input
                 name="confirmPassword"
                 label="Confirm Password"
@@ -131,7 +215,7 @@ const Signup = () => {
               />
             </div>
 
-            {/* Select for User Role */}
+            {/* Role Select */}
             <div className="mt-6 mb-4 flex flex-col">
               <label
                 htmlFor="role"
@@ -160,15 +244,24 @@ const Signup = () => {
               )}
             </div>
 
+            {/* Submit Button */}
             <Button
               type="submit"
               variant="primary"
               size="md"
               round="md"
               className="w-full mt-6"
+              disabled={loading}
             >
-              Sign Up
+              {loading ? "Signing Up..." : "Sign Up"}
             </Button>
+
+            {error && <p className="text-center text-red-500 mt-3">{error}</p>}
+            {success && (
+              <p className="text-center text-green-600 mt-3">
+                Account created successfully!
+              </p>
+            )}
           </form>
         </FormProvider>
 

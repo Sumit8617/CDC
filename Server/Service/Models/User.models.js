@@ -14,7 +14,7 @@ try {
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    fullName: {
       type: String,
       required: [true, "Name is required"],
     },
@@ -59,9 +59,17 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    rollNumber: {
+      type: String,
+      required: true,
+    },
+    dob: {
+      type: String,
+      required: true,
+    },
     refreshToken: {
-      type : String
-    }
+      type: String,
+    },
   },
   { timestamps: true }
 );
