@@ -96,10 +96,7 @@ const leaderboardData = [
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = useState("global");
   const [searchTerm, setSearchTerm] = useState("");
-
-  const methods = useForm({
-    defaultValues: { search: "" },
-  });
+  const methods = useForm({ defaultValues: { search: "" } });
 
   const filteredUsers = leaderboardData.filter(
     (user) =>
@@ -176,10 +173,10 @@ const Leaderboard = () => {
           ))}
         </div>
 
+        {/* Updated Search + Filter Section */}
         <FormProvider {...methods}>
-          <Card className="p-4 sm:p-6 flex flex-col gap-4 rounded-2xl shadow-sm border">
-            {/* Header Title */}
-            <h2 className="text-xl font-bold text-gray-800 pb-2">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+            <h2 className="text-2xl font-bold text-gray-900">
               {activeTab === "global"
                 ? "Global Leaderboard"
                 : activeTab === "college"
@@ -187,22 +184,23 @@ const Leaderboard = () => {
                   : "Monthly Leaderboard"}
             </h2>
 
-            {/* Search + Filter Section */}
-            <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center w-full gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
-                <Input
-                  name="search"
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
                   placeholder="Search by name or college..."
-                  className="pl-10 w-full"
+                  value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2.5 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
               </div>
-              <Button variant="outline" className="rounded-lg shrink-0">
-                <Filter className="w-4 h-4 mr-2" /> Filter
-              </Button>
+              <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-amber-500 text-amber-500 rounded-lg hover:bg-amber-50 transition-all duration-200">
+                <Filter className="w-4 h-4" />
+                <span className="font-medium">Filter</span>
+              </button>
             </div>
-          </Card>
+          </div>
         </FormProvider>
 
         {/* Leaderboard Table */}
@@ -241,6 +239,33 @@ const Leaderboard = () => {
             </tbody>
           </table>
         </Card>
+
+        {/* Rank Summary Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card className="p-5 rounded-2xl shadow-sm border border-gray-100 bg-white">
+            <h3 className="text-gray-600 font-medium mb-2">Your Global Rank</h3>
+            <div className="text-4xl font-extrabold text-indigo-700">#145</div>
+            <div className="flex items-center gap-2 mt-1 text-green-600 text-sm font-medium">
+              <ArrowUp className="w-4 h-4" /> +12 from last week
+            </div>
+          </Card>
+
+          <Card className="p-5 rounded-2xl shadow-sm border border-gray-100 bg-white">
+            <h3 className="text-gray-600 font-medium mb-2">College Rank</h3>
+            <div className="text-4xl font-extrabold text-indigo-700">#8</div>
+            <div className="flex items-center gap-2 mt-1 text-green-600 text-sm font-medium">
+              <ArrowUp className="w-4 h-4" /> +2 from last week
+            </div>
+          </Card>
+
+          <Card className="p-5 rounded-2xl shadow-sm border border-gray-100 bg-white">
+            <h3 className="text-gray-600 font-medium mb-2">Month Rank</h3>
+            <div className="text-4xl font-extrabold text-indigo-700">#23</div>
+            <div className="flex items-center gap-2 mt-1 text-red-600 text-sm font-medium">
+              <ArrowDown className="w-4 h-4" /> -5 from last month
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

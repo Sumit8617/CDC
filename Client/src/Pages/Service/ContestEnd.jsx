@@ -6,7 +6,7 @@ const ContestEnd = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Optional: get reason from query string (e.g. /contest-ended?reason=fullscreen)
+  // get reason from query string (e.g. /contest-ended?reason=fullscreen)
   const params = new URLSearchParams(location.search);
   const reason = params.get("reason");
 

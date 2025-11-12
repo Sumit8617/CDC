@@ -45,7 +45,7 @@ const Contest = () => {
   const [timeLeft, setTimeLeft] = useState(20 * 60);
   const [finished, setFinished] = useState(false);
 
-  // 🚫 Prevent re-entry after contest ended
+  // Prevent re-entry after contest ended
   useEffect(() => {
     const ended = localStorage.getItem("contestEnded");
     if (ended === "true") {
@@ -99,7 +99,7 @@ const Contest = () => {
       document.removeEventListener("fullscreenchange", handleFsChange);
   }, [finished]);
 
-  // 📛 Detect tab switch
+  //  Detect tab switch
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && !finished) {
@@ -111,7 +111,7 @@ const Contest = () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [finished]);
 
-  // 🕵️ Detect DevTools open
+  //  Detect DevTools open
   useEffect(() => {
     const detectDevTools = () => {
       const threshold = 160;
@@ -126,7 +126,7 @@ const Contest = () => {
     return () => clearInterval(checkInterval);
   }, [finished]);
 
-  // 🚫 Disable right-click and F12, Ctrl+Shift+I/J/C/U
+  //  Disable right-click and F12, Ctrl+Shift+I/J/C/U
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
     const handleKeyDown = (e) => {
@@ -189,7 +189,7 @@ const Contest = () => {
           className="flex flex-col justify-center items-center"
           style={{ minHeight: "calc(100vh - 4rem)" }}
         >
-          {/* ✅ Question Dashboard Section */}
+          {/*  Question Dashboard Section */}
           <div className="w-full max-w-3xl flex flex-col items-center gap-4">
             <div className="my-5 flex flex-wrap gap-1.5 sm:gap-2 justify-center">
               {questionsData.map((q, idx) => (
