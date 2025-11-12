@@ -38,7 +38,7 @@ const Home = () => {
   // --- USER ---
   if (userRole === "user") {
     return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 text-gray-900">
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 text-gray-900 md:pl-64">
         <main className="flex-1 overflow-y-auto w-full">
           <UserDashboard />
         </main>

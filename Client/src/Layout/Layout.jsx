@@ -15,7 +15,7 @@ const Layout = ({ children }) => {
   ];
 
   // Define routes where we want a clean layout (no sidebar or footer)
-  const authRoutes = ["/login", "/signup"];
+  const authRoutes = ["/login", "/signup", "/forgot-password"];
 
   const isDashboardPage = dashboardRoutes.some((path) =>
     location.pathname.startsWith(path)

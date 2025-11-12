@@ -12,6 +12,7 @@ import {
   Signup,
   Login,
   ContestEnd,
+  ForgotPassword,
 } from "./Pages/index.js";
 
 const router = createBrowserRouter([
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
       {
         path: "/contest-ended",
         element: <ContestEnd />,
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />,
       },
     ],
   },

@@ -170,7 +170,7 @@ const Contest = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
+    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 md:pl-64">
       {/* Topbar */}
       <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-40">
         <div className="flex justify-between items-center py-3 sm:py-4 px-3 sm:px-6">

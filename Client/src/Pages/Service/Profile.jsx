@@ -106,7 +106,7 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 md:pl-64">
       {/* Header */}
       <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-50">
         <div className="flex justify-between items-center py-4 px-6 border-b border-gray-200">

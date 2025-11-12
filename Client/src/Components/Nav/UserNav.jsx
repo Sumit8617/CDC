@@ -37,23 +37,21 @@ const Sidebar = () => {
     setActive(item.name);
     setPopup(item.name);
     navigate(item.path);
-
-    setTimeout(() => {
-      setPopup(null);
-    }, 1500); // hide popup after 1.5s
+    setTimeout(() => setPopup(null), 1500);
   };
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Fixed Desktop Sidebar */}
       <Card
         variant="outlined"
-        className="hidden md:flex w-64 h-screen flex-col justify-between bg-white border-r-2 border-gray-600 p-4"
+        className="hidden md:flex fixed top-0 left-0 h-screen w-64 flex-col justify-between bg-white p-4 shadow-sm z-40 border-r border-gray-200"
         round="none"
+        height="screen"
       >
         {/* Top Section */}
         <div className="flex flex-col w-full">
-          <div className="flex flex-col mt-2.5 mb-10 border-b-2 border-gray-200 pb-3">
+          <div className="flex flex-col mt-2.5 mb-10 border-b border-gray-200 pb-3">
             <div className="flex items-center space-x-2 mb-1">
               <h1 className="text-xl font-semibold text-gray-900">
                 {import.meta.env.VITE_APP_NAME || "AptiQuest"}
@@ -62,25 +60,31 @@ const Sidebar = () => {
           </div>
 
           {/* Menu Items */}
-          <div className="space-y-6">
+          <div className="space-y-3">
             {menuItems.map((item) => (
               <Button
                 key={item.name}
                 variant={active === item.name ? "indigo" : "secondary"}
                 size="md"
                 round="md"
-                className="w-full justify-start gap-3 text-left"
-                onClick={() => setActive(item.name) || navigate(item.path)}
+                className={`w-full justify-start gap-3 text-left transition-all duration-200 ${
+                  active === item.name ? "ring-1 ring-indigo-200" : ""
+                }`}
+                onClick={() => {
+                  setActive(item.name);
+                  navigate(item.path);
+                }}
               >
                 {item.icon}
                 <span className="text-sm font-medium">{item.name}</span>
               </Button>
             ))}
           </div>
+          <hr className="mt-10" />
         </div>
 
         {/* Bottom Section (Logout Button) */}
-        <div className="border-t p-4 mt-4">
+        <div className="border-t border-gray-200 pt-4">
           <Button
             variant="danger"
             size="md"
@@ -94,7 +98,7 @@ const Sidebar = () => {
         </div>
       </Card>
 
-      {/* Mobile Bottom Nav */}
+      {/*  Mobile Bottom Nav (Already Fixed) */}
       <div className="md:hidden fixed z-50 bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 shadow-sm">
         {menuItems.map((item) => (
           <div key={item.name} className="relative flex flex-col items-center">
