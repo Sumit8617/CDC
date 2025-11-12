@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, Circle } from "lucide-react";
 import { Button } from "../../Components/index";
 
 const questionsData = [
@@ -14,115 +13,8 @@ const questionsData = [
     question: "Who wrote 'Hamlet'?",
     options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
   },
-  {
-    id: 4,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 5,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-
-  {
-    id: 6,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 7,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 8,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 9,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 10,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 11,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 12,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 13,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 14,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 15,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 16,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 17,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 18,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 19,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-  {
-    id: 20,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
 ];
 
-// Reusable Custom Radio Component
-const CustomRadio = ({ label, checked, onChange }) => (
-  <button
-    type="button"
-    onClick={onChange}
-    className={`flex items-center gap-2 border rounded-lg px-3 sm:px-4 py-2 text-left w-full transition text-sm sm:text-base ${
-      checked
-        ? "bg-blue-100 border-blue-500 text-blue-800"
-        : "bg-gray-50 border-gray-300 hover:bg-gray-100"
-    }`}
-  >
-    {checked ? (
-      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 shrink-0" />
-    ) : (
-      <Circle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 shrink-0" />
-    )}
-    <span>{label}</span>
-  </button>
-);
-
-// Question Card uses CustomRadio
 const QuestionCard = ({ question, selectedOption, setSelectedOption }) => (
   <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 w-full border-2 border-gray-200">
     <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
@@ -130,12 +22,18 @@ const QuestionCard = ({ question, selectedOption, setSelectedOption }) => (
     </h3>
     <div className="flex flex-col gap-3">
       {question.options.map((option, idx) => (
-        <CustomRadio
+        <button
           key={idx}
-          label={option}
-          checked={selectedOption[question.id] === option}
-          onChange={() => setSelectedOption(question.id, option)}
-        />
+          type="button"
+          onClick={() => setSelectedOption(question.id, option)}
+          className={`flex items-center gap-2 border rounded-lg px-3 sm:px-4 py-2 text-left w-full transition text-sm sm:text-base ${
+            selectedOption[question.id] === option
+              ? "bg-blue-100 border-blue-500 text-blue-800"
+              : "bg-gray-50 border-gray-300 hover:bg-gray-100"
+          }`}
+        >
+          {option}
+        </button>
       ))}
     </div>
   </div>
@@ -145,28 +43,116 @@ const Contest = () => {
   const [selectedOption, setSelectedOptionState] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20 * 60);
+  const [finished, setFinished] = useState(false);
 
-  // Timer countdown
+  // 🚫 Prevent re-entry after contest ended
   useEffect(() => {
-    const interval = setInterval(() => {
+    const ended = localStorage.getItem("contestEnded");
+    if (ended === "true") {
+      window.location.href = "/contest-ended?reason=already-finished";
+    }
+  }, []);
+
+  const finishContest = (reason) => {
+    if (finished) return;
+    setFinished(true);
+    localStorage.setItem("contestEnded", "true");
+    console.log("Contest ended:", reason);
+    console.log("User answers:", selectedOption);
+
+    if (document.exitFullscreen) document.exitFullscreen();
+    window.location.href = `/contest-ended?reason=${encodeURIComponent(reason)}`;
+  };
+
+  // Countdown Timer
+  useEffect(() => {
+    if (finished) return;
+    const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearInterval(interval);
-          alert("Time is up! Submitting your answers...");
-          handleSubmit();
+        if (prev <= 1) {
+          clearInterval(timer);
+          finishContest("Time up");
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
+    return () => clearInterval(timer);
+  }, [finished]);
 
-    return () => clearInterval(interval);
-  }, []);
+  // Force fullscreen & auto-end if exited
+  useEffect(() => {
+    const enterFullscreen = async () => {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) await elem.requestFullscreen();
+    };
+    enterFullscreen();
+
+    const handleFsChange = () => {
+      if (!document.fullscreenElement && !finished) {
+        finishContest("User exited fullscreen");
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFsChange);
+  }, [finished]);
+
+  // 📛 Detect tab switch
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && !finished) {
+        finishContest("User switched tab");
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [finished]);
+
+  // 🕵️ Detect DevTools open
+  useEffect(() => {
+    const detectDevTools = () => {
+      const threshold = 160;
+      if (
+        window.outerWidth - window.innerWidth > threshold ||
+        window.outerHeight - window.innerHeight > threshold
+      ) {
+        finishContest("Developer tools opened");
+      }
+    };
+    const checkInterval = setInterval(detectDevTools, 1000);
+    return () => clearInterval(checkInterval);
+  }, [finished]);
+
+  // 🚫 Disable right-click and F12, Ctrl+Shift+I/J/C/U
+  useEffect(() => {
+    const handleContextMenu = (e) => e.preventDefault();
+    const handleKeyDown = (e) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
+        (e.ctrlKey && e.key === "U")
+      ) {
+        e.preventDefault();
+        finishContest("Attempted to open DevTools");
+      }
+    };
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [finished]);
 
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
     const sec = seconds % 60;
-    return `${min.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+    return `${min.toString().padStart(2, "0")}:${sec
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const setSelectedOption = (questionId, option) => {
@@ -180,8 +166,7 @@ const Contest = () => {
     currentQuestion > 0 && setCurrentQuestion(currentQuestion - 1);
 
   const handleSubmit = () => {
-    console.log("Selected Answers:", selectedOption);
-    alert("Answers submitted!");
+    finishContest("User submitted manually");
   };
 
   return (
@@ -189,12 +174,9 @@ const Contest = () => {
       {/* Topbar */}
       <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-40">
         <div className="flex justify-between items-center py-3 sm:py-4 px-3 sm:px-6">
-          {/* Title */}
           <h1 className="text-lg sm:text-2xl font-bold text-gray-800 shrink">
             Contest NO. 1
           </h1>
-
-          {/* Timer */}
           <div className="bg-gray-100 font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-sm sm:text-base text-red-600 text-center shrink-0">
             Remaining Time {formatTime(timeLeft)}
           </div>
@@ -207,22 +189,21 @@ const Contest = () => {
           className="flex flex-col justify-center items-center"
           style={{ minHeight: "calc(100vh - 4rem)" }}
         >
+          {/* ✅ Question Dashboard Section */}
           <div className="w-full max-w-3xl flex flex-col items-center gap-4">
-            {/* Question Dashboard */}
-            <div className="my-5 flex flex-wrap gap-1.5 sm:gap-2">
+            <div className="my-5 flex flex-wrap gap-1.5 sm:gap-2 justify-center">
               {questionsData.map((q, idx) => (
                 <div
                   key={q.id}
                   onClick={() => setCurrentQuestion(idx)}
                   className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full border text-xs sm:text-sm cursor-pointer transition-all duration-200
-        ${
-          currentQuestion === idx
-            ? "bg-blue-500 border-blue-700 text-white" // Highlight current question
-            : selectedOption[q.id]
-              ? "bg-green-500 border-green-700 text-white" // Answered question
-              : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200" // Default
-        }
-      `}
+                    ${
+                      currentQuestion === idx
+                        ? "bg-blue-500 border-blue-700 text-white"
+                        : selectedOption[q.id]
+                          ? "bg-green-500 border-green-700 text-white"
+                          : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200"
+                    }`}
                 >
                   {q.id}
                 </div>
@@ -238,7 +219,7 @@ const Contest = () => {
           />
 
           {/* Pagination Buttons */}
-          <div className="mt-4 sm:mt-6 flex justify-between w-full gap-2 sm:gap-0">
+          <div className="mt-4 sm:mt-6 flex justify-between w-full gap-2 sm:gap-0 max-w-3xl">
             <Button
               variant="secondary"
               onClick={handlePrevious}

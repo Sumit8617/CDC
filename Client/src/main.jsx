@@ -11,6 +11,7 @@ import {
   Profile,
   Signup,
   Login,
+  ContestEnd,
 } from "./Pages/index.js";
 
 const router = createBrowserRouter([
@@ -45,6 +46,10 @@ const router = createBrowserRouter([
       {
         path: "/signup",
         element: <Signup />,
+      },
+      {
+        path: "/contest-ended",
+        element: <ContestEnd />,
       },
     ],
   },
