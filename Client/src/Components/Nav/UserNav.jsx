@@ -51,7 +51,7 @@ const Sidebar = () => {
       >
         {/* Top Section */}
         <div className="flex flex-col w-full">
-          <div className="flex flex-col mt-2.5 mb-10 border-b border-gray-200 pb-3">
+          <div className="flex flex-col mt-1 mb-10 border-b border-gray-200 pb-3">
             <div className="flex items-center space-x-2 mb-1">
               <h1 className="text-xl font-semibold text-gray-900">
                 {import.meta.env.VITE_APP_NAME || "AptiQuest"}

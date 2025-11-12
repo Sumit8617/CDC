@@ -14,7 +14,7 @@ const Home = () => {
 
   // Simulate fetching user role from localStorage (or auth context)
   useEffect(() => {
-    const role = "user";
+    const role = "admin";
     setUserRole(role);
   }, []);
 

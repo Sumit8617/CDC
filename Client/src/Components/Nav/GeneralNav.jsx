@@ -5,7 +5,7 @@ const GeneralNav = () => {
   const [role, setRole] = useState(null);
 
   useEffect(() => {
-    const storedRole = "user";
+    const storedRole = "admin";
     setRole(storedRole);
   }, []);
 

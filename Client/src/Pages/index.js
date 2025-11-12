@@ -7,6 +7,13 @@ import Signup from "./Service/Signup";
 import Login from "./Service/Login";
 import ContestEnd from "./Service/ContestEnd";
 import ForgotPassword from "./Service/ForgotPassword";
+import AdminDashboard from "./Admin/AdminDashboard";
+import CreateContest from "./Admin/CreateContest";
+import ManageContest from "./Admin/ManageContest";
+import ManageUsers from "./Admin/UserData";
+import AdminAnalytics from "./Admin/Analytics";
+import AdminProfile from "./Admin/AdminProfile";
+import AdminSettings from "./Admin/AdminSettings";
 
 export {
   Home,
@@ -18,4 +25,11 @@ export {
   Login,
   ContestEnd,
   ForgotPassword,
+  AdminDashboard,
+  CreateContest,
+  ManageContest,
+  ManageUsers,
+  AdminAnalytics,
+  AdminProfile,
+  AdminSettings,
 };

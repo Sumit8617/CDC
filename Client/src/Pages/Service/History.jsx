@@ -95,7 +95,7 @@ const History = () => {
   return (
     <div className="min-h-screen bg-gray-50 md:pl-64">
       {/* Topbar */}
-      <div className="fixed top-0 left-0 md:left-64 right-0 pt-2.5 bg-white shadow-md z-50">
+      <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-50">
         <div className="flex justify-between items-center py-3 sm:py-4 px-4 sm:px-6 border-b border-gray-200">
           <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
             Contest History

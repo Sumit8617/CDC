@@ -13,6 +13,13 @@ import {
   Login,
   ContestEnd,
   ForgotPassword,
+  AdminDashboard,
+  CreateContest,
+  ManageContest,
+  ManageUsers,
+  AdminAnalytics,
+  AdminProfile,
+  AdminSettings,
 } from "./Pages/index.js";
 
 const router = createBrowserRouter([
@@ -55,6 +62,34 @@ const router = createBrowserRouter([
       {
         path: "/forgot-password",
         element: <ForgotPassword />,
+      },
+      {
+        path: "/admin/dashboard",
+        element: <AdminDashboard />,
+      },
+      {
+        path: "/admin/create-contest",
+        element: <CreateContest />,
+      },
+      {
+        path: "/admin/manage-contests",
+        element: <ManageContest />,
+      },
+      {
+        path: "/admin/manageusers",
+        element: <ManageUsers />,
+      },
+      {
+        path: "/admin/analytics",
+        element: <AdminAnalytics />,
+      },
+      {
+        path: "/admin/profile",
+        element: <AdminProfile />,
+      },
+      {
+        path: "/admin/settings",
+        element: <AdminSettings />,
       },
     ],
   },
