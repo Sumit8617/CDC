@@ -3,8 +3,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { aj } from "./lib/arcjet.js";
 import authRoutes from "./Service/Routes/Auth.routes.js";
-import quizRoutes from "./Service/Routes/Quiz.routes.js";
-import resultRoutes from "./Service/Routes/Result.routes.js";
+// import quizRoutes from "./Service/Routes/Quiz.routes.js";
+// import resultRoutes from "./Service/Routes/Result.routes.js";
 import adminRouter from "./Admin/Routes/CreateTest.routes.js";
 
 const app = express();
@@ -46,8 +46,8 @@ app.use("/api", async (req, res, next) => {
 });
 
 app.use("/api/v1/user", authRoutes);
-app.use("/api/v1/quiz", quizRoutes);
-app.use("/api/v1/result", resultRoutes);
+// app.use("/api/v1/quiz", quizRoutes);
+// app.use("/api/v1/result", resultRoutes);
 app.use("/api/v1/admin", adminRouter);
 
 export { app };

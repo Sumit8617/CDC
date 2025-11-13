@@ -9,7 +9,9 @@ const questionSchema = new mongoose.Schema({
         type: [String],
         validate: [arr => arr.length === 4, "Must have exactly 4 options"],
         required: true,
+        set: arr => arr.map(opt => opt.trim())
     },
+    
     correctOption: {
         type: Number,
         required: true,

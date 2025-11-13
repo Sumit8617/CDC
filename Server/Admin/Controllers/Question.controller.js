@@ -4,16 +4,16 @@ import { Question } from "../Models/Question.model.js";
 import { User } from "../../Service/Models/User.models.js";
 
 export const checkingCorrectness = asynchandler(async (req, res) => {
-  const { submitedOption, question, userId } = req.body;
+  const { submittedOption, question } = req.body;
 
   // Validate input
-  if (submitedOption === undefined || !question) {
-    throw new APIERR(400, "Please provide both submitedOption and question ID");
+  if (submittedOption === undefined || !question) {
+    throw new APIERR(400, "Please provide both submittedOption and question ID");
   }
 
  
   const submission = await SubmittedOption.create({
-    submitedOption,
+    submittedOption,
     question,
   });
 
@@ -25,7 +25,7 @@ export const checkingCorrectness = asynchandler(async (req, res) => {
 
   // Compare user's answer with the correct one
   const isCorrect =
-    Number(submitedOption) === Number(fetchedQuestion.correctOption);
+    Number(submittedOption) === Number(fetchedQuestion.correctOption);
   const score = isCorrect ? 5 : 0;
   let updatedScore = 0;
   if (isCorrect) {
