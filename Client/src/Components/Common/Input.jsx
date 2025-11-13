@@ -19,7 +19,10 @@ const Input = ({
   return (
     <div className="flex flex-col gap-1 mb-4">
       {label && (
-        <label htmlFor={name} className="text-sm font-medium text-gray-700">
+        <label
+          htmlFor={name}
+          className={`text-sm font-medium text-gray-700 ${className}`}
+        >
           {label}
         </label>
       )}

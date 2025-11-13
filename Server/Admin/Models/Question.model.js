@@ -13,11 +13,6 @@ const questionSchema = new mongoose.Schema({
     correctOption: {
         type: Number,
         required: true,
-    },
-    test: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'test',
-        required: true,
-    },
+    }
 }, { timestamps: true });
 export const Question = mongoose.model('Question', questionSchema);

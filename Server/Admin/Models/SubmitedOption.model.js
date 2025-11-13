@@ -5,13 +5,13 @@ const submitedOptionSchema = new mongoose.Schema({
         type : Number,
     },
     question : {
-        type : mongoose.Schema.Type.ObjectId,
+        type : mongoose.Schema.Types.ObjectId,
         ref : "Question",
     },
     createdAt : {
         type : Date,
         default : Date.now(),
-        expires : 60 * 60 * 5000 
+        expires : 60 * 60 * 5 
     },
 }, {timestamps : true}) ;
 
