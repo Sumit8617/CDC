@@ -1,5 +1,15 @@
+// src/lib/authSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+
+const extractUser = (payload) => {
+  if (!payload) return null;
+  if (payload.user) return payload.user;
+  if (payload.data && payload.data.user) return payload.data.user;
+  // fallback: if payload already looks like a user object (has role or email)
+  if (payload.role || payload.email || payload.fullName) return payload;
+  return null;
+};
 
 //  Send OTP API
 export const sendOtp = createAsyncThunk(
@@ -61,10 +71,19 @@ export const signupUser = createAsyncThunk(
   }
 );
 
+const initialUser = (() => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+})();
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    user: null,
+    user: initialUser,
     loading: false,
     error: null,
     success: false,
@@ -77,6 +96,30 @@ const authSlice = createSlice({
       state.success = false;
       state.otpSent = false;
       state.otpVerified = false;
+    },
+    // useful for login or restoring user from token
+    setUser: (state, action) => {
+      state.user = action.payload;
+      try {
+        if (action.payload)
+          localStorage.setItem("user", JSON.stringify(action.payload));
+        else localStorage.removeItem("user");
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    logout: (state) => {
+      state.user = null;
+      state.loading = false;
+      state.error = null;
+      state.success = false;
+      state.otpSent = false;
+      state.otpVerified = false;
+      try {
+        localStorage.removeItem("user");
+      } catch (e) {
+        console.error(e);
+      }
     },
   },
   extraReducers: (builder) => {
@@ -119,8 +162,22 @@ const authSlice = createSlice({
       })
       .addCase(signupUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
         state.success = true;
+
+        // Extract user from payload (be defensive)
+        const user = extractUser(action.payload);
+
+        if (user) {
+          state.user = user;
+          try {
+            localStorage.setItem("user", JSON.stringify(user));
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          // If backend didn't return user, keep user null but still success
+          state.user = null;
+        }
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;
@@ -129,5 +186,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearAuthState } = authSlice.actions;
+export const { clearAuthState, setUser, logout } = authSlice.actions;
 export default authSlice.reducer;

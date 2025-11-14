@@ -7,7 +7,6 @@ const Layout = ({ children }) => {
 
   // Define routes where the sidebar (and footer) should be visible
   const dashboardRoutes = [
-    "/",
     "/contests",
     "/leaderboard",
     "/profile",

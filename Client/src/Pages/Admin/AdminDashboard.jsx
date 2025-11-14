@@ -1,4 +1,5 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import { Card, Button } from "../../Components/index";
 import {
   Trophy,
@@ -11,6 +12,22 @@ import {
 } from "lucide-react";
 
 const AdminDashboard = () => {
+  const { user } = useSelector((state) => state.auth);
+
+  // Prevent crash if user loading
+  if (!user) return null;
+
+  // Protect route
+  if (user.role !== "admin") {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <p className="text-red-500 font-semibold text-lg">
+          Access Denied – Admins Only
+        </p>
+      </div>
+    );
+  }
+
   const stats = [
     {
       title: "Active Contests",

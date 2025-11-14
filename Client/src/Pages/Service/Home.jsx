@@ -1,36 +1,30 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "motion/react";
+import { useSelector } from "react-redux";
+
 import {
   HeroSection,
   HowItWorks,
   Testimonials,
   UserDashboard,
   Sidebar,
+  Footer,
 } from "../../Components/index";
+import { AdminDashboard } from "../index";
 
 const Home = () => {
-  const [userRole, setUserRole] = useState("user");
+  const { user } = useSelector((state) => state.auth);
 
-  // Simulate fetching user role from localStorage (or auth context)
-  useEffect(() => {
-    const role = "user";
-    setUserRole(role);
-  }, []);
-
-  if (!userRole) return null;
+  const userRole = user?.role || "public";
 
   // --- ADMIN ---
   if (userRole === "admin") {
     return (
-      <div className="flex min-h-screen bg-gray-50 text-gray-900">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <h1 className="text-2xl font-semibold mb-4">Admin Dashboard</h1>
-          <p className="text-gray-600">
-            Welcome, Admin! Manage contests, users, and settings here.
-          </p>
-        </div>
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 text-gray-900 md:pl-64">
+        <main className="flex-1 overflow-y-auto w-full">
+          <AdminDashboard />
+        </main>
       </div>
     );
   }
@@ -46,7 +40,8 @@ const Home = () => {
     );
   }
 
-  // --- PUBLIC (Viewer / Not Logged In) ---
+  // --- PUBLIC (not logged in) ---
+  // --- PUBLIC (not logged in) ---
   return (
     <div className="overflow-hidden">
       {/* Hero Section */}

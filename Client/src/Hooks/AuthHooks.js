@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { signupUser, sendOtp, verifyOtp } from "../lib/AuthSlice"; // <-- imported both new thunks
+import { signupUser, sendOtp, verifyOtp } from "../lib/AuthSlice";
 import { useCallback } from "react";
 
 const useSignup = () => {

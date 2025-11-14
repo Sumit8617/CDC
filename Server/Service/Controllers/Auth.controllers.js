@@ -61,7 +61,7 @@ const signup = asynchandler(async (req, res) => {
     dob,
   });
 
-  const createdUser = await User.find({ mobileNumber }).select(
+  const createdUser = await User.findOne({ mobileNumber }).select(
     "-password -refreshToken"
   );
 
@@ -77,7 +77,7 @@ const signup = asynchandler(async (req, res) => {
   const templateId = process.env.EMAILJS_WELCOME_MESSAGE_TEMPLATE_ID;
 
   const templateData = {
-    name : fullName,
+    name: fullName,
     email,
     appLink: ``,
     supportLink: ``,
@@ -94,7 +94,9 @@ const signup = asynchandler(async (req, res) => {
   // Final Response
   res
     .status(200)
-    .json(new APIRES(200, createdUser, "Successfully Create the User"));
+    .json(
+      new APIRES(200, { user: createUser }, "Successfully Create the User")
+    );
 });
 
 const login = asynchandler(async (req, res) => {
