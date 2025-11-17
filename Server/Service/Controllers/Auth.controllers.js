@@ -128,12 +128,24 @@ const login = asynchandler(async (req, res) => {
   res.status(200).json(new APIRES(200, "Successfully logged in"));
 });
 
-const logout = asynchandler(async (res) => {
-  res.cookie("refreshToken", "", {
+const logout = asynchandler(async (req, res) => {
+  res.cookie("refreshToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
     maxAge: 0,
   });
-  res.status(200).json(new APIRES(200, "Successfully log out"));
+
+  res.cookie("accessToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    maxAge: 0,
+  });
+
+  return res.status(200).json(new APIRES(200, "Successfully logged out"));
 });
+
 
 // TODO: Convert to working phase
 const updateProfile = async (req, res) => {
