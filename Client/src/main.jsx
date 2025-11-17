@@ -55,19 +55,19 @@ const router = createBrowserRouter([
         element: <UserProtectedRoute />,
         children: [
           {
-            path: "/dashboard",
+            path: "dashboard",
             element: <UserDashboard />,
           },
           {
-            path: "/contests",
+            path: "contests",
             element: <Contest />,
           },
           {
-            path: "/contest-history",
+            path: "contest-history",
             element: <History />,
           },
           {
-            path: "/leaderboard",
+            path: "leaderboard",
             element: <Leaderboard />,
           },
           {
@@ -75,11 +75,11 @@ const router = createBrowserRouter([
             element: <Profile />,
           },
           {
-            path: "/contest-ended",
+            path: "contest-ended",
             element: <ContestEnd />,
           },
           {
-            path: "/forgot-password",
+            path: "forgot-password",
             element: <ForgotPassword />,
           },
         ],
@@ -88,31 +88,31 @@ const router = createBrowserRouter([
         element: <AdminProtectedRoute />,
         children: [
           {
-            path: "/admin/dashboard",
+            path: "admin/dashboard",
             element: <AdminDashboard />,
           },
           {
-            path: "/admin/create-contest",
+            path: "admin/create-contest",
             element: <CreateContest />,
           },
           {
-            path: "/admin/manage-contests",
+            path: "admin/manage-contests",
             element: <ManageContest />,
           },
           {
-            path: "/admin/manageusers",
+            path: "admin/manageusers",
             element: <ManageUsers />,
           },
           {
-            path: "/admin/analytics",
+            path: "admin/analytics",
             element: <AdminAnalytics />,
           },
           {
-            path: "/admin/profile",
+            path: "admin/profile",
             element: <AdminProfile />,
           },
           {
-            path: "/admin/settings",
+            path: "admin/settings",
             element: <AdminSettings />,
           },
         ],

@@ -2,11 +2,14 @@ import React, { useState } from "react";
 import { Home, Trophy, History, Zap, User, LogOut } from "lucide-react";
 import { Button, Card } from "../index";
 import { useNavigate } from "react-router-dom";
+import useLogin from "../../Hooks/LoginHook";
 
 const Sidebar = () => {
   const [active, setActive] = useState("Home");
   const [popup, setPopup] = useState(null);
   const navigate = useNavigate();
+
+  const { handleLogout } = useLogin();
 
   const menuItems = [
     { name: "Home", icon: <Home className="w-5 h-5" />, path: "/" },
@@ -28,8 +31,9 @@ const Sidebar = () => {
     { name: "Profile", icon: <User className="w-5 h-5" />, path: "/profile" },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
+  // Handel Logout
+  const handleLogoutClick = async () => {
+    await handleLogout();
     navigate("/login");
   };
 
@@ -90,7 +94,7 @@ const Sidebar = () => {
             size="md"
             round="md"
             className="w-full justify-start gap-3"
-            onClick={handleLogout}
+            onClick={handleLogoutClick} // 🔥 updated
           >
             <LogOut className="w-5 h-5" />
             <span className="text-sm font-medium">Logout</span>
@@ -98,7 +102,7 @@ const Sidebar = () => {
         </div>
       </Card>
 
-      {/*  Mobile Bottom Nav (Already Fixed) */}
+      {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed z-50 bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 shadow-sm">
         {menuItems.map((item) => (
           <div key={item.name} className="relative flex flex-col items-center">
@@ -123,13 +127,12 @@ const Sidebar = () => {
         {/* Logout Icon */}
         <div className="relative flex flex-col items-center">
           <button
-            onClick={handleLogout}
+            onClick={handleLogoutClick} // 🔥 updated
             className="flex flex-col items-center justify-center text-gray-600 hover:text-red-600"
           >
             <LogOut className="w-5 h-5" />
           </button>
 
-          {/* Popup label for logout */}
           {popup === "Logout" && (
             <span className="absolute -top-7 bg-red-600 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-md animate-fadeIn">
               Logout

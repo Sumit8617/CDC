@@ -46,8 +46,6 @@ app.use("/api", async (req, res, next) => {
 });
 
 app.use("/api/v1/user", authRoutes);
-// app.use("/api/v1/quiz", quizRoutes);
-// app.use("/api/v1/result", resultRoutes);
 app.use("/api/v1/admin", adminRouter);
 
 export { app };

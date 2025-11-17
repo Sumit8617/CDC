@@ -5,12 +5,11 @@ const extractUser = (payload) => {
   if (!payload) return null;
   if (payload.user) return payload.user;
   if (payload.data && payload.data.user) return payload.data.user;
-  // fallback: if payload already looks like a user object (has role or email)
   if (payload.role || payload.email || payload.fullName) return payload;
   return null;
 };
 
-//  Send OTP API
+//  SEND OTP 
 export const sendOtp = createAsyncThunk(
   "auth/sendOtp",
   async ({ fullName, email }, thunkAPI) => {
@@ -31,7 +30,7 @@ export const sendOtp = createAsyncThunk(
   }
 );
 
-// Verify OTP API
+// VERIFY OTP
 export const verifyOtp = createAsyncThunk(
   "auth/verifyOtp",
   async ({ otp }, thunkAPI) => {
@@ -51,7 +50,7 @@ export const verifyOtp = createAsyncThunk(
   }
 );
 
-//  Signup API
+// SIGNUP
 export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async (userData, { rejectWithValue }) => {
@@ -70,6 +69,7 @@ export const signupUser = createAsyncThunk(
   }
 );
 
+// LOGIN 
 export const login = createAsyncThunk(
   "auth/login",
   async (userData, { rejectWithValue }) => {
@@ -89,6 +89,26 @@ export const login = createAsyncThunk(
   }
 );
 
+// LOGOUT
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/logout`,
+        {},
+        { withCredentials: true }
+      );
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Logout failed. Try again."
+      );
+    }
+  }
+);
+
+// INITIAL USER 
 const initialUser = (() => {
   try {
     const raw = localStorage.getItem("user");
@@ -98,6 +118,7 @@ const initialUser = (() => {
   }
 })();
 
+//  SLICE 
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -108,6 +129,7 @@ const authSlice = createSlice({
     otpSent: false,
     otpVerified: false,
   },
+
   reducers: {
     clearAuthState: (state) => {
       state.error = null;
@@ -115,7 +137,7 @@ const authSlice = createSlice({
       state.otpSent = false;
       state.otpVerified = false;
     },
-    // useful for login or restoring user from token
+
     setUser: (state, action) => {
       state.user = action.payload;
       try {
@@ -126,6 +148,7 @@ const authSlice = createSlice({
         console.error(e);
       }
     },
+
     logout: (state) => {
       state.user = null;
       state.loading = false;
@@ -140,9 +163,10 @@ const authSlice = createSlice({
       }
     },
   },
+
   extraReducers: (builder) => {
     builder
-      // === SEND OTP ===
+      // SEND OTP 
       .addCase(sendOtp.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -157,7 +181,7 @@ const authSlice = createSlice({
         state.otpSent = false;
       })
 
-      // === VERIFY OTP ===
+      //  Verify OTP
       .addCase(verifyOtp.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -172,7 +196,7 @@ const authSlice = createSlice({
         state.otpVerified = false;
       })
 
-      // === SIGNUP ===
+      //  Signup
       .addCase(signupUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -182,7 +206,6 @@ const authSlice = createSlice({
         state.loading = false;
         state.success = true;
 
-        // Extract user from payload (be defensive)
         const user = extractUser(action.payload);
 
         if (user) {
@@ -193,11 +216,59 @@ const authSlice = createSlice({
             console.error(e);
           }
         } else {
-          // If backend didn't return user, keep user null but still success
           state.user = null;
         }
       })
       .addCase(signupUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Login
+      .addCase(login.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const user = extractUser(action.payload);
+
+        if (user) {
+          state.user = user;
+          try {
+            localStorage.setItem("user", JSON.stringify(user));
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          state.user = null;
+        }
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Logout
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.success = false;
+        state.otpSent = false;
+        state.otpVerified = false;
+
+        try {
+          localStorage.removeItem("user");
+        } catch (e) {
+          console.error(e);
+        }
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

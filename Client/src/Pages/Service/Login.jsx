@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Button, Input } from "../../Components/index";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { login } from "../../lib/AuthSlice";
+import { useSelector } from "react-redux";
+import useLogin from "../../Hooks/LoginHook";
 
 const Login = () => {
   const methods = useForm({
@@ -16,22 +16,29 @@ const Login = () => {
   const { handleSubmit, reset, setError } = methods;
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const { handleLogin, loading } = useLogin();
 
-  const { loading } = useSelector((state) => state.auth);
+  // Get user from Redux
+  const { user } = useSelector((state) => state.auth);
 
-  const onSubmit = async (data) => {
-    const result = await dispatch(login(data));
+  // Redirect when redux user updated
+  useEffect(() => {
+    if (!user) return;
 
-    if (login.fulfilled.match(result)) {
-      navigate("/");
-      reset();
+    if (user.role === "user") {
+      navigate("/dashboard");
     }
+  }, [user, navigate]);
 
-    if (login.rejected.match(result)) {
+  // Submit Handler
+  const onSubmit = async (data) => {
+    try {
+      await handleLogin(data);
+      reset();
+    } catch (err) {
       setError("password", {
         type: "server",
-        message: result.payload || "Invalid credentials",
+        message: err || "Invalid credentials",
       });
     }
   };
@@ -87,6 +94,7 @@ const Login = () => {
             </Button>
           </form>
         </FormProvider>
+
         <p
           className="mt-5 text-blue-600 hover:underline font-medium hover:cursor-pointer text-center"
           onClick={() => navigate("/forgot-password")}

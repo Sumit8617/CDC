@@ -9,14 +9,14 @@ const useSignup = () => {
     (state) => state.auth
   );
 
-  // ===== Signup handler =====
+  // Signup 
   const handleSignup = useCallback(
     async (data) => {
       try {
         const result = await dispatch(signupUser(data)).unwrap();
         return result;
       } catch (err) {
-        console.log("Coming from Auth Hook", data)
+        console.log("Coming from Auth Hook", data);
         console.error("Signup failed:", err);
         throw err;
       }
@@ -24,7 +24,7 @@ const useSignup = () => {
     [dispatch]
   );
 
-  // ===== Send OTP handler =====
+  // Send OTP
   const handleSendOtp = useCallback(
     async ({ fullName, email }) => {
       if (!fullName || !email) {
@@ -44,7 +44,7 @@ const useSignup = () => {
     [dispatch]
   );
 
-  // ===== Verify OTP handler =====
+  // Verify OTP
   const handleVerifyOtp = useCallback(
     async (otp) => {
       try {
@@ -57,6 +57,7 @@ const useSignup = () => {
     },
     [dispatch]
   );
+
 
   return {
     handleSignup,
