@@ -24,6 +24,11 @@ import {
   AdminLogin,
 } from "./Pages/index.js";
 import { store } from "./Store/Store.js";
+import {
+  UserProtectedRoute,
+  AdminProtectedRoute,
+} from "./Components/Common/Procted.jsx";
+import { UserDashboard } from "./Components/index.js";
 
 const router = createBrowserRouter([
   {
@@ -35,20 +40,8 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/contests",
-        element: <Contest />,
-      },
-      {
-        path: "/contest-history",
-        element: <History />,
-      },
-      {
-        path: "/leaderboard",
-        element: <Leaderboard />,
-      },
-      {
-        path: "profile",
-        element: <Profile />,
+        path: "/admin/login",
+        element: <AdminLogin />,
       },
       {
         path: "/login",
@@ -59,44 +52,70 @@ const router = createBrowserRouter([
         element: <Signup />,
       },
       {
-        path: "/contest-ended",
-        element: <ContestEnd />,
+        element: <UserProtectedRoute />,
+        children: [
+          {
+            path: "/dashboard",
+            element: <UserDashboard />,
+          },
+          {
+            path: "/contests",
+            element: <Contest />,
+          },
+          {
+            path: "/contest-history",
+            element: <History />,
+          },
+          {
+            path: "/leaderboard",
+            element: <Leaderboard />,
+          },
+          {
+            path: "profile",
+            element: <Profile />,
+          },
+          {
+            path: "/contest-ended",
+            element: <ContestEnd />,
+          },
+          {
+            path: "/forgot-password",
+            element: <ForgotPassword />,
+          },
+        ],
       },
       {
-        path: "/forgot-password",
-        element: <ForgotPassword />,
-      },
-      {
-        path: "/admin/dashboard",
-        element: <AdminDashboard />,
-      },
-      {
-        path: "/admin/create-contest",
-        element: <CreateContest />,
-      },
-      {
-        path: "/admin/manage-contests",
-        element: <ManageContest />,
-      },
-      {
-        path: "/admin/manageusers",
-        element: <ManageUsers />,
-      },
-      {
-        path: "/admin/analytics",
-        element: <AdminAnalytics />,
-      },
-      {
-        path: "/admin/profile",
-        element: <AdminProfile />,
-      },
-      {
-        path: "/admin/settings",
-        element: <AdminSettings />,
-      },
-      {
-        path: "/admin/login",
-        element: <AdminLogin />,
+        element: <AdminProtectedRoute />,
+        children: [
+          {
+            path: "/admin/dashboard",
+            element: <AdminDashboard />,
+          },
+          {
+            path: "/admin/create-contest",
+            element: <CreateContest />,
+          },
+          {
+            path: "/admin/manage-contests",
+            element: <ManageContest />,
+          },
+          {
+            path: "/admin/manageusers",
+            element: <ManageUsers />,
+          },
+          {
+            path: "/admin/analytics",
+            element: <AdminAnalytics />,
+          },
+          {
+            path: "/admin/profile",
+            element: <AdminProfile />,
+          },
+          {
+            path: "/admin/settings",
+            element: <AdminSettings />,
+          },
+        ],
       },
     ],
   },
@@ -104,8 +123,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-      <Provider store={store}>
-        <RouterProvider router={router} />
-      </Provider>
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>
 );

@@ -67,7 +67,7 @@ const UserDashboard = ({ userName = "Subhas" }) => {
     <div
       className="
         flex-1 w-full 
-        px-3 sm:px-6 lg:px-8 xl:px-10 
+        px-3 sm:px-6 xl:px-10 
         pb-20 sm:pb-16 pb-safe 
         overflow-y-auto 
         bg-gray-50

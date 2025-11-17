@@ -1,4 +1,3 @@
-// src/lib/authSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -66,6 +65,25 @@ export const signupUser = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Signup failed. Try again."
+      );
+    }
+  }
+);
+
+export const login = createAsyncThunk(
+  "auth/login",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/login`,
+        userData,
+        { withCredentials: true }
+      );
+      return res.data;
+    } catch (error) {
+      console.error("ERR While Login", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Login Failed. Try again"
       );
     }
   }

@@ -1,20 +1,3 @@
-/* import { APIERR, APIRES, asynchandler } from "../../Utils/index.utils.js"
-import {Test} from '../Models/Test.model.js'
-
-export const createTest = asynchandler(async (req, res) => {
-    const { testName, desctiption, duration, questions } = req.body;
-    console.log(testName, questions);
-    const newTest = await Test.create({
-        testName,
-        desctiption,
-        duration,
-        questions,
-    });
-    return res.APIRES(201,newTest, "Test Created Successfully") ;
-})  ;
- */
-
-
 import { asynchandler, APIERR, APIRES } from "../../Utils/index.utils.js";
 import { Test } from "../Models/Test.model.js";
 import { Question } from "../Models/Question.model.js";

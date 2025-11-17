@@ -1,30 +1,31 @@
 /* eslint-disable no-unused-vars */
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "motion/react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-import {
-  HeroSection,
-  HowItWorks,
-  Testimonials,
-  UserDashboard,
-  Sidebar,
-  Footer,
-} from "../../Components/index";
-import { AdminDashboard } from "../index";
+import { HeroSection, HowItWorks, Testimonials } from "../../Components/index";
 
 const Home = () => {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
   const userRole = user?.role || "public";
 
+  // Redirect Handeler
+  useEffect(() => {
+    if (userRole === "admin") {
+      navigate("/admin/dashboard");
+    } else if (userRole === "user") {
+      navigate("/dashboard");
+    }
+  }, [userRole, navigate]);
+
   // --- ADMIN ---
   if (userRole === "admin") {
     return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 text-gray-900 md:pl-64">
-        <main className="flex-1 overflow-y-auto w-full">
-          <AdminDashboard />
-        </main>
+      <div className="flex items-center justify-center min-height-screen">
+        <p className="text-lg font-medium">Redirecting to admin dashboard...</p>
       </div>
     );
   }
@@ -32,15 +33,12 @@ const Home = () => {
   // --- USER ---
   if (userRole === "user") {
     return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 text-gray-900 md:pl-64">
-        <main className="flex-1 overflow-y-auto w-full">
-          <UserDashboard />
-        </main>
+      <div className="flex items-center justify-center min-height-screen">
+        <p className="text-lg font-medium">Redirecting to your dashboard...</p>
       </div>
     );
   }
 
-  // --- PUBLIC (not logged in) ---
   // --- PUBLIC (not logged in) ---
   return (
     <div className="overflow-hidden">

@@ -3,10 +3,11 @@ import { useForm, FormProvider } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { Card, Button, Input } from "../../Components";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 // import { loginAdmin } from "../../lib/AdminSlice";
 
 const AdminLogin = () => {
+  console.log("Admin Login Page rendering");
   const methods = useForm({
     defaultValues: {
       email: "",
@@ -17,17 +18,17 @@ const AdminLogin = () => {
 
   const { handleSubmit } = methods;
 
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ✅ State for show/hide password
+  //  State for show/hide password
   const [showPassword, setShowPassword] = useState(false);
 
   // === Login Handler ===
   const onSubmit = async (data) => {
     try {
-      const res = await dispatch(loginAdmin(data)).unwrap();
-      console.log("Admin login success:", res);
+      // const res = await dispatch(loginAdmin(data)).unwrap();
+      console.log("Admin login success:", data);
       navigate("/admin/dashboard");
     } catch (err) {
       console.error("Admin login failed:", err);
@@ -110,14 +111,14 @@ const AdminLogin = () => {
                   </button>
                 </div>
 
-                <div className="flex justify-end text-sm">
+                {/* <div className="flex justify-end text-sm">
                   <a
                     href="/forgot-password"
                     className="text-blue-600 hover:underline"
                   >
                     Forgot password?
                   </a>
-                </div>
+                </div> */}
 
                 <Button
                   type="submit"
@@ -130,14 +131,21 @@ const AdminLogin = () => {
               </form>
             </FormProvider>
 
-            <p className="text-center text-gray-600 mt-6 text-sm">
+            <p
+              onClick={() => navigate("/forgot-password")}
+              className="text-center text-blue-600 mt-6 text-sm font-semibold hover:cursor-pointer hover:underline"
+            >
+              Forgot password?
+            </p>
+
+            <p
+              className="text-center text-gray-600 mt-6 text-sm"
+              onClick={() => navigate("/login")}
+            >
               Not an admin?{" "}
-              <a
-                href="/login"
-                className="text-blue-600 hover:underline font-medium"
-              >
+              <span className="text-blue-600 hover:underline font-medium hover:cursor-pointer">
                 Go back to user login
-              </a>
+              </span>
             </p>
           </div>
         </Card>

@@ -2,6 +2,8 @@ import React from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Button, Input } from "../../Components/index";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../../lib/AuthSlice";
 
 const Login = () => {
   const methods = useForm({
@@ -11,17 +13,31 @@ const Login = () => {
     },
   });
 
-  const { handleSubmit, reset } = methods;
-  const navigate = useNavigate();
+  const { handleSubmit, reset, setError } = methods;
 
-  const onSubmit = () => {
-    navigate("/");
-    reset();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { loading } = useSelector((state) => state.auth);
+
+  const onSubmit = async (data) => {
+    const result = await dispatch(login(data));
+
+    if (login.fulfilled.match(result)) {
+      navigate("/");
+      reset();
+    }
+
+    if (login.rejected.match(result)) {
+      setError("password", {
+        type: "server",
+        message: result.payload || "Invalid credentials",
+      });
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      {/* Container */}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 ">
       <div className="w-full max-w-5xl bg-white rounded-xl shadow-lg p-8 md:p-10">
         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
           Welcome Back
@@ -36,10 +52,10 @@ const Login = () => {
                 type="email"
                 placeholder="Enter your mail"
                 rules={{
-                  required: "Colege mail is required",
+                  required: "College email is required",
                   pattern: {
                     value: /^\S+@\S+\.\S+$/,
-                    message: "Please enter a valid mail address",
+                    message: "Please enter a valid email",
                   },
                 }}
               />
@@ -53,31 +69,10 @@ const Login = () => {
                   required: "Password is required",
                   minLength: {
                     value: 6,
-                    message: "Password must be at least 6 characters long",
+                    message: "Password must be at least 6 characters",
                   },
                 }}
               />
-            </div>
-
-            {/* Update this div */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 mb-6 gap-2 md:gap-0">
-              <div className="flex justify-center items-center gap-2">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="remember" className="text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
-
-              <a
-                href="/forgot-password"
-                className="text-sm text-blue-600 hover:underline justify-center"
-              >
-                Forgot password?
-              </a>
             </div>
 
             <Button
@@ -85,21 +80,28 @@ const Login = () => {
               variant="primary"
               size="md"
               round="md"
-              className="w-full"
+              className="w-full mt-5"
+              disabled={loading}
             >
-              Log In
+              {loading ? "Logging in..." : "Log In"}
             </Button>
           </form>
         </FormProvider>
+        <p
+          className="mt-5 text-blue-600 hover:underline font-medium hover:cursor-pointer text-center"
+          onClick={() => navigate("/forgot-password")}
+        >
+          Forgot password?
+        </p>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-gray-600 mt-2">
           Don’t have an account?{" "}
-          <a
-            href="/signup"
-            className="text-blue-600 hover:underline font-medium"
+          <span
+            className="text-blue-600 hover:underline font-medium hover:cursor-pointer"
+            onClick={() => navigate("/signup")}
           >
-            Sign up
-          </a>
+            Signup
+          </span>
         </p>
       </div>
     </div>

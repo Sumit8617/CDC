@@ -5,7 +5,7 @@ import { GeneralNav, Footer } from "../Components/index";
 const Layout = ({ children }) => {
   const location = useLocation();
 
-  // Define routes where the sidebar (and footer) should be visible
+  // Dashboard pages
   const dashboardRoutes = [
     "/contests",
     "/leaderboard",
@@ -13,7 +13,7 @@ const Layout = ({ children }) => {
     "/contest-history",
   ];
 
-  // Define routes where we want a clean layout (no sidebar or footer)
+  // Auth pages (full width, no footer, no nav)
   const authRoutes = ["/login", "/signup", "/forgot-password", "/admin/login"];
 
   const isDashboardPage = dashboardRoutes.some((path) =>
@@ -24,20 +24,21 @@ const Layout = ({ children }) => {
     location.pathname.startsWith(path)
   );
 
-  //  Auth Pages: No sidebar or footer
+  /* -------------------------------------------
+      AUTH PAGES  → Full Width 100% Layout
+  -------------------------------------------- */
   if (isAuthPage) {
-    return (
-      <main className="min-h-screen w-full flex justify-center items-center bg-gray-50">
-        {children}
-      </main>
-    );
+    return <main className="min-h-screen w-full bg-gray-50">{children}</main>;
   }
 
-  //  Dashboard Pages: With sidebar
+  /* -------------------------------------------
+      DASHBOARD PAGES  → With Sidebar
+  -------------------------------------------- */
   if (isDashboardPage) {
     return (
       <div className="flex min-h-screen bg-gray-50 text-gray-900">
         <GeneralNav />
+
         <main className="flex-1 overflow-auto flex justify-center">
           <div className="w-full p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
@@ -45,7 +46,9 @@ const Layout = ({ children }) => {
     );
   }
 
-  // Public Pages (e.g., Landing, About, etc.)
+  /* -------------------------------------------
+      PUBLIC PAGES  → Normal Layout + Header + Footer
+  -------------------------------------------- */
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
       <header className="fixed top-0 left-0 w-full z-50 shadow-sm bg-white">

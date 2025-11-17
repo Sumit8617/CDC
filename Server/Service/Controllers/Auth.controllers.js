@@ -100,17 +100,17 @@ const signup = asynchandler(async (req, res) => {
 });
 
 const login = asynchandler(async (req, res) => {
-  const { mobileNumber, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!mobileNumber || !password) {
+  if (!email || !password) {
     throw new APIERR(400, "Please fill the required Fields");
   }
 
-  const user = await User.findOne({ mobileNumber });
+  const user = await User.findOne({ email });
   if (!user) {
     throw new APIERR(
       400,
-      "No account found with this mobile. Please Signup first"
+      "No account found with this mail. Please Signup first"
     );
   }
 
