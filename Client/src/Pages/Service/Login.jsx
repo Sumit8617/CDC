@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { Button, Input } from "../../Components/index";
+import { Button, Input, Card } from "../../Components/index";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import useLogin from "../../Hooks/LoginHook";
@@ -20,13 +20,15 @@ const Login = () => {
 
   // Get user from Redux
   const { user } = useSelector((state) => state.auth);
-
+  const [showErr, setShowErr] = useState(false);
   // Redirect when redux user updated
   useEffect(() => {
     if (!user) return;
 
-    if (user.role === "user") {
+    if (user?.role === "user") {
       navigate("/dashboard");
+    } else {
+      setShowErr(true);
     }
   }, [user, navigate]);
 
@@ -111,6 +113,26 @@ const Login = () => {
             Signup
           </span>
         </p>
+
+        {/* popup message for unauthorized user */}
+        {showErr && (
+          <div className="fixed inset-0 bg-slate-900/10 bg-opacity-40 backdrop-blur-sm flex items-center justify-center">
+            <Card
+              variant="default"
+              round="md"
+              padding="p-8"
+              className="w-auto flex flex-col items-center justify-center text-center"
+            >
+              <p className="text-red-600 text-lg font-semibold mb-4">
+                Something went wrong! Unauthorized access.
+              </p>
+
+              <Button className="mt-4" onClick={() => setShowErr(false)}>
+                Close
+              </Button>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
