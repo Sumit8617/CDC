@@ -11,11 +11,13 @@ import {
 } from "lucide-react";
 import { Button, Card } from "../index";
 import { useNavigate } from "react-router-dom";
+import useLogin from "../../Hooks/LoginHook";
 
 const AdminNav = () => {
   const [active, setActive] = useState("Dashboard");
   const [popup, setPopup] = useState(null);
   const navigate = useNavigate();
+  const { handleLogout } = useLogin();
 
   const menuItems = [
     {
@@ -55,9 +57,13 @@ const AdminNav = () => {
     },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    navigate("/admin/login");
+  const logoutAdmin = async () => {
+    try {
+      await handleLogout();
+      navigate("/admin/login", { replace: true });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
   };
 
   const handleMobileClick = (item) => {
@@ -150,7 +156,7 @@ const AdminNav = () => {
         {/* Logout Icon */}
         <div className="relative flex flex-col items-center">
           <button
-            onClick={handleLogout}
+            onClick={logoutAdmin}
             className="flex flex-col items-center justify-center text-gray-600 hover:text-red-600"
           >
             <LogOut className="w-5 h-5" />

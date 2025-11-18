@@ -52,6 +52,10 @@ const router = createBrowserRouter([
         element: <Signup />,
       },
       {
+        path: "forgot-password",
+        element: <ForgotPassword />,
+      },
+      {
         element: <UserProtectedRoute />,
         children: [
           {
@@ -77,10 +81,6 @@ const router = createBrowserRouter([
           {
             path: "contest-ended",
             element: <ContestEnd />,
-          },
-          {
-            path: "forgot-password",
-            element: <ForgotPassword />,
           },
         ],
       },

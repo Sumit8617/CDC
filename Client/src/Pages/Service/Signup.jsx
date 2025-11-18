@@ -158,14 +158,15 @@ const Signup = () => {
                       rules={{ required: "OTP is required" }}
                     />
                   </div>
-
+                  {/* TODO: Button Class is not Working */}
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
+                    round="full"
                     onClick={onVerifyOtp}
                     disabled={otpVerified}
-                    className="h-[42px]"
+                    className="h-[30px]"
                   >
                     {otpVerified ? "Verified" : "Verify"}
                   </Button>
@@ -191,6 +192,7 @@ const Signup = () => {
                     type="number"
                     placeholder="2310110XXXX"
                     rules={{ required: "Roll number is required" }}
+                    className="[appearance:textfield] [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
                   />
                 </div>
               </div>

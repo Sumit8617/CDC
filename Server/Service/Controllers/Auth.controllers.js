@@ -188,4 +188,11 @@ const checkAuth = (req, res) => {
   }
 };
 
-export { signup, login, logout, updateProfile, checkAuth };
+export {
+  signup,
+  login,
+  logout,
+  updateProfile,
+  checkAuth,
+  generateAccessAndRefreshTokens,
+};

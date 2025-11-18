@@ -46,15 +46,15 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 ">
-      <div className="w-full max-w-5xl bg-white rounded-xl shadow-lg p-8 md:p-10">
+    <div className="min-h-screen flex items-center justify-center bg-gray-500 p-4 ">
+      <div className="w-full max-w-3xl bg-slate-50/90 rounded-xl shadow-lg p-8 md:p-10 bg-[url('/CollegeLogo.png')] bg-no-repeat bg-contain bg-center">
         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
           Welcome Back
         </h2>
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <Input
                 name="email"
                 label="Enter your college mail"
@@ -111,6 +111,16 @@ const Login = () => {
             onClick={() => navigate("/signup")}
           >
             Signup
+          </span>
+        </p>
+
+        <p className="text-center text-sm text-gray-600 mt-2">
+          Not an User?{" "}
+          <span
+            className="text-blue-600 hover:underline font-medium hover:cursor-pointer"
+            onClick={() => navigate("/admin/login")}
+          >
+            Go back to Admin Login
           </span>
         </p>
 

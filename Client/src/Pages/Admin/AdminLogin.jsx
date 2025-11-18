@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { Card, Button, Input } from "../../Components";
 import { useNavigate } from "react-router-dom";
-// import { useDispatch } from "react-redux";
-// import { loginAdmin } from "../../lib/AdminSlice";
+import { useSelector } from "react-redux";
+import useLogin from "../../Hooks/LoginHook";
 
 const AdminLogin = () => {
   console.log("Admin Login Page rendering");
@@ -16,23 +16,37 @@ const AdminLogin = () => {
     },
   });
 
-  const { handleSubmit } = methods;
-
-  // const dispatch = useDispatch();
+  const { handleSubmit, reset, setError } = methods;
   const navigate = useNavigate();
+  const { handleAdminLogin, loading } = useLogin();
+
+  // Get user from Redux
+  const { user } = useSelector((state) => state.auth);
+  const [showErr, setShowErr] = useState(false);
+
+  // Redirect when redux user updated
+  useEffect(() => {
+    if (!user) return;
+
+    if (user?.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      setShowErr(true);
+    }
+  }, [user, navigate]);
 
   //  State for show/hide password
   const [showPassword, setShowPassword] = useState(false);
 
-  // === Login Handler ===
   const onSubmit = async (data) => {
     try {
-      // const res = await dispatch(loginAdmin(data)).unwrap();
-      console.log("Admin login success:", data);
-      navigate("/admin/dashboard");
+      await handleAdminLogin(data);
+      reset();
     } catch (err) {
-      console.error("Admin login failed:", err);
-      alert(err.message || "Login failed. Please check credentials.");
+      setError("password", {
+        type: "server",
+        message: err || "Invalid credentials",
+      });
     }
   };
 
@@ -41,7 +55,7 @@ const AdminLogin = () => {
       {/* === Login Form === */}
       <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-10">
         {/* Card with background image */}
-        <Card className="w-full max-w-md p-8 shadow-lg border border-gray-200 bg-[url('/')] bg-cover bg-center bg-no-repeat relative overflow-hidden rounded-xl">
+        <Card className="w-full max-w-md p-8 shadow-lg border border-gray-200 bg-[url('/CollegeLogo.png')] bg-cover bg-center bg-no-repeat relative overflow-hidden rounded-xl">
           {/* Optional overlay for readability */}
           <div className="absolute inset-0 bg-white/20 rounded-xl backdrop-blur-[2px]"></div>
 
@@ -111,22 +125,13 @@ const AdminLogin = () => {
                   </button>
                 </div>
 
-                {/* <div className="flex justify-end text-sm">
-                  <a
-                    href="/forgot-password"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Forgot password?
-                  </a>
-                </div> */}
-
                 <Button
                   type="submit"
                   variant="primary"
                   size="md"
                   className="w-full mt-4"
                 >
-                  Login
+                  {loading ? "Logging in..." : "Log In"}
                 </Button>
               </form>
             </FormProvider>
@@ -149,6 +154,27 @@ const AdminLogin = () => {
             </p>
           </div>
         </Card>
+
+        {/* popup message for unauthorized user */}
+        {showErr && (
+          <div className="fixed inset-0 bg-slate-900/10 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50">
+            <Card
+              variant="default"
+              round="md"
+              padding="p-8"
+              className="w-auto flex flex-col items-center justify-center text-center"
+            >
+              <p className="text-red-600 text-lg font-semibold mb-4">
+                Something went wrong! Unauthorized access. If you are a user go
+                to user login
+              </p>
+
+              <Button className="mt-4" onClick={() => setShowErr(false)}>
+                Close
+              </Button>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

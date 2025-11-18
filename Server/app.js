@@ -6,6 +6,7 @@ import authRoutes from "./Service/Routes/Auth.routes.js";
 // import quizRoutes from "./Service/Routes/Quiz.routes.js";
 // import resultRoutes from "./Service/Routes/Result.routes.js";
 import adminRouter from "./Admin/Routes/CreateTest.routes.js";
+import { adminAuthRoute } from "./Admin/Routes/Auth.routes.js";
 
 const app = express();
 
@@ -47,5 +48,6 @@ app.use("/api", async (req, res, next) => {
 
 app.use("/api/v1/user", authRoutes);
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/admin/auth", adminAuthRoute);
 
 export { app };

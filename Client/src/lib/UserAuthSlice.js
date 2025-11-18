@@ -3,13 +3,20 @@ import axios from "axios";
 
 const extractUser = (payload) => {
   if (!payload) return null;
+  if (payload.user && payload.role) {
+    return {
+      user: payload.user,
+      role: payload.role,
+    };
+  }
+  if (payload.data?.user) {
+    return payload.data.user;
+  }
   if (payload.user) return payload.user;
-  if (payload.data && payload.data.user) return payload.data.user;
-  if (payload.role || payload.email || payload.fullName) return payload;
-  return null;
+  return payload;
 };
 
-//  SEND OTP 
+//  SEND OTP
 export const sendOtp = createAsyncThunk(
   "auth/sendOtp",
   async ({ fullName, email }, thunkAPI) => {
@@ -69,13 +76,33 @@ export const signupUser = createAsyncThunk(
   }
 );
 
-// LOGIN 
+// User LOGIN
 export const login = createAsyncThunk(
   "auth/login",
   async (userData, { rejectWithValue }) => {
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_API}/api/v1/user/login`,
+        userData,
+        { withCredentials: true }
+      );
+      return res.data;
+    } catch (error) {
+      console.error("ERR While Login", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Login Failed. Try again"
+      );
+    }
+  }
+);
+
+// Admin Login
+export const adminLogin = createAsyncThunk(
+  "auth/adminlogin",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_API}/api/v1/admin/auth/login`,
         userData,
         { withCredentials: true }
       );
@@ -108,7 +135,7 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
-// INITIAL USER 
+// INITIAL USER
 const initialUser = (() => {
   try {
     const raw = localStorage.getItem("user");
@@ -118,7 +145,7 @@ const initialUser = (() => {
   }
 })();
 
-//  SLICE 
+//  SLICE
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -166,7 +193,7 @@ const authSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // SEND OTP 
+      // SEND OTP
       .addCase(sendOtp.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -246,6 +273,33 @@ const authSlice = createSlice({
         }
       })
       .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Admin Login
+      .addCase(adminLogin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(adminLogin.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const user = extractUser(action.payload.data);
+
+        // Store admin user
+        if (user) {
+          state.user = user;
+          try {
+            localStorage.setItem("user", JSON.stringify(user));
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          state.user = null;
+        }
+      })
+      .addCase(adminLogin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
