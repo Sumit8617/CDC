@@ -7,14 +7,47 @@ const Layout = ({ children }) => {
 
   // Dashboard pages
   const dashboardRoutes = [
+    "*",
     "/contests",
     "/leaderboard",
     "/profile",
     "/contest-history",
   ];
 
-  // Auth pages (full width, no footer, no nav)
-  const authRoutes = ["/login", "/signup", "/forgot-password", "/admin/login"];
+  // Auth pages
+  const authRoutes = [
+    "*",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/admin/login",
+  ];
+
+  const knownRoutes = [
+    "/",
+    "/admin/login",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/dashboard",
+    "/contests",
+    "/contest-history",
+    "/leaderboard",
+    "/profile",
+    "/contest-ended",
+    "/admin/dashboard",
+    "/admin/create-contest",
+    "/admin/manage-contests",
+    "/admin/manageusers",
+    "/admin/analytics",
+    "/admin/profile",
+    "/admin/settings",
+  ];
+
+  const is404Page = !knownRoutes.includes(location.pathname);
+  if (is404Page) {
+    return <main className="min-h-screen w-full">{children}</main>;
+  }
 
   const isDashboardPage = dashboardRoutes.some((path) =>
     location.pathname.startsWith(path)
@@ -24,16 +57,11 @@ const Layout = ({ children }) => {
     location.pathname.startsWith(path)
   );
 
-  /* -------------------------------------------
-      AUTH PAGES  → Full Width 100% Layout
-  -------------------------------------------- */
   if (isAuthPage) {
     return <main className="min-h-screen w-full bg-gray-50">{children}</main>;
   }
 
-  /* -------------------------------------------
-      DASHBOARD PAGES  → With Sidebar
-  -------------------------------------------- */
+  // DashBoard with Nav bar
   if (isDashboardPage) {
     return (
       <div className="flex min-h-screen bg-gray-50 text-gray-900">
@@ -46,9 +74,7 @@ const Layout = ({ children }) => {
     );
   }
 
-  /* -------------------------------------------
-      PUBLIC PAGES  → Normal Layout + Header + Footer
-  -------------------------------------------- */
+  // Public Pages
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
       <header className="fixed top-0 left-0 w-full z-50 shadow-sm bg-white">

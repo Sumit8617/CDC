@@ -29,6 +29,7 @@ import {
   AdminProtectedRoute,
 } from "./Components/Common/Procted.jsx";
 import { UserDashboard } from "./Components/index.js";
+import NotFoundPage from "./Pages/NotFound.jsx";
 
 const router = createBrowserRouter([
   {
@@ -116,6 +117,10 @@ const router = createBrowserRouter([
             element: <AdminSettings />,
           },
         ],
+      },
+      {
+        path: "*",
+        element: <NotFoundPage />,
       },
     ],
   },
