@@ -51,8 +51,14 @@ const userSchema = new mongoose.Schema(
       minlength: [6, "Minimum 6 Characters Needed"],
     },
     profilePic: {
-      type: String,
-      default: "",
+      url:{
+        type:String,
+        default:""
+      },
+      publicId:{
+        type:String,
+        default:""  
+      }
     },
     role: {
       type: String,

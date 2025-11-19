@@ -1,5 +1,4 @@
 import { User } from "../Models/User.models.js";
-import { cloudinary } from "../../Config/Cloudinary.config.js";
 import {
   asynchandler,
   APIERR,
@@ -61,13 +60,15 @@ const signup = asynchandler(async (req, res) => {
     dob,
   });
 
-  const createdUser = await User.findOne({ mobileNumber }).select(
+  const createdUser = await User.findOne(createUser._id).select(
     "-password -refreshToken"
   );
 
   // Set the Access Token
-  const { accessToken } = await generateAccessAndRefreshTokens(createUser._id);
+  const { accessToken,refreshToken } = await generateAccessAndRefreshTokens(createUser._id);
+  
   res.cookie("accessToken", accessToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   if (!accessToken) {
     throw new APIERR(502, "Internal Server ERR! While setting the accesstoken");
@@ -95,7 +96,7 @@ const signup = asynchandler(async (req, res) => {
   res
     .status(200)
     .json(
-      new APIRES(200, { user: createUser }, "Successfully Create the User")
+      new APIRES(200, { user: createdUser }, "Successfully Create the User")
     );
 });
 
@@ -116,13 +117,11 @@ const login = asynchandler(async (req, res) => {
 
   // Match the password
   const isPasswordCorrect = await user.isPasswordValid(password);
-  if (!isPasswordCorrect) {
-    throw new APIERR(400, "Wrong Password");
-  }
+  if (!isPasswordCorrect) throw new APIERR(400, "Wrong Password");
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user._id
-  );
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+  
   res.cookie("accessToken", accessToken, cookieOptions);
   res.cookie("refreshToken", refreshToken, cookieOptions);
   res.status(200).json(
@@ -158,41 +157,75 @@ const logout = asynchandler(async (req, res) => {
   return res.status(200).json(new APIRES(200, "Successfully logged out"));
 });
 
-// TODO: Convert to working phase
-const updateProfile = async (req, res) => {
-  try {
-    const { profilePic } = req.body;
-    const userId = req.user._id;
-    if (!profilePic) {
-      return res.status(400).json({ message: "Profile picture is required" });
-    }
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { profilePic: uploadResponse.secure_url },
-      { new: true }
-    );
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    console.log("Error in updatedProfile Controller", error);
-    return res.status(500).json({ message: "Internal server error" });
+const refreshAccessToken = asynchandler(async (req, res) => {
+  const incomingRefreshToken = req.cookies.refreshToken;
+  if (!incomingRefreshToken) {
+    throw new APIERR(401, "No refresh token found. Please login again");
   }
-};
+  try {
+    const decoded = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    const user = await User.findById(decoded._id);
+    if (!user) {
+      throw new APIERR(404, "User not found");
+    }
+  
+    if(incomingRefreshToken !== user.refreshToken){
+      throw new APIERR(401,"Refresh Token Mismatch. Please login again")
+    }
+    const {accessToken,newRefreshToken} = await generateAccessAndRefreshTokens(user._id);
+  
+    res
+    .status(200)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", newRefreshToken, cookieOptions)
+    .lson(new APIRES(200, {accessToken,refreshToken :newRefreshToken}, "Access Token refreshed Successfully"));
+  } catch (error) {
+    throw new APIERR(401,error?.message || "Invalid Refresh Token. Please login again")
+  } 
+})
+
+const changeCurrentPassword = asynchandler(async(req,res)=>{
+  const {oldPassword,newPassword,confirmPassword} = req.body;
+  if(!oldPassword || !newPassword || !confirmPassword){
+    throw new APIERR(400,"Please provide the required fields")
+  }
+  if(newPassword !== confirmPassword){
+    throw new APIERR(400,"New Password and Confirm Password must be same")
+  }
+
+  const user = await User.findById(req.user?._id);
+  if(!user){
+    throw new APIERR(404,"User not found")
+  }
+  const isOldPasswordCorrect = await user.isPasswordValid(oldPassword);
+  if(!isOldPasswordCorrect){
+    throw new APIERR(400,"Old Password is incorrect")
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+  return res.status(200).json(new APIRES(200,{}, "Password changed successfully"))
+})
+
+
+// TODO: Convert to working phase
+
 
 const checkAuth = (req, res) => {
-  try {
-    res.status(200).json(req.user);
-  } catch (error) {
-    console.log("Error in checkAuth Controller:", error);
-    return res.status(500).json({ message: "Internal server error" });
+  if(!req.user){
+    throw new APIERR(401,"User not authenticated")
   }
+  return res.status(200).json(req.user);
 };
 
 export {
   signup,
   login,
   logout,
-  updateProfile,
   checkAuth,
   generateAccessAndRefreshTokens,
+  refreshAccessToken,
+  changeCurrentPassword
 };

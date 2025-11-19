@@ -1,30 +1,33 @@
 import jwt from "jsonwebtoken";
 import { User } from "../Service/Models/User.models.js";
+import { asynchandler } from "../Utils/index.utils.js";
 
-export const protectRoute = async (req, res, next) => {
+export const protectRoute = asynchandler(async(req,res,next)=>{
   try {
-    const auth_token = req.cookies?.jwt;
+    // 1. Access token from cookies
+    const auth_token = req.cookies?.accessToken || req.headers("Authorization")?.replace("Bearer ","");
     if (!auth_token) {
       return res.status(401).json({ message: "Unouthorized-NO token" });
     }
-    const decoded = jwt.verify(auth_token, process.env.JWT_SECRET);
-    if (!decoded) {
-      return res.status(401).json({ message: "Unouthorized- Invalid token" });
-    }
-
-    const user = await User.findById(decoded.userId).select("-password");
-    if (!user) {
-      return res.status(404).json({ message: "User not Found" });
-    }
-    req.user = user;
-    next();
+      // 2. Verify access token
+    
+      const decoded = jwt.verify(auth_token, process.env.ACCESS_TOKEN_SECRET);
+      // 3. Find user in DB
+      const user = await User.findById(decoded?._id).select("-password -refreshToken");
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      req.user = user;
+      next();
   } catch (error) {
     console.log("Error in authMiddleware function", error);
     return res
       .status(500)
       .json({ message: "Internal server error in auth middleware" });
   }
-};
+})
+
+
 
 export const adminOnly = (req, res, next) => {
   if (!req.user || !req.user.isAdmin) {
