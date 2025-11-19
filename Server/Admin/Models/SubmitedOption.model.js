@@ -1,6 +1,7 @@
-import mongoose from "mongoose" 
+import mongoose from "mongoose";
 
-const submittedOptionSchema = new mongoose.Schema({
+const submittedOptionSchema = new mongoose.Schema(
+  {
     contest: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Test",
@@ -11,18 +12,33 @@ const submittedOptionSchema = new mongoose.Schema({
       ref: "User",
       required: true,
     },
-    submittedOption : {
-        type : Number,
+    questions: [
+      {
+        question: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Question",
+          required: true,
+        },
+        submittedOption: {
+          type: Number,
+          required: true,
+        },
+        checked: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
+    autoDeleteAt: {
+      type: Date,
+      default: Date.now,
+      expires: 60 * 60 * 5, // 5 hours
     },
-    question : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "Question",
-    },
-    autoDeleteAt : {
-        type : Date,
-        default : Date.now(),
-        expires : 60 * 60 * 5 
-    },
-}, {timestamps : true}) ;
+  },
+  { timestamps: true }
+);
 
-export const SubmittedOption = mongoose.model("SubmittedOption", submittedOptionSchema) ;
+export const SubmittedOption = mongoose.model(
+  "SubmittedOption",
+  submittedOptionSchema
+);

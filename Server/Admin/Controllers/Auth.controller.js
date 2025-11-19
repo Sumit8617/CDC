@@ -1,6 +1,11 @@
-import { asynchandler, APIERR, APIRES,AdminMail } from "../../Utils/index.utils.js";
+import {
+  asynchandler,
+  APIERR,
+  APIRES,
+  AdminMail,
+} from "../../Utils/index.utils.js";
 import { User } from "../../Service/Models/User.models.js";
-import { Test } from "../Models/Test.model.js";
+import { Test } from "../Models/Contest.model.js";
 import { generateAccessAndRefreshTokens } from "../../Service/Controllers/Auth.controllers.js";
 
 const adminLogin = asynchandler(async (req, res) => {
@@ -57,7 +62,7 @@ const adminLogin = asynchandler(async (req, res) => {
     )
   );
 });
-
+// TODO:
 const adminInvite = asynchandler(async (req, res) => {
   const { fullName, email } = req.body;
   console.log("Coming From the body =>", fullName, email);
@@ -73,7 +78,6 @@ const adminInvite = asynchandler(async (req, res) => {
       "User with this mail and role already exists. You can't invite them"
     );
   }
-
 });
 
 const getUser = asynchandler(async (req, res) => {

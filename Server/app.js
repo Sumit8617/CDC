@@ -3,9 +3,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { aj } from "./lib/arcjet.js";
 import authRoutes from "./Service/Routes/Auth.routes.js";
-// import quizRoutes from "./Service/Routes/Quiz.routes.js";
-// import resultRoutes from "./Service/Routes/Result.routes.js";
+import submitContestResponse from "./Service/Routes/SubmitContest.routes.js";
 import adminRouter from "./Admin/Routes/CreateTest.routes.js";
+import leaderboardRouter from "./Service/Routes/Leaderboard.routes.js";
 import { adminAuthRoute } from "./Admin/Routes/Auth.routes.js";
 
 const app = express();
@@ -47,6 +47,8 @@ app.use("/api", async (req, res, next) => {
 });
 
 app.use("/api/v1/user", authRoutes);
+app.use("/api/v1/user", submitContestResponse);
+app.use("/api/v1/user", leaderboardRouter)
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/admin/auth", adminAuthRoute);
 

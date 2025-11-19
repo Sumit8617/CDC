@@ -1,15 +1,19 @@
 import { asynchandler, APIERR, APIRES } from "../../Utils/index.utils.js";
-import { Test } from "../Models/Test.model.js";
+import { Test } from "../Models/Contest.model.js";
 import { Question } from "../Models/Question.model.js";
 
 export const createTest = asynchandler(async (req, res) => {
-  const { testName, description, duration, questions } = req.body;
+  const { testName, description, date, duration, questions } = req.body;
 
   // Basic validation
-//   if ([testName, description, duration].some((f) => !f || f.trim() === "")) {
-//     throw new APIERR(400, "Please provide all required fields");
-//   }
+    if ([testName, description, duration].some((f) => !f || f.trim() === "")) {
+      throw new APIERR(400, "Please provide all required fields");
+    }
 
+  if (!date) {
+    throw new APIERR(400, "Date is requied")
+  }
+  
   if (!Array.isArray(questions) || questions.length === 0) {
     throw new APIERR(400, "Please provide at least one question");
   }
@@ -28,6 +32,7 @@ export const createTest = asynchandler(async (req, res) => {
   // Step 3: Create the test and link the questions
   const newTest = await Test.create({
     testName,
+    date,
     description,
     duration,
     questions: questionIds,

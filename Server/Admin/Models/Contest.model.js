@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const testSchema = new mongoose.Schema(
   {
@@ -10,6 +10,10 @@ const testSchema = new mongoose.Schema(
       type: String,
       required: true,
       maxlength: 250,
+    },
+    date: {
+      type: Date,
+      required: true,
     },
     duration: {
       type: Number,
@@ -24,5 +28,12 @@ const testSchema = new mongoose.Schema(
     ],
   },
   { timestamps: true }
-); 
-export  const Test = mongoose.model("Test", testSchema) ;
+);
+
+testSchema.methods.predictContestEndTime = function () {
+  if (!this.date || !this.duration) return null;
+  const endTime = new Date(this.date.getTime() + this.duration * 60 * 1000);
+  return endTime;
+};
+
+export const Test = mongoose.model("Test", testSchema);

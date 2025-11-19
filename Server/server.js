@@ -1,6 +1,7 @@
 import "./config/Envfiles.config.js";
 import { app } from "./app.js";
 import { connectDB } from "./DB/Db.db.js";
+import './Admin/Controllers/CheckCorrectAnswer.controller.js'
 
 const PORT = process.env.PORT || 5000;
 
