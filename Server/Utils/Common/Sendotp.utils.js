@@ -2,7 +2,7 @@ import { asynchandler, APIERR, APIRES, sendMail } from "../index.utils.js";
 
 const sendOTP = asynchandler(async (req, res) => {
   const { fullName, email } = req.body;
-  console.log("Coming from Body", fullName, email)
+  console.log("Coming from Body", fullName, email);
 
   if (!fullName || !email) {
     throw new APIERR(400, "Please provide the required fields");

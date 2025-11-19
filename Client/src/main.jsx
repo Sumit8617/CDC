@@ -22,6 +22,8 @@ import {
   AdminProfile,
   AdminSettings,
   AdminLogin,
+  ContestHistory,
+  AdminRegister,
 } from "./Pages/index.js";
 import { store } from "./Store/Store.js";
 import {
@@ -51,6 +53,10 @@ const router = createBrowserRouter([
       {
         path: "/signup",
         element: <Signup />,
+      },
+      {
+        path: "/admin/register",
+        element: <AdminRegister />,
       },
       {
         path: "forgot-password",
@@ -91,6 +97,10 @@ const router = createBrowserRouter([
           {
             path: "admin/dashboard",
             element: <AdminDashboard />,
+          },
+          {
+            path: "admin/contest-history",
+            element: <ContestHistory />,
           },
           {
             path: "admin/create-contest",

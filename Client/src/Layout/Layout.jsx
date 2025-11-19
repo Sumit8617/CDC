@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
-import { GeneralNav, Footer } from "../Components/index";
+import { GeneralNav, Footer, AdminNav } from "../Components/index";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -23,6 +23,17 @@ const Layout = ({ children }) => {
     "/admin/login",
   ];
 
+  const adminRoutes = [
+    "/admin/dashboard",
+    "/admin/contest-history",
+    "/admin/create-contest",
+    "/admin/manage-contests",
+    "/admin/manageusers",
+    "/admin/analytics",
+    "/admin/profile",
+    "/admin/settings",
+  ];
+
   const knownRoutes = [
     "/",
     "/admin/login",
@@ -36,17 +47,34 @@ const Layout = ({ children }) => {
     "/profile",
     "/contest-ended",
     "/admin/dashboard",
+    "/amin/contest-history",
     "/admin/create-contest",
     "/admin/manage-contests",
     "/admin/manageusers",
     "/admin/analytics",
     "/admin/profile",
     "/admin/settings",
+    "/admin/register"
   ];
 
   const is404Page = !knownRoutes.includes(location.pathname);
   if (is404Page) {
     return <main className="min-h-screen w-full">{children}</main>;
+  }
+
+  const isAdminPage = adminRoutes.some((path) =>
+    location.pathname.startsWith(path)
+  );
+
+  if (isAdminPage) {
+    return (
+      <div className="flex min-h-screen bg-gray-50 text-gray-900">
+        <AdminNav />
+        <main className="flex-1 overflow-auto flex justify-center">
+          <div className="w-full p-4 sm:p-6 lg:p-8">{children}</div>
+        </main>
+      </div>
+    );
   }
 
   const isDashboardPage = dashboardRoutes.some((path) =>

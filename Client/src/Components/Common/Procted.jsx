@@ -15,7 +15,6 @@ export const UserProtectedRoute = () => {
 // For admins
 export const AdminProtectedRoute = () => {
   const { user } = useSelector((state) => state.auth);
-  console.log("Admin Protected Route Running");
   if (!user || user.role !== "admin") {
     return <Navigate to="/admin/login" replace />;
   }

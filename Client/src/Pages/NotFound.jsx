@@ -26,8 +26,8 @@ export default function NotFoundPage() {
               className="text-5xl md:text-6xl font-extrabold leading-tight text-slate-900 dark:text-white"
             >
               404
-              <span className="block text-xl font-medium text-slate-500 dark:text-slate-300 mt-2">
-                Oops — we can't find that page
+              <span className="block text-5xl font-bold text-slate-500 dark:text-slate-300 mt-2">
+                Page NOT FOUND
               </span>
             </motion.h1>
 

@@ -1,19 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { Card, Button } from "../../Components/index";
-import {
-  Trophy,
-  Users,
-  FileText,
-  DollarSign,
-  PlusCircle,
-  BarChart3,
-  Settings,
-} from "lucide-react";
+import { PlusCircle, BarChart3, Send } from "lucide-react";
+import { useAdminStats } from "../../Hooks/AdminStatsHook";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
+  const [openModal, setOpenModal] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [inviteSent, setInviteSent] = useState(false);
+
   const { user } = useSelector((state) => state.auth);
 
+  // Using hook
+  const { stats, recentContests } = useAdminStats();
+  console.log("Coming from Admin Dashboard =>", recentContests);
+
+  const navigate = useNavigate();
   // Prevent crash if user loading
   if (!user) return null;
 
@@ -28,44 +32,9 @@ const AdminDashboard = () => {
     );
   }
 
-  const stats = [
-    {
-      title: "Active Contests",
-      value: "12",
-      icon: <Trophy className="w-6 h-6 text-indigo-600" />,
-    },
-    {
-      title: "Registered Users",
-      value: "1,284",
-      icon: <Users className="w-6 h-6 text-green-600" />,
-    },
-    {
-      title: "Total Submissions",
-      value: "5,642",
-      icon: <FileText className="w-6 h-6 text-blue-600" />,
-    },
-    {
-      title: "Revenue (₹)",
-      value: "92,430",
-      icon: <DollarSign className="w-6 h-6 text-yellow-500" />,
-    },
-  ];
-
-  const recentContests = [
-    {
-      id: 1,
-      name: "Aptitude Test Round 1",
-      participants: 230,
-      status: "Ongoing",
-    },
-    {
-      id: 2,
-      name: "Coding Challenge 2025",
-      participants: 154,
-      status: "Completed",
-    },
-    { id: 3, name: "Data Science Quiz", participants: 180, status: "Upcoming" },
-  ];
+  const adminInvite = () => {
+    setOpenModal(true);
+  };
 
   return (
     <div className="flex flex-col w-full space-y-8 md:pl-64">
@@ -80,36 +49,53 @@ const AdminDashboard = () => {
           </p>
         </div>
 
-        <Button
-          variant="indigo"
-          size="md"
-          round="md"
-          className="flex items-center gap-2"
-        >
-          <PlusCircle className="w-5 h-5" />
-          Create Contest
-        </Button>
+        <div className="flex justify-end items-center gap-3">
+          <Button
+            variant="green"
+            size="md"
+            round="md"
+            className="flex items-center justify-end gap-2"
+            onClick={adminInvite}
+          >
+            <Send className="w-5 h-5" />
+            Admin Invite
+          </Button>
+
+          <Button
+            variant="indigo"
+            size="md"
+            round="md"
+            className="flex items-center gap-2"
+            onClick={() => navigate("/admin/create-contest")}
+          >
+            <PlusCircle className="w-5 h-5" />
+            Create Contest
+          </Button>
+        </div>
       </div>
 
       {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {stats.map((item, index) => (
-          <Card
-            key={index}
-            variant="outlined"
-            className="flex items-center justify-between p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div>
-              <h3 className="text-sm text-gray-500 font-medium">
-                {item.title}
-              </h3>
-              <p className="text-2xl font-semibold text-gray-900 mt-1">
-                {item.value}
-              </p>
-            </div>
-            <div className="p-3 bg-gray-100 rounded-full">{item.icon}</div>
-          </Card>
-        ))}
+        {stats.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <Card
+              key={index}
+              variant="outlined"
+              className="flex items-center justify-between p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200"
+              height="8"
+            >
+              <div>
+                <h3 className="text-sm text-gray-500 font-medium flex justify-center items-center gap-3">
+                  {item.title} <Icon className="w-6 h-6 text-indigo-600" />
+                </h3>
+                <p className="text-2xl font-semibold text-gray-900 mt-4">
+                  {item.value}
+                </p>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Recent Contests Table */}
@@ -126,6 +112,7 @@ const AdminDashboard = () => {
             size="sm"
             round="md"
             className="flex items-center gap-2"
+            onClick={() => navigate("/admin/contest-history")}
           >
             <BarChart3 className="w-4 h-4" />
             View All
@@ -144,73 +131,118 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {recentContests.map((contest) => (
-                <tr
-                  key={contest.id}
-                  className="border-b last:border-none hover:bg-gray-50 transition-all"
-                >
-                  <td className="py-2 px-3 text-gray-800">{contest.name}</td>
-                  <td className="py-2 px-3 text-gray-600">
-                    {contest.participants}
-                  </td>
-                  <td className="py-2 px-3">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        contest.status === "Ongoing"
-                          ? "bg-green-100 text-green-600"
-                          : contest.status === "Completed"
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-yellow-100 text-yellow-600"
-                      }`}
-                    >
-                      {contest.status}
-                    </span>
+              {recentContests && recentContests.length > 0 ? (
+                recentContests.slice(0, 7).map((contest) => (
+                  <tr
+                    key={contest._id}
+                    className="border-b last:border-none hover:bg-gray-50 transition-all"
+                  >
+                    <td className="py-2 px-3 text-gray-800">
+                      {contest.testName}
+                    </td>
+                    <td className="py-2 px-3 text-gray-600">
+                      {contest.participants || 0}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          contest.status === "Ongoing"
+                            ? "bg-green-100 text-green-600"
+                            : contest.status === "Completed"
+                              ? "bg-blue-100 text-blue-600"
+                              : "bg-yellow-100 text-yellow-600"
+                        }`}
+                      >
+                        {contest.status || "Pending"}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className="text-center py-4 text-gray-500">
+                    No contests found.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </Card>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <Card className="p-5 flex flex-col justify-between bg-indigo-50 hover:bg-indigo-100 transition-all">
-          <div className="flex items-center gap-3 mb-3">
-            <PlusCircle className="w-6 h-6 text-indigo-600" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Create New Contest
-            </h3>
-          </div>
-          <Button variant="indigo" size="sm" round="md">
-            Get Started
-          </Button>
-        </Card>
+      {/* Admin Invite popup */}
+      {openModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Card className="w-full max-w-md p-6 relative">
+            {/* Close button */}
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setOpenModal(false)}
+            >
+              ✕
+            </button>
 
-        <Card className="p-5 flex flex-col justify-between bg-blue-50 hover:bg-blue-100 transition-all">
-          <div className="flex items-center gap-3 mb-3">
-            <Users className="w-6 h-6 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Manage Users
-            </h3>
-          </div>
-          <Button variant="secondary" size="sm" round="md">
-            View Users
-          </Button>
-        </Card>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Invite Admin
+            </h2>
 
-        <Card className="p-5 flex flex-col justify-between bg-gray-50 hover:bg-gray-100 transition-all">
-          <div className="flex items-center gap-3 mb-3">
-            <Settings className="w-6 h-6 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Admin Settings
-            </h3>
-          </div>
-          <Button variant="secondary" size="sm" round="md">
-            Go to Settings
-          </Button>
-        </Card>
-      </div>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // Simulate sending invite
+                setInviteSent(true);
+              }}
+            >
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-600 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter full name"
+                  className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-600 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="Enter email"
+                  className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                variant="green"
+                size="md"
+                round="md"
+                className="mt-2 flex items-center justify-center gap-2"
+              >
+                <Send className="w-5 h-5" />
+                Send
+              </Button>
+            </form>
+
+            {/* Success message */}
+            {inviteSent && (
+              <p className="mt-4 text-green-600 font-medium text-center">
+                Admin invite sent successfully!
+              </p>
+            )}
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
