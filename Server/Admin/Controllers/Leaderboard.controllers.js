@@ -4,7 +4,9 @@ import { Leaderboard } from "../../Admin/Models/Leaderboard.models.js";
 const getLeaderboard = asynchandler(async (req, res) => {
   const { contestId } = req.body;
 
-  const leaderboard = await Leaderboard.findOne({ contest: contestId });
+  const leaderboard = Leaderboard.findOne({
+    contest: new mongoose.Types.ObjectId(contestId),
+  });
   console.log(leaderboard);
   if (!leaderboard)
     return res

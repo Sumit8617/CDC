@@ -13,7 +13,6 @@ export const fetchContest = createAsyncThunk(
     const res = await axios.get(
       `${import.meta.env.VITE_BACKEND_API}/api/v1/admin/auth/get-contest`
     );
-    console.log("Contest Details =>", res.data.data);
     return res.data.data;
   }
 );

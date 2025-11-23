@@ -2,23 +2,10 @@ import mongoose from "mongoose";
 
 const testSchema = new mongoose.Schema(
   {
-    testName: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-      maxlength: 250,
-    },
-    date: {
-      type: Date,
-      required: true,
-    },
-    duration: {
-      type: Number,
-      required: true,
-    },
+    testName: { type: String, required: true },
+    description: { type: String, required: true, maxlength: 250 },
+    date: { type: Date, required: true },
+    duration: { type: Number, required: true },
     questions: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -26,14 +13,13 @@ const testSchema = new mongoose.Schema(
         required: true,
       },
     ],
+    status: {
+      type: String,
+      enum: ["pending", "completed"],
+      default: "pending", // new contests start as pending
+    },
   },
   { timestamps: true }
 );
 
-testSchema.methods.predictContestEndTime = function () {
-  if (!this.date || !this.duration) return null;
-  const endTime = new Date(this.date.getTime() + this.duration * 60 * 1000);
-  return endTime;
-};
-
-export const Test = mongoose.model("Test", testSchema);
+export const Test = mongoose.model("Test", testSchema)

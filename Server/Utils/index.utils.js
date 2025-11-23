@@ -5,6 +5,11 @@ import { sendMail } from "./Mail/Sendmail.utils.js";
 import { sendOTP } from "./Common/Sendotp.utils.js";
 import { verifyOTP } from "./Common/Verifyotp.utils.js";
 import { AdminMail } from "./Mail/AdminMail.utils.js";
+import {
+  resetPassword,
+  verifyPasswordResetOTP,
+  sendPasswordResetOTP,
+} from "./Common/forgotPassword.utils.js";
 
 export {
   APIERR,
@@ -14,4 +19,7 @@ export {
   sendOTP,
   verifyOTP,
   AdminMail,
+  resetPassword,
+  verifyPasswordResetOTP,
+  sendPasswordResetOTP,
 };

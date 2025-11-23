@@ -10,7 +10,6 @@ import { generateAccessAndRefreshTokens } from "../../Service/Controllers/Auth.c
 
 const adminLogin = asynchandler(async (req, res) => {
   const { email, mobileNumber, password } = req.body;
-  console.log("Coming From the Admin Login =>", email, mobileNumber, password);
   if ([email, mobileNumber, password].some((f) => !f || f.trim() === "")) {
     throw new APIERR(400, "Please provide all the fields");
   }
@@ -27,7 +26,6 @@ const adminLogin = asynchandler(async (req, res) => {
   if (!isPasswordCorrect) {
     throw new APIERR(402, "Password is not Correct");
   }
-
   //   Generate TOkens
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     existedUser._id
@@ -81,7 +79,7 @@ const adminInvite = asynchandler(async (req, res) => {
 });
 
 const getUser = asynchandler(async (req, res) => {
-  const totalUsers = await User.countDocuments({ role: "user" });
+  const totalUsers = await User.countDocuments({ role: "user" }).lean();
   const userDetails = await User.find({ role: "user" }).select(
     "-password -refreshToken"
   );
@@ -98,7 +96,7 @@ const getUser = asynchandler(async (req, res) => {
 });
 
 const getAdmin = asynchandler(async (req, res) => {
-  const totalAdmin = await User.countDocuments({ role: "admin" });
+  const totalAdmin = await User.countDocuments({ role: "admin" }).lean();
   const adminDetails = await User.find({ role: "admin" }).select(
     "-password -refreshToken"
   );
@@ -117,7 +115,7 @@ const getAdmin = asynchandler(async (req, res) => {
 });
 
 const getContest = asynchandler(async (req, res) => {
-  const totalContest = await Test.countDocuments();
+  const totalContest = await Test.countDocuments().lean();
   const recentContests = await Test.find().sort({ createdAt: -1 }).lean();
   if (!totalContest || !recentContests) {
     throw new APIERR(502, "Internal Server Error");

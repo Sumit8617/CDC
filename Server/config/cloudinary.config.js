@@ -1,8 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-
 import dotenv from "dotenv";
-import { response } from "express";
 
 dotenv.config();
 
@@ -12,28 +10,38 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-
-const uploadOnCloudinary = async(localFilePath)=>{
+// SAFE delete function
+const removeLocalFile = (path) => {
   try {
-    if(!localFilePath) return;
-    const response = await cloudinary.uploader.upload(localFilePath,{
-      resource_type:"auto"
-    })
-    fs.unlinkSync(localFilePath);
-    return response
-  } catch (error) {
-    fs.unlinkSync(localFilePath);
-    return null
+    if (fs.existsSync(path)) fs.unlinkSync(path);
+  } catch (err) {
+    console.log("Failed to delete local file:", err);
   }
-}
+};
 
-const deleteFromCloudinary = async (publicId)=>{
+const uploadOnCloudinary = async (localFilePath) => {
   try {
+    if (!localFilePath) return null;
+
+    const result = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",
+    });
+
+    removeLocalFile(localFilePath);
+    return result;
+  } catch (error) {
+    removeLocalFile(localFilePath);
+    return null;
+  }
+};
+
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    if (!publicId) return;
     await cloudinary.uploader.destroy(publicId);
   } catch (error) {
-    console.log("Error in deleting old image",error)
+    console.log("Error in deleting old image:", error);
   }
+};
 
-}
-
-export {deleteFromCloudinary, uploadOnCloudinary };
+export { uploadOnCloudinary, deleteFromCloudinary };

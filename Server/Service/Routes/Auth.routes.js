@@ -11,7 +11,7 @@ import { protectRoute } from "../../Middleware/Auth.middleware.js";
 import { sendOTP, verifyOTP } from "../../Utils/index.utils.js";
 import { updateProfile } from "../../Utils/Common/UpdateProfile.utils.js";
 import {upload} from "../../Middleware/Multer.middleware.js";
-import { resetPassword, sendPasswordResetOTP, verifyPasswordResetOTP } from "../../Utils/Common/ForgotPassword.js";
+import { resetPassword, sendPasswordResetOTP, verifyPasswordResetOTP } from "../../Utils/index.utils.js";
 
 const router = express.Router();
 

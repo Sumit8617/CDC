@@ -12,6 +12,7 @@ const submittedOptionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     questions: [
       {
         question: {
@@ -23,12 +24,10 @@ const submittedOptionSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
-        checked: {
-          type: Boolean,
-          default: false,
-        },
+        checked: { type: Boolean, default: false },
       },
     ],
+
     autoDeleteAt: {
       type: Date,
       default: Date.now,
@@ -36,6 +35,12 @@ const submittedOptionSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
+);
+
+// Make sure the TTL index is registered
+submittedOptionSchema.index(
+  { autoDeleteAt: 1 },
+  { expireAfterSeconds: 60 * 60 * 5 }
 );
 
 export const SubmittedOption = mongoose.model(

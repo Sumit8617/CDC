@@ -7,18 +7,19 @@ import {
 } from "../../Utils/index.utils.js";
 import { cookieOptions } from "../../Config/Cookie.config.js";
 
-const generateAccessAndRefreshTokens = asynchandler(async (userId) => {
+const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = await user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
     await user.hashRefreshToken(refreshToken);
     await user.save({ validateBeforeSave: false });
     return { accessToken, refreshToken };
   } catch (error) {
     console.log("Err While Generating the Tokens", error);
+    throw error;
   }
-});
+};
 
 const signup = asynchandler(async (req, res) => {
   const { fullName, email, mobileNumber, password, role, rollNumber, dob } =
@@ -65,8 +66,10 @@ const signup = asynchandler(async (req, res) => {
   );
 
   // Set the Access Token
-  const { accessToken,refreshToken } = await generateAccessAndRefreshTokens(createUser._id);
-  
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    createUser._id
+  );
+
   res.cookie("accessToken", accessToken, cookieOptions);
   res.cookie("refreshToken", refreshToken, cookieOptions);
 
@@ -119,9 +122,10 @@ const login = asynchandler(async (req, res) => {
   const isPasswordCorrect = await user.isPasswordValid(password);
   if (!isPasswordCorrect) throw new APIERR(400, "Wrong Password");
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
 
-  
   res.cookie("accessToken", accessToken, cookieOptions);
   res.cookie("refreshToken", refreshToken, cookieOptions);
   res.status(200).json(
@@ -171,51 +175,61 @@ const refreshAccessToken = asynchandler(async (req, res) => {
     if (!user) {
       throw new APIERR(404, "User not found");
     }
-  
-    if(incomingRefreshToken !== user.refreshToken){
-      throw new APIERR(401,"Refresh Token Mismatch. Please login again")
-    }
-    const {accessToken,newRefreshToken} = await generateAccessAndRefreshTokens(user._id);
-  
-    res
-    .status(200)
-    .cookie("accessToken", accessToken, cookieOptions)
-    .cookie("refreshToken", newRefreshToken, cookieOptions)
-    .lson(new APIRES(200, {accessToken,refreshToken :newRefreshToken}, "Access Token refreshed Successfully"));
-  } catch (error) {
-    throw new APIERR(401,error?.message || "Invalid Refresh Token. Please login again")
-  } 
-})
 
-const changeCurrentPassword = asynchandler(async(req,res)=>{
-  const {oldPassword,newPassword,confirmPassword} = req.body;
-  if(!oldPassword || !newPassword || !confirmPassword){
-    throw new APIERR(400,"Please provide the required fields")
+    if (incomingRefreshToken !== user.refreshToken) {
+      throw new APIERR(401, "Refresh Token Mismatch. Please login again");
+    }
+    const { accessToken, newRefreshToken } =
+      await generateAccessAndRefreshTokens(user._id);
+
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", newRefreshToken, cookieOptions)
+      .lson(
+        new APIRES(
+          200,
+          { accessToken, refreshToken: newRefreshToken },
+          "Access Token refreshed Successfully"
+        )
+      );
+  } catch (error) {
+    throw new APIERR(
+      401,
+      error?.message || "Invalid Refresh Token. Please login again"
+    );
   }
-  if(newPassword !== confirmPassword){
-    throw new APIERR(400,"New Password and Confirm Password must be same")
+});
+
+const changeCurrentPassword = asynchandler(async (req, res) => {
+  const { oldPassword, newPassword, confirmPassword } = req.body;
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    throw new APIERR(400, "Please provide the required fields");
+  }
+  if (newPassword !== confirmPassword) {
+    throw new APIERR(400, "New Password and Confirm Password must be same");
   }
 
   const user = await User.findById(req.user?._id);
-  if(!user){
-    throw new APIERR(404,"User not found")
+  if (!user) {
+    throw new APIERR(404, "User not found");
   }
   const isOldPasswordCorrect = await user.isPasswordValid(oldPassword);
-  if(!isOldPasswordCorrect){
-    throw new APIERR(400,"Old Password is incorrect")
+  if (!isOldPasswordCorrect) {
+    throw new APIERR(400, "Old Password is incorrect");
   }
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
-  return res.status(200).json(new APIRES(200,{}, "Password changed successfully"))
-})
-
+  return res
+    .status(200)
+    .json(new APIRES(200, {}, "Password changed successfully"));
+});
 
 // TODO: Convert to working phase
 
-
 const checkAuth = (req, res) => {
-  if(!req.user){
-    throw new APIERR(401,"User not authenticated")
+  if (!req.user) {
+    throw new APIERR(401, "User not authenticated");
   }
   return res.status(200).json(req.user);
 };
@@ -227,5 +241,5 @@ export {
   checkAuth,
   generateAccessAndRefreshTokens,
   refreshAccessToken,
-  changeCurrentPassword
+  changeCurrentPassword,
 };

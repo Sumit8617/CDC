@@ -7,7 +7,6 @@ import { useSelector } from "react-redux";
 import useLogin from "../../Hooks/LoginHook";
 
 const AdminLogin = () => {
-  console.log("Admin Login Page rendering");
   const methods = useForm({
     defaultValues: {
       email: "",

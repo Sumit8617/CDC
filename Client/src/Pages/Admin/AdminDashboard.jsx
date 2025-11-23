@@ -15,7 +15,6 @@ const AdminDashboard = () => {
 
   // Using hook
   const { stats, recentContests } = useAdminStats();
-  console.log("Coming from Admin Dashboard =>", recentContests);
 
   const navigate = useNavigate();
   // Prevent crash if user loading

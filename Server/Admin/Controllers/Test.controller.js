@@ -32,7 +32,7 @@ export const createTest = asynchandler(async (req, res) => {
   // Step 3: Create the test and link the questions
   const newTest = await Test.create({
     testName,
-    date,
+    date: new Date(new Date(date).getTime() - 5.5 * 3600000),
     description,
     duration,
     questions: questionIds,
