@@ -14,7 +14,8 @@ const Card = ({
   round = "md",
   layout = "vertical",
   padding = "",
-  margin = "", 
+  margin = "",
+  onClick, // <-- added
 }) => {
   // Base layout styles
   const baseStyles = clsx(
@@ -56,6 +57,12 @@ const Card = ({
               : `${height}rem`,
         width:
           width.includes("rem") || width.includes("px") ? width : `${width}rem`,
+      }}
+      onClick={onClick} // <-- forwards onClick
+      role={onClick ? "button" : undefined} // accessibility
+      tabIndex={onClick ? 0 : undefined} // keyboard focus
+      onKeyPress={(e) => {
+        if (onClick && (e.key === "Enter" || e.key === " ")) onClick();
       }}
     >
       {/* Title + Icon section */}

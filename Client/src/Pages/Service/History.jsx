@@ -1,96 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, Button } from "../../Components/index";
-
-const contestHistoryData = [
-  {
-    id: 1,
-    name: "November Coding Challenge",
-    date: "2025-11-01",
-    status: "Completed",
-    score: 85,
-  },
-  {
-    id: 2,
-    name: "October Algorithms Contest",
-    date: "2025-10-15",
-    status: "Completed",
-    score: 92,
-  },
-  {
-    id: 3,
-    name: "September Math Marathon",
-    date: "2025-09-20",
-    status: "Completed",
-    score: 78,
-  },
-  {
-    id: 4,
-    name: "September Math Marathon",
-    date: "2025-09-20",
-    status: "Completed",
-    score: 78,
-  },
-  {
-    id: 5,
-    name: "September Math Marathon",
-    date: "2025-09-20",
-    status: "Completed",
-    score: 78,
-  },
-  {
-    id: 6,
-    name: "September Math Marathon",
-    date: "2025-09-20",
-    status: "Completed",
-    score: 78,
-  },
-  {
-    id: 7,
-    name: "September Math Marathon",
-    date: "2025-09-20",
-    status: "Completed",
-    score: 78,
-  },
-  {
-    id: 8,
-    name: "September Math Marathon",
-    date: "2025-09-20",
-    status: "Completed",
-    score: 78,
-  },
-  {
-    id: 9,
-    name: "September Math Marathon",
-    date: "2025-09-20",
-    status: "Completed",
-    score: 78,
-  },
-  {
-    id: 10,
-    name: "September Math Marathon",
-    date: "2025-09-20",
-    status: "Completed",
-    score: 78,
-  },
-];
+import { useContestDetails } from "../../Hooks/TestDetailsHook";
 
 const History = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const contestsPerPage = 6;
 
+  // Fetch contests from Redux hook
+  const { contests = [], loading, error, getContests } = useContestDetails();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    getContests();
+  }, []);
+
   // Calculate indexes for slicing
   const indexOfLastContest = currentPage * contestsPerPage;
   const indexOfFirstContest = indexOfLastContest - contestsPerPage;
-  const currentContests = contestHistoryData.slice(
+  const currentContests = contests.slice(
     indexOfFirstContest,
     indexOfLastContest
   );
 
-  const totalPages = Math.ceil(contestHistoryData.length / contestsPerPage);
+  const totalPages = Math.ceil(contests.length / contestsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+
+  if (loading) return <p className="pt-24 px-4">Loading...</p>;
+  if (error) return <p className="pt-24 px-4">Error: {error}</p>;
 
   return (
     <div className="min-h-screen bg-gray-50 md:pl-64">
@@ -112,34 +52,44 @@ const History = () => {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {currentContests.map((contest) => (
             <Card
-              key={contest.id}
+              key={contest._id || contest.id}
               variant="hover"
               round="lg"
               className="p-5 flex flex-col justify-between h-full transition-transform"
+              onClick={() => {
+                navigate(`/contest-history/${contest.contestId}`);
+              }}
             >
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-indigo-600 transition-colors">
-                  {contest.name}
+                  {contest.contestName || contest.name}
                 </h3>
                 <p className="text-sm text-gray-500 mb-1">
-                  Date: <span className="font-medium">{contest.date}</span>
+                  Date:{" "}
+                  <span className="font-medium">
+                    {contest.contestDate || contest.date}
+                  </span>
                 </p>
                 <p className="text-sm mb-1">
                   Status:{" "}
                   <span
                     className={`font-semibold ${
+                      contest.contestStatus === "completed" ||
                       contest.status === "Completed"
                         ? "text-green-600"
                         : "text-yellow-600"
                     }`}
                   >
-                    {contest.status}
+                    {contest.contestStatus.toUpperCase() || contest.status}
                   </span>
                 </p>
               </div>
               <div className="mt-3">
                 <p className="text-sm text-gray-500">
-                  Score: <span className="font-semibold">{contest.score}</span>
+                  Description:{" "}
+                  <span className="font-semibold">
+                    {contest.contestDescription || "No Description Provided"}
+                  </span>
                 </p>
               </div>
             </Card>

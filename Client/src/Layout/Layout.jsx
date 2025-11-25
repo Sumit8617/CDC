@@ -34,30 +34,34 @@ const Layout = ({ children }) => {
     "/admin/settings",
   ];
 
-  const knownRoutes = [
-    "/",
-    "/admin/login",
-    "/login",
-    "/signup",
-    "/forgot-password",
-    "/dashboard",
-    "/contests",
-    "/contest-history",
-    "/leaderboard",
-    "/profile",
-    "/contest-ended",
-    "/admin/dashboard",
-    "/amin/contest-history",
-    "/admin/create-contest",
-    "/admin/manage-contests",
-    "/admin/manageusers",
-    "/admin/analytics",
-    "/admin/profile",
-    "/admin/settings",
-    "/admin/register"
+  const knownRoutePatterns = [
+    /^\/$/,
+    /^\/admin\/login$/,
+    /^\/login$/,
+    /^\/signup$/,
+    /^\/forgot-password$/,
+    /^\/dashboard$/,
+    /^\/contests$/,
+    /^\/contest-history$/,
+    /^\/contest-history\/[^/]+$/, // <-- dynamic route pattern
+    /^\/leaderboard$/,
+    /^\/profile$/,
+    /^\/contest-ended$/,
+    /^\/admin\/dashboard$/,
+    /^\/admin\/contest-history$/,
+    /^\/admin\/create-contest$/,
+    /^\/admin\/manage-contests$/,
+    /^\/admin\/manageusers$/,
+    /^\/admin\/analytics$/,
+    /^\/admin\/profile$/,
+    /^\/admin\/settings$/,
+    /^\/admin\/register$/,
   ];
 
-  const is404Page = !knownRoutes.includes(location.pathname);
+  const is404Page = !knownRoutePatterns.some((pattern) =>
+    pattern.test(location.pathname)
+  );
+
   if (is404Page) {
     return <main className="min-h-screen w-full">{children}</main>;
   }
@@ -77,8 +81,9 @@ const Layout = ({ children }) => {
     );
   }
 
-  const isDashboardPage = dashboardRoutes.some((path) =>
-    location.pathname.startsWith(path)
+  const isDashboardPage = dashboardRoutes.some(
+    (path) =>
+      location.pathname === path || location.pathname.startsWith(`${path}/`)
   );
 
   const isAuthPage = authRoutes.some((path) =>

@@ -24,6 +24,7 @@ import {
   AdminLogin,
   ContestHistory,
   AdminRegister,
+  PreviousContestQuestions,
 } from "./Pages/index.js";
 import { store } from "./Store/Store.js";
 import {
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
           {
             path: "contest-history",
             element: <History />,
+          },
+          {
+            path: "contest-history/:id",
+            element: <PreviousContestQuestions />,
           },
           {
             path: "leaderboard",

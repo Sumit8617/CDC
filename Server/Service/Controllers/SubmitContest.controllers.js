@@ -37,19 +37,18 @@ const submitContest = asynchandler(async (req, res) => {
   }
 
   // UPSERT SUBMISSION (safe)
-  let submission = await SubmittedOption.findOne({ contest, user });
-
-const preparedQuestions = questions.map((q) => ({
-  question: new mongoose.mongo.ObjectId(q.question),
-  submittedOption: Number(q.submittedOption),
-  checked: false,
-}));
-
-
+  let submission = await SubmittedOption.findOne({ contest, user: user._id });
+  console.log("Submission Details =>", submission);
+  const preparedQuestions = questions.map((q) => ({
+    question: new mongoose.mongo.ObjectId(q.question),
+    submittedOption: Number(q.submittedOption),
+    checked: false,
+  }));
 
   // If submission exists → update
   if (submission) {
     submission.questions = preparedQuestions;
+    submission.user = user;
   } else {
     submission = new SubmittedOption({
       contest,
