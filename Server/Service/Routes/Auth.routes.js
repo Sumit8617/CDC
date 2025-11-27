@@ -35,7 +35,7 @@ router.put(
 );
 router.get("/check", protectRoute, checkAuth);
 router.post("/refresh-token", refreshAccessToken);
-router.post("/change-password", protectRoute, changePassword);
+router.put("/change-password", protectRoute, changePassword);
 
 router.post("/forgot-password/send-otp", sendPasswordResetOTP);
 router.post("/forgot-password/verify-otp", verifyPasswordResetOTP);

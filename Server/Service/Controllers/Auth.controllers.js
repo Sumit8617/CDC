@@ -211,6 +211,11 @@ const changeCurrentPassword = asynchandler(async (req, res) => {
   if (!oldPassword || !newPassword || !confirmPassword) {
     throw new APIERR(400, "Please provide the required fields");
   }
+
+  if (newPassword.length < 6 || confirmPassword.length < 6) {
+    throw new APIERR(400, "Password must be at least 6 characters long");
+  }
+
   if (newPassword !== confirmPassword) {
     throw new APIERR(400, "New Password and Confirm Password must be same");
   }
@@ -227,7 +232,7 @@ const changeCurrentPassword = asynchandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
   return res
     .status(200)
-    .json(new APIRES(200, {}, "Password changed successfully"));
+    .json(new APIRES(200, user, "Password changed successfully"));
 });
 
 const userDetails = asynchandler(async (req, res) => {
@@ -271,7 +276,7 @@ const userDetails = asynchandler(async (req, res) => {
           }),
           college: user.college,
           dob: user.dob,
-          bio : user.bio,
+          bio: user.bio,
           role: user.role,
         },
       },

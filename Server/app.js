@@ -8,6 +8,7 @@ import adminRouter from "./Admin/Routes/CreateTest.routes.js";
 import leaderboardRouter from "./Service/Routes/Leaderboard.routes.js";
 import { adminAuthRoute } from "./Admin/Routes/Auth.routes.js";
 import contestDetailsRouter from "./Service/Routes/TestDetails.routes.js";
+import viewersRouter from "./Service/Routes/Statistic.routes.js";
 
 const app = express();
 
@@ -54,5 +55,7 @@ app.use("/api/v1/user", leaderboardRouter);
 app.use("/api/v1/user", contestDetailsRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/admin/auth", adminAuthRoute);
+
+app.use("/api/v1/viewer/", viewersRouter);
 
 export { app };

@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import { Trophy, Users, ShieldUser, FileText } from "lucide-react";
-
-axios.defaults.withCredentials = true;
+import axiosClient from "./AxiosInstance";
 
 // API Calls
 
@@ -10,18 +8,14 @@ axios.defaults.withCredentials = true;
 export const fetchContest = createAsyncThunk(
   "stats/fetchContestsOverview",
   async () => {
-    const res = await axios.get(
-      `${import.meta.env.VITE_BACKEND_API}/api/v1/admin/auth/get-contest`
-    );
+    const res = await axiosClient.get(`/api/v1/admin/auth/get-contest`);
     return res.data.data;
   }
 );
 
 // User Stats
 export const fetchUsers = createAsyncThunk("stats/fetchUsers", async () => {
-  const res = await axios.get(
-    `${import.meta.env.VITE_BACKEND_API}/api/v1/admin/auth/get-user`
-  );
+  const res = await axiosClient.get(`/api/v1/admin/auth/get-user`);
   return {
     totalUsers: res.data.data.totalUsers,
     userDetails: res.data.data.userDetails,
@@ -30,9 +24,7 @@ export const fetchUsers = createAsyncThunk("stats/fetchUsers", async () => {
 
 // Admin Stats
 export const fetchAdmins = createAsyncThunk("stats/fetchAdmins", async () => {
-  const res = await axios.get(
-    `${import.meta.env.VITE_BACKEND_API}/api/v1/admin/auth/get-admin`
-  );
+  const res = await axiosClient.get(`/api/v1/admin/auth/get-admin`);
   return {
     totalAdmin: res.data.data.totalAdmin,
     adminDetails: res.data.data.adminDetails,

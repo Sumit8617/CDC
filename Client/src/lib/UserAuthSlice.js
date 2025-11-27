@@ -21,7 +21,7 @@ export const sendOtp = createAsyncThunk(
 
     try {
       const res = await axiosClient.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/send-otp`,
+        `/api/v1/user/send-otp`,
         { fullName, email },
         { withCredentials: true }
       );
@@ -41,7 +41,7 @@ export const verifyOtp = createAsyncThunk(
     const { rejectWithValue } = thunkAPI;
     try {
       const res = await axiosClient.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/verify-otp`,
+        `/api/v1/user/verify-otp`,
         { otp },
         { withCredentials: true }
       );
@@ -59,11 +59,9 @@ export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/signup`,
-        userData,
-        { withCredentials: true }
-      );
+      const res = await axiosClient.post(`/api/v1/user/signup`, userData, {
+        withCredentials: true,
+      });
       return res.data;
     } catch (error) {
       return rejectWithValue(
@@ -78,11 +76,9 @@ export const login = createAsyncThunk(
   "auth/login",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/login`,
-        userData,
-        { withCredentials: true }
-      );
+      const res = await axiosClient.post(`/api/v1/user/login`, userData, {
+        withCredentials: true,
+      });
       return res.data;
     } catch (error) {
       console.error("ERR While Login", error);
@@ -98,11 +94,9 @@ export const adminLogin = createAsyncThunk(
   "auth/adminlogin",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/admin/auth/login`,
-        userData,
-        { withCredentials: true }
-      );
+      const res = await axiosClient.post(`/api/v1/admin/auth/login`, userData, {
+        withCredentials: true,
+      });
       return res.data;
     } catch (error) {
       console.error("ERR While Login", error);
@@ -119,7 +113,7 @@ export const logoutUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await axiosClient.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/logout`,
+        `/api/v1/user/logout`,
         {},
         { withCredentials: true }
       );
@@ -136,10 +130,9 @@ export const logoutUser = createAsyncThunk(
 export const fetchUserDetails = createAsyncThunk(
   "auth/fetchUserDetails",
   async () => {
-    const res = await axiosClient.get(
-      `${import.meta.env.VITE_BACKEND_API}/api/v1/user/user-details`,
-      { withCredentials: true }
-    );
+    const res = await axiosClient.get(`/api/v1/user/user-details`, {
+      withCredentials: true,
+    });
     return res.data || null;
   }
 );
@@ -155,7 +148,7 @@ export const updateProfile = createAsyncThunk(
         : {};
 
       const res = await axiosClient.put(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/updateProfile`,
+        `/api/v1/user/updateProfile`,
         payload,
         config
       );
@@ -163,6 +156,25 @@ export const updateProfile = createAsyncThunk(
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to update profile");
+    }
+  }
+);
+
+// Change Password
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.put(
+        `/api/v1/user/change-password`,
+        payload
+      );
+
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Something went wrong"
+      );
     }
   }
 );
@@ -382,6 +394,22 @@ const authSlice = createSlice({
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to update profile";
+      })
+
+      // Change Password
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.success = false;
       });
   },
 });

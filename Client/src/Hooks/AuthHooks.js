@@ -5,6 +5,7 @@ import {
   verifyOtp,
   fetchUserDetails,
   updateProfile,
+  changePassword,
 } from "../lib/UserAuthSlice";
 import { useCallback, useState } from "react";
 
@@ -92,6 +93,20 @@ const useSignup = () => {
     [dispatch]
   );
 
+  // Change Password
+  const handleChangePassword = useCallback(
+    async (payload) => {
+      try {
+        const res = await dispatch(changePassword(payload)).unwrap();
+        return res || true;
+      } catch (err) {
+        console.error("Password change failed:", err);
+        throw err;
+      }
+    },
+    [dispatch]
+  );
+
   return {
     handleSignup,
     handleSendOtp,
@@ -105,6 +120,7 @@ const useSignup = () => {
     otpSent,
     otpVerified,
     user,
+    handleChangePassword,
   };
 };
 

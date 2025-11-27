@@ -1,22 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-axios.defaults.withCredentials = true;
+import axiosClient from "./AxiosInstance";
 
 export const fetchContestDetails = createAsyncThunk(
   "contest/fetchContestDetails",
   async () => {
-    const res = await axios.get(
-      `${import.meta.env.VITE_BACKEND_API}/api/v1/user/contest-details`
+    const res = await axiosClient.get(
+      `/api/v1/user/contest-details`
     );
-    return res.data.data; // Expecting an array of contests now
+    return res.data.data;
   }
 );
 
 export const previousContestQuestions = createAsyncThunk(
   "contest/previousContestQuestions",
   async (contestId) => {
-    const res = await axios.get(
-      `${import.meta.env.VITE_BACKEND_API}/api/v1/user/previous-contest-questions/${contestId}`
+    const res = await axiosClient.get(
+      `/api/v1/user/previous-contest-questions/${contestId}`
     );
     return res.data.data;
   }

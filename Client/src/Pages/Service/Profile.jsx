@@ -1,11 +1,5 @@
-import React, { useState } from "react";
-import {
-  Card,
-  Button,
-  PageLoaderWrapper,
-  UserProfileCard,
-} from "../../Components/index";
-import { Eye, EyeOff } from "lucide-react";
+import React, { lazy, useEffect, useState } from "react";
+import { Card, Button } from "../../Components/index";
 import {
   BarChart,
   Bar,
@@ -16,25 +10,32 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts";
+import { useContestDetails } from "../../Hooks/TestDetailsHook";
 
+// Lazy Loading
+const UserProfileCard = lazy(
+  () => import("../../Components/Profile/UserProfileCard")
+);
+const ChangePassword = lazy(
+  () => import("../../Components/Password/UserPasswordChange")
+);
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [showPassword, setShowPassword] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
 
-  const toggleVisibility = (field) =>
-    setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
+  // Test Details Hook
+  const { contests = [], getContests } = useContestDetails();
 
   // Dummy placeholders until UserProfileCard loads user
   const emptyStats = {
-    totalContests: 0,
-    avgScore: "0%",
-    bestRank: "--",
-    successRate: "0%",
+    totalContests: contests.length,
+    yourApperance: "20%",
+    // averageScore: "0%",
+    bestRank: "#09",
   };
+
+  useEffect(() => {
+    getContests()
+  },[]);
 
   const emptyPerformance = [
     { category: "Reasoning", score: 0 },
@@ -117,7 +118,7 @@ const Profile = () => {
             </Card>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(stats).map(([key, value], i) => (
                 <Card
                   key={i}
@@ -176,7 +177,7 @@ const Profile = () => {
           </>
         )}
 
-        {/* ---------------- ACHIEVEMENTS TAB ---------------- */}
+        {/* Achievements Tab */}
         {activeTab === "achievements" && (
           <Card className="p-6 rounded-2xl shadow-sm border border-gray-100 bg-white">
             <h2 className="text-xl font-bold text-gray-800 mb-6">
@@ -220,52 +221,10 @@ const Profile = () => {
           </Card>
         )}
 
-        {/* ---------------- SECURITY TAB ---------------- */}
+        {/* SECURITY TAB */}
         {activeTab === "security" && (
-          <Card className="p-8 rounded-2xl shadow-sm border border-gray-100 bg-white w-full">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">
-              Security Settings
-            </h2>
-
-            <section className="mb-10">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                Change Password
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {["current", "new", "confirm"].map((type, i) => (
-                  <div key={i}>
-                    <label className="block text-gray-700 mb-2 capitalize">
-                      {type} Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword[type] ? "text" : "password"}
-                        className="w-full border border-gray-200 rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder={`Enter ${type} password`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => toggleVisibility(type)}
-                        className="absolute right-3 top-3.5 text-gray-500"
-                      >
-                        {showPassword[type] ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg">
-                  Update Password
-                </Button>
-              </div>
-            </section>
+          <Card>
+            <ChangePassword />
           </Card>
         )}
       </div>

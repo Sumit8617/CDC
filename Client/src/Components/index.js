@@ -14,6 +14,7 @@ import UserDashboard from "./Dashboard/UserDashboard";
 import { PageLoaderWrapper } from "./Common/Pageloader";
 import UserProfileCard from "./Profile/UserProfileCard";
 import Modal from "./Common/Modal";
+import UserChangePassword from "./Password/UserPasswordChange";
 
 export {
   GeneralNav,
@@ -32,4 +33,5 @@ export {
   PageLoaderWrapper,
   UserProfileCard,
   Modal,
+  UserChangePassword,
 };
