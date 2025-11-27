@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Button } from "../../Components/index";
+import { Button, PageLoaderWrapper } from "../../Components/index";
 import { useContestDetails } from "../../Hooks/TestDetailsHook";
 
 const QuestionCard = ({ question, selectedOption, setSelectedOption }) => (
@@ -64,8 +64,19 @@ const PreviousQuestions = () => {
     if (currentQuestion > 0) setCurrentQuestion(currentQuestion - 1);
   };
 
-  if (loading) return <p className="pt-24 px-4">Loading...</p>;
-  if (error) return <p className="pt-24 px-4">Error: {error}</p>;
+  if (loading)
+    return (
+      <div>
+        {" "}
+        <PageLoaderWrapper loading={loading} />{" "}
+      </div>
+    );
+  if (error)
+    return (
+      <p className="pt-24 px-4 md:pl-64 text-2xl font-bold text-center">
+        <span className="text-red-500">ERROR :</span> {error}
+      </p>
+    );
   if (!questions.length)
     return <p className="pt-24 px-4">No questions found</p>;
 

@@ -3,6 +3,7 @@ import { Test } from "../../Admin/Models/Contest.model.js";
 
 const fetchContestDetails = asynchandler(async (req, res) => {
   const contests = await Test.find({})
+    .sort({ createdAt: -1 })
     .select("testName date status description")
     .lean();
 

@@ -11,6 +11,7 @@ import Card from "./Common/Card";
 import HowItWorks from "./Common/HowItWorks";
 import Testimonials from "./Testimonials/UserReview";
 import UserDashboard from "./Dashboard/UserDashboard";
+import { PageLoaderWrapper } from "./Common/Pageloader";
 
 export {
   GeneralNav,
@@ -26,4 +27,5 @@ export {
   Testimonials,
   UserDashboard,
   Sidebar,
+  PageLoaderWrapper,
 };

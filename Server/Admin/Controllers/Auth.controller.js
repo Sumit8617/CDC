@@ -79,6 +79,9 @@ const adminInvite = asynchandler(async (req, res) => {
 });
 
 const getUser = asynchandler(async (req, res) => {
+  if (!userId) {
+    throw new APIERR(404, "User ID Not Found");
+  }
   const totalUsers = await User.countDocuments({ role: "user" }).lean();
   const userDetails = await User.find({ role: "user" }).select(
     "-password -refreshToken"

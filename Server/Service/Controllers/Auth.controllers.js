@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { User } from "../Models/User.models.js";
 import {
   asynchandler,
@@ -166,39 +167,43 @@ const refreshAccessToken = asynchandler(async (req, res) => {
   if (!incomingRefreshToken) {
     throw new APIERR(401, "No refresh token found. Please login again");
   }
+
+  // Verify refresh token signature
+  let decoded;
   try {
-    const decoded = jwt.verify(
+    decoded = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-    const user = await User.findById(decoded._id);
-    if (!user) {
-      throw new APIERR(404, "User not found");
-    }
-
-    if (incomingRefreshToken !== user.refreshToken) {
-      throw new APIERR(401, "Refresh Token Mismatch. Please login again");
-    }
-    const { accessToken, newRefreshToken } =
-      await generateAccessAndRefreshTokens(user._id);
-
-    res
-      .status(200)
-      .cookie("accessToken", accessToken, cookieOptions)
-      .cookie("refreshToken", newRefreshToken, cookieOptions)
-      .lson(
-        new APIRES(
-          200,
-          { accessToken, refreshToken: newRefreshToken },
-          "Access Token refreshed Successfully"
-        )
-      );
-  } catch (error) {
-    throw new APIERR(
-      401,
-      error?.message || "Invalid Refresh Token. Please login again"
-    );
+  } catch (err) {
+    throw new APIERR(401, "Invalid or expired refresh token");
   }
+
+  // Find user
+  const user = await User.findById(decoded._id);
+  if (!user) {
+    throw new APIERR(404, "User not found");
+  }
+
+  //  Compare hashed refresh token
+  const isMatch = await user.compareRefreshToken(incomingRefreshToken);
+  if (!isMatch) {
+    throw new APIERR(401, "Refresh token mismatch. Please login again");
+  }
+
+  //  Generate new pair
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
+
+  //  Send cookies
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(
+      new APIRES(200, { accessToken }, "Access token refreshed successfully")
+    );
 });
 
 const changeCurrentPassword = asynchandler(async (req, res) => {
@@ -225,7 +230,54 @@ const changeCurrentPassword = asynchandler(async (req, res) => {
     .json(new APIRES(200, {}, "Password changed successfully"));
 });
 
-// TODO: Convert to working phase
+const userDetails = asynchandler(async (req, res) => {
+  const token = req.cookies?.accessToken;
+  console.log("Incoming Tokens =>", token);
+  if (!token) throw new APIERR(401, "No access token");
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+  } catch (e) {
+    throw new APIERR(401, "Invalid or expired access token");
+  }
+
+  const userId = decoded._id;
+  if (!userId) throw new APIERR(401, "Invalid token payload");
+
+  const user = await User.findById(userId)
+    .select("-password -refreshToken")
+    .lean();
+
+  if (!user) throw new APIERR(404, "User not found");
+
+  const profilePicUrl =
+    user?.profilePic?.url.trim() && user.profilePic.url.trim() !== ""
+      ? user.profilePic.url.trim()
+      : null;
+
+  return res.status(200).json(
+    new APIRES(
+      200,
+      {
+        user: {
+          id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          profilePic: profilePicUrl,
+          since: new Date(user.createdAt).toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          }),
+          college: user.college,
+          dob: user.dob,
+          role: user.role,
+        },
+      },
+      "User fetched"
+    )
+  );
+});
 
 const checkAuth = (req, res) => {
   if (!req.user) {
@@ -242,4 +294,5 @@ export {
   generateAccessAndRefreshTokens,
   refreshAccessToken,
   changeCurrentPassword,
+  userDetails,
 };
