@@ -12,6 +12,8 @@ import HowItWorks from "./Common/HowItWorks";
 import Testimonials from "./Testimonials/UserReview";
 import UserDashboard from "./Dashboard/UserDashboard";
 import { PageLoaderWrapper } from "./Common/Pageloader";
+import UserProfileCard from "./Profile/UserProfileCard";
+import Modal from "./Common/Modal";
 
 export {
   GeneralNav,
@@ -28,4 +30,6 @@ export {
   UserDashboard,
   Sidebar,
   PageLoaderWrapper,
+  UserProfileCard,
+  Modal,
 };
