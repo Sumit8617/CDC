@@ -271,6 +271,7 @@ const userDetails = asynchandler(async (req, res) => {
           }),
           college: user.college,
           dob: user.dob,
+          bio : user.bio,
           role: user.role,
         },
       },

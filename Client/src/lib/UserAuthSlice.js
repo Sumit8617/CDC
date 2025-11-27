@@ -145,13 +145,25 @@ export const fetchUserDetails = createAsyncThunk(
 );
 
 // Upload image
-export const uploadImage = createAsyncThunk(
-  "auth/uploadImage",
-  async (formData) => {
-    const res = await axiosClient.put("/api/v1/user/updateProfile", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return res.data;
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const isFormData = payload instanceof FormData;
+      const config = isFormData
+        ? { headers: { "Content-Type": "multipart/form-data" } }
+        : {};
+
+      const res = await axiosClient.put(
+        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/updateProfile`,
+        payload,
+        config
+      );
+
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || "Failed to update profile");
+    }
   }
 );
 
@@ -350,20 +362,16 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Image change
-      .addCase(uploadImage.pending, (state) => {
+      // Update Profile
+      .addCase(updateProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-
-      .addCase(uploadImage.fulfilled, (state, action) => {
+      .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
-
         const user = extractUser(action.payload);
-
         if (user) {
           state.user = user;
-
           try {
             localStorage.setItem("user", JSON.stringify(user));
           } catch (e) {
@@ -371,10 +379,9 @@ const authSlice = createSlice({
           }
         }
       })
-
-      .addCase(uploadImage.rejected, (state, action) => {
+      .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to update profile image";
+        state.error = action.payload || "Failed to update profile";
       });
   },
 });

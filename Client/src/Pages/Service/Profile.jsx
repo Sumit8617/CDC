@@ -8,6 +8,7 @@ import {
   EyeOff,
   Camera,
   User2Icon,
+  X,
 } from "lucide-react";
 import {
   BarChart,
@@ -29,13 +30,14 @@ const Profile = () => {
     new: false,
     confirm: false,
   });
+  const [isBioModalOpen, setIsBioModalOpen] = useState(false);
+  const [modalBioInput, setModalBioInput] = useState("");
 
   const toggleVisibility = (field) =>
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
 
   // Hook
-  const { handleFetchUserDetails, handleUploadImage, user } = useSignup();
-
+  const { handleFetchUserDetails, handleUpdateProfile, user } = useSignup();
   const [localLoading, setLocalLoading] = useState(true);
 
   // Fetch user details on mount if not present
@@ -70,7 +72,7 @@ const Profile = () => {
     college: "Jalpaiguri Government Engineering College",
     memberSince: user.since || "N/A",
     profilePic: user.profilePic || null,
-    bio: user.bio || "Add Your Bio",
+    bio: user.bio || "Add Your Bio from the Edit Profile Button",
     stats: user.stats || {
       totalContests: 0,
       avgScore: "0%",
@@ -102,6 +104,22 @@ const Profile = () => {
     ],
   };
 
+  // Save bio update from modal
+  const handleModalBioUpdate = async () => {
+    try {
+      if (!modalBioInput.trim()) return;
+      await handleUpdateProfile({ bio: modalBioInput });
+      setIsBioModalOpen(false);
+
+      // Refresh user data
+      await handleFetchUserDetails();
+    } catch (err) {
+      console.error("Bio update failed:", err);
+    } finally {
+      setTimeout(() => setUploadStatus(null), 2000);
+    }
+  };
+
   // Upload image
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -117,7 +135,7 @@ const Profile = () => {
 
     try {
       setUploadStatus("uploading");
-      await handleUploadImage(formData); // this uploads in background
+      await handleUpdateProfile(formData); // Use unified endpoint
       setUploadStatus("success");
 
       // Refresh user data
@@ -127,7 +145,6 @@ const Profile = () => {
       setUploadStatus("failed");
     }
 
-    // Clear status after 2 seconds
     setTimeout(() => setUploadStatus(null), 2000);
   };
 
@@ -195,7 +212,7 @@ const Profile = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
                   {/* Profile Picture */}
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-md">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-md flex items-center justify-center bg-gray-100">
                     {finalUser.profilePic ? (
                       <img
                         src={finalUser.profilePic}
@@ -203,8 +220,7 @@ const Profile = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      // TODO: User Icon is not coming for the user who don't have the profile image
-                      <User2Icon className="w-full h-full text-gray-400" />
+                      <User2Icon className="w-16 h-16 text-gray-400" />
                     )}
                     <label
                       htmlFor="profilePicUpload"
@@ -238,6 +254,10 @@ const Profile = () => {
                   variant="primary"
                   size="sm"
                   className="mt-4 sm:mt-0 flex items-center gap-2"
+                  onClick={() => {
+                    setModalBioInput(finalUser.bio); // prefill modal with current bio
+                    setIsBioModalOpen(true);
+                  }}
                 >
                   <Edit2 className="w-4 h-4" /> Edit Profile
                 </Button>
@@ -248,6 +268,34 @@ const Profile = () => {
                 {finalUser.bio}
               </p>
             </Card>
+
+            {/* Bio Modal */}
+            {isBioModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
+                  <button
+                    onClick={() => setIsBioModalOpen(false)}
+                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                  >
+                    <X size={20} />
+                  </button>
+                  <h2 className="text-xl font-bold mb-4">Edit Bio</h2>
+                  <textarea
+                    className="w-full border p-2 rounded mb-4"
+                    value={modalBioInput}
+                    onChange={(e) => setModalBioInput(e.target.value)}
+                    placeholder="Enter your bio"
+                  />
+                  <Button
+                    className="w-full"
+                    onClick={handleModalBioUpdate}
+                    disabled={uploadStatus === "uploading"}
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

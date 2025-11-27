@@ -4,7 +4,7 @@ import {
   sendOtp,
   verifyOtp,
   fetchUserDetails,
-  uploadImage,
+  updateProfile,
 } from "../lib/UserAuthSlice";
 import { useCallback, useState } from "react";
 
@@ -79,13 +79,13 @@ const useSignup = () => {
   );
 
   // Upload Image
-  const handleUploadImage = useCallback(
-    async (formData) => {
+  const handleUpdateProfile = useCallback(
+    async (payload) => {
       try {
-        const updated = await dispatch(uploadImage(formData)).unwrap();
+        const updated = await dispatch(updateProfile(payload)).unwrap();
         return updated?.data?.user || updated?.user || null;
       } catch (err) {
-        console.error("Image upload failed:", err);
+        console.error("Profile update failed:", err);
         throw err;
       }
     },
@@ -97,7 +97,7 @@ const useSignup = () => {
     handleSendOtp,
     handleVerifyOtp,
     handleFetchUserDetails,
-    handleUploadImage,
+    handleUpdateProfile,
     loading,
     loadingUser,
     error,
