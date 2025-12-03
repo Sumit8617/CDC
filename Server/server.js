@@ -2,6 +2,7 @@ import "./config/Envfiles.config.js";
 import { app } from "./app.js";
 import { connectDB } from "./DB/Db.db.js";
 import "./Admin/Controllers/CheckCorrectAnswer.controller.js";
+import "./Cron/QuizNotifier.cron.js";
 
 import { startSubmissionWorker } from "./Admin/Worker/SubmissionWorker.controller.js";
 

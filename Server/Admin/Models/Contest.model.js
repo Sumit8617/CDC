@@ -18,6 +18,10 @@ const testSchema = new mongoose.Schema(
       enum: ["pending", "completed"],
       default: "pending", // new contests start as pending
     },
+    notificationsSent: {
+      type: Boolean,
+      default: false, // to track if notifications have been sent
+    },
   },
   { timestamps: true }
 );

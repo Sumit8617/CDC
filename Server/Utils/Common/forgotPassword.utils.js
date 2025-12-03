@@ -1,5 +1,6 @@
 import {User} from "../../Service/Models/User.models.js";
-import { asynchandler, APIERR,sendMail } from "../index.utils.js";
+import { asynchandler, APIERR } from "../index.utils.js";
+import { contestNotification } from "../Mail/ContestNotification.js";
 
 
 export const sendPasswordResetOTP = asynchandler(async (req,res) =>{
@@ -25,7 +26,7 @@ export const sendPasswordResetOTP = asynchandler(async (req,res) =>{
         date: new Date().getFullYear(),
     };
 
-    const mailSent = await sendMail(templateId, templateData);
+    const mailSent = await contestNotification(templateId, templateData);
     if(!mailSent){
         throw new APIERR(500,"Error while sending the OTP email");
     }
