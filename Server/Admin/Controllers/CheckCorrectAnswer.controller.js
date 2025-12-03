@@ -47,7 +47,7 @@ cron.schedule("* * * * *", async () => {
           select: "correctOption",
         });
 
-      console.log("Submissions:", submissions.length);
+      console.log("Submissions:", submissions.length, submissions);
 
       const leaderboardMap = {};
 

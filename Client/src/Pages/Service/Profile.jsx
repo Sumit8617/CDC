@@ -1,19 +1,5 @@
-import React, { useState } from "react";
+import React, { lazy, useEffect, useState } from "react";
 import { Card, Button } from "../../Components/index";
-import {
-  User,
-  Edit2,
-  Trophy,
-  Star,
-  Flame,
-  Zap,
-  Target,
-  Award,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-  Smartphone,
-} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -24,86 +10,64 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts";
+import { useContestDetails } from "../../Hooks/TestDetailsHook";
 
+// Lazy Loading
+const UserProfileCard = lazy(
+  () => import("../../Components/Profile/UserProfileCard")
+);
+const ChangePassword = lazy(
+  () => import("../../Components/Password/UserPasswordChange")
+);
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [showPassword, setShowPassword] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
 
-  const toggleVisibility = (field) =>
-    setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
+  // Test Details Hook
+  const { contests = [], getContests } = useContestDetails();
 
-  const user = {
-    name: "Priya Singh",
-    email: "priya.singh@example.com",
-    college: "IIT Delhi",
-    memberSince: "January 2024",
-    bio: "Passionate about problem-solving and competitive programming",
-    stats: {
-      totalContests: 24,
-      avgScore: "82%",
-      bestRank: "#45",
-      successRate: "87%",
-    },
+  // Dummy placeholders until UserProfileCard loads user
+  const emptyStats = {
+    totalContests: contests.length,
+    yourApperance: "20%",
+    // averageScore: "0%",
+    bestRank: "#09",
   };
 
-  const chartData = [
-    { category: "Reasoning", score: 90 },
-    { category: "Quant", score: 85 },
-    { category: "Verbal", score: 75 },
-    { category: "Logic", score: 88 },
-    { category: "Data", score: 70 },
+  useEffect(() => {
+    getContests()
+  },[]);
+
+  const emptyPerformance = [
+    { category: "Reasoning", score: 0 },
+    { category: "Quant", score: 0 },
+    { category: "Verbal", score: 0 },
+    { category: "Logic", score: 0 },
+    { category: "Data", score: 0 },
   ];
 
-  const activeIndex = 1;
-
-  const achievements = [
+  const emptyAchievements = [
     {
       title: "Top Performer",
       description: "Ranked in top 100 globally",
-      icon: <Trophy className="w-7 h-7 text-yellow-500" />,
       color: "bg-yellow-100",
+      icon: null,
       earned: true,
     },
     {
       title: "Consistency Master",
       description: "Participated in 30 consecutive contests",
-      icon: <Star className="w-7 h-7 text-blue-500" />,
       color: "bg-blue-100",
+      icon: null,
       earned: true,
-    },
-    {
-      title: "Streak Champion",
-      description: "Maintained 7-day win streak",
-      icon: <Flame className="w-7 h-7 text-orange-500" />,
-      color: "bg-orange-100",
-      earned: true,
-    },
-    {
-      title: "Speed Demon",
-      description: "Completed contest in under 30 minutes",
-      icon: <Zap className="w-7 h-7 text-purple-500" />,
-      color: "bg-purple-100",
-      earned: true,
-    },
-    {
-      title: "Perfect Score",
-      description: "Score 100% in a contest",
-      icon: <Target className="w-7 h-7 text-gray-400" />,
-      color: "bg-gray-100",
-      earned: false,
-    },
-    {
-      title: "Master of All",
-      description: "Win all types of contests",
-      icon: <Award className="w-7 h-7 text-gray-400" />,
-      color: "bg-gray-100",
-      earned: false,
     },
   ];
+
+  // These will be passed from UserProfileCard later using context/redux
+  const stats = emptyStats;
+  const performance = emptyPerformance;
+  const achievements = emptyAchievements;
+
+  const activeIndex = 1;
 
   return (
     <div className="min-h-screen bg-gray-50 md:pl-64">
@@ -116,7 +80,7 @@ const Profile = () => {
 
       {/* Main Section */}
       <div className="pt-24 px-4 sm:px-6 md:px-8 space-y-8">
-        {/* Navigation Tabs */}
+        {/* Tabs */}
         <div className="flex flex-wrap gap-2">
           <Button
             variant={activeTab === "overview" ? "primary" : "outline"}
@@ -126,6 +90,7 @@ const Profile = () => {
           >
             Overview
           </Button>
+
           <Button
             variant={activeTab === "achievements" ? "primary" : "outline"}
             size="sm"
@@ -134,6 +99,7 @@ const Profile = () => {
           >
             Achievements
           </Button>
+
           <Button
             variant={activeTab === "security" ? "primary" : "outline"}
             size="sm"
@@ -144,43 +110,16 @@ const Profile = () => {
           </Button>
         </div>
 
-        {/* Overview Section */}
+        {/* Overview Tab */}
         {activeTab === "overview" && (
           <>
-            <Card className="p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 bg-white">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                  <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="w-12 h-12 text-gray-400" />
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <h2 className="text-xl font-bold text-gray-900">
-                      {user.name}
-                    </h2>
-                    <p className="text-gray-600">{user.email}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {user.college} • Member since {user.memberSince}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="mt-4 sm:mt-0 flex items-center gap-2"
-                >
-                  <Edit2 className="w-4 h-4" /> Edit Profile
-                </Button>
-              </div>
-
-              <hr className="my-6 border-gray-200" />
-              <p className="text-gray-700 text-center sm:text-left">
-                {user.bio}
-              </p>
+            <Card className="">
+              <UserProfileCard />
             </Card>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {Object.entries(user.stats).map(([key, value], i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(stats).map(([key, value], i) => (
                 <Card
                   key={i}
                   className="p-5 rounded-2xl text-center border border-gray-100 bg-white shadow-sm"
@@ -200,9 +139,10 @@ const Profile = () => {
               <h2 className="text-xl font-bold text-gray-800 mb-4">
                 Performance by Category
               </h2>
+
               <div className="w-full h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
+                  <BarChart data={performance}>
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
@@ -220,15 +160,9 @@ const Profile = () => {
                       tickLine={false}
                       domain={[0, 100]}
                     />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #ddd",
-                        borderRadius: "10px",
-                      }}
-                    />
+                    <Tooltip />
                     <Bar dataKey="score" radius={[10, 10, 0, 0]} barSize={50}>
-                      {chartData.map((entry, index) => (
+                      {performance.map((entry, index) => (
                         <Cell
                           key={index}
                           fill={index === activeIndex ? "#4F46E5" : "#6366F1"}
@@ -243,12 +177,13 @@ const Profile = () => {
           </>
         )}
 
-        {/* Achievements */}
+        {/* Achievements Tab */}
         {activeTab === "achievements" && (
           <Card className="p-6 rounded-2xl shadow-sm border border-gray-100 bg-white">
             <h2 className="text-xl font-bold text-gray-800 mb-6">
               Achievements & Badges
             </h2>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {achievements.map((item, index) => (
                 <div
@@ -264,6 +199,7 @@ const Profile = () => {
                   >
                     {item.icon}
                   </div>
+
                   <h3
                     className={`text-base font-semibold ${
                       item.earned ? "text-gray-800" : "text-gray-500"
@@ -271,6 +207,7 @@ const Profile = () => {
                   >
                     {item.title}
                   </h3>
+
                   <p
                     className={`text-sm mt-1 ${
                       item.earned ? "text-gray-600" : "text-gray-400"
@@ -284,85 +221,10 @@ const Profile = () => {
           </Card>
         )}
 
-        {/* Security */}
+        {/* SECURITY TAB */}
         {activeTab === "security" && (
-          <Card className="p-8 rounded-2xl shadow-sm border border-gray-100 bg-white w-full">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">
-              Security Settings
-            </h2>
-
-            {/* Change Password */}
-            <section className="mb-10">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                Change Password
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {["current", "new", "confirm"].map((type, i) => (
-                  <div key={i}>
-                    <label className="block text-gray-700 mb-2 capitalize">
-                      {type} Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword[type] ? "text" : "password"}
-                        className="w-full border border-gray-200 rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder={`Enter ${type} password`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => toggleVisibility(type)}
-                        className="absolute right-3 top-3.5 text-gray-500"
-                      >
-                        {showPassword[type] ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg">
-                  Update Password
-                </Button>
-              </div>
-            </section>
-
-            <hr className="my-8 border-gray-200" />
-
-            {/* Two-Factor Authentication */}
-            <section className="mb-10">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                Two-Factor Authentication (2FA)
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Add an extra layer of security to your account using OTP or
-                authenticator apps.
-              </p>
-              <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
-                Enable 2FA
-              </Button>
-            </section>
-
-            <hr className="my-8 border-gray-200" />
-
-            {/* Account Recovery */}
-            <section>
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                Account Recovery Options
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Set recovery email or security questions to help regain access
-                if you forget your password.
-              </p>
-              <Button className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded-lg">
-                Manage Recovery Options
-              </Button>
-            </section>
+          <Card>
+            <ChangePassword />
           </Card>
         )}
       </div>

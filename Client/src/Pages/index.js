@@ -17,6 +17,7 @@ import AdminSettings from "./Admin/AdminSettings";
 import AdminLogin from "./Admin/AdminLogin";
 import ContestHistory from "./Admin/ConstestHistory";
 import AdminRegister from "./Admin/AdminRegistration";
+import PreviousContestQuestions from "./Service/ContestHistoryQuestions";
 
 export {
   Home,
@@ -38,4 +39,5 @@ export {
   AdminLogin,
   ContestHistory,
   AdminRegister,
+  PreviousContestQuestions,
 };

@@ -1,19 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axiosClient from "./AxiosInstance";
 
 const extractUser = (payload) => {
   if (!payload) return null;
-  if (payload.user && payload.role) {
-    return {
-      user: payload.user,
-      role: payload.role,
-    };
-  }
-  if (payload.data?.user) {
-    return payload.data.user;
-  }
+
+  // From user-details endpoint
+  if (payload.data?.user) return payload.data.user;
+
+  // From login endpoint
   if (payload.user) return payload.user;
-  return payload;
+
+  return null;
 };
 
 //  SEND OTP
@@ -23,8 +20,8 @@ export const sendOtp = createAsyncThunk(
     const { rejectWithValue } = thunkAPI;
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/send-otp`,
+      const res = await axiosClient.post(
+        `/api/v1/user/send-otp`,
         { fullName, email },
         { withCredentials: true }
       );
@@ -43,8 +40,8 @@ export const verifyOtp = createAsyncThunk(
   async ({ otp }, thunkAPI) => {
     const { rejectWithValue } = thunkAPI;
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/verify-otp`,
+      const res = await axiosClient.post(
+        `/api/v1/user/verify-otp`,
         { otp },
         { withCredentials: true }
       );
@@ -62,11 +59,9 @@ export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/signup`,
-        userData,
-        { withCredentials: true }
-      );
+      const res = await axiosClient.post(`/api/v1/user/signup`, userData, {
+        withCredentials: true,
+      });
       return res.data;
     } catch (error) {
       return rejectWithValue(
@@ -81,11 +76,9 @@ export const login = createAsyncThunk(
   "auth/login",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/login`,
-        userData,
-        { withCredentials: true }
-      );
+      const res = await axiosClient.post(`/api/v1/user/login`, userData, {
+        withCredentials: true,
+      });
       return res.data;
     } catch (error) {
       console.error("ERR While Login", error);
@@ -101,11 +94,9 @@ export const adminLogin = createAsyncThunk(
   "auth/adminlogin",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/admin/auth/login`,
-        userData,
-        { withCredentials: true }
-      );
+      const res = await axiosClient.post(`/api/v1/admin/auth/login`, userData, {
+        withCredentials: true,
+      });
       return res.data;
     } catch (error) {
       console.error("ERR While Login", error);
@@ -121,8 +112,8 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/api/v1/user/logout`,
+      const res = await axiosClient.post(
+        `/api/v1/user/logout`,
         {},
         { withCredentials: true }
       );
@@ -130,6 +121,59 @@ export const logoutUser = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Logout failed. Try again."
+      );
+    }
+  }
+);
+
+// Fetch User Details
+export const fetchUserDetails = createAsyncThunk(
+  "auth/fetchUserDetails",
+  async () => {
+    const res = await axiosClient.get(`/api/v1/user/user-details`, {
+      withCredentials: true,
+    });
+    return res.data || null;
+  }
+);
+
+// Upload image
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const isFormData = payload instanceof FormData;
+      const config = isFormData
+        ? { headers: { "Content-Type": "multipart/form-data" } }
+        : {};
+
+      const res = await axiosClient.put(
+        `/api/v1/user/updateProfile`,
+        payload,
+        config
+      );
+
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || "Failed to update profile");
+    }
+  }
+);
+
+// Change Password
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.put(
+        `/api/v1/user/change-password`,
+        payload
+      );
+
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Something went wrong"
       );
     }
   }
@@ -254,23 +298,11 @@ const authSlice = createSlice({
       // Login
       .addCase(login.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
-        state.loading = false;
-
         const user = extractUser(action.payload);
-
-        if (user) {
-          state.user = user;
-          try {
-            localStorage.setItem("user", JSON.stringify(user));
-          } catch (e) {
-            console.error(e);
-          }
-        } else {
-          state.user = null;
-        }
+        state.user = user;
+        localStorage.setItem("user", JSON.stringify(user));
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -325,6 +357,59 @@ const authSlice = createSlice({
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // Fetch User Details
+      .addCase(fetchUserDetails.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUserDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        const user = extractUser(action.payload);
+        state.user = user;
+        localStorage.setItem("user", JSON.stringify(user));
+      })
+      .addCase(fetchUserDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Update Profile
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        const user = extractUser(action.payload);
+        if (user) {
+          state.user = user;
+          try {
+            localStorage.setItem("user", JSON.stringify(user));
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to update profile";
+      })
+
+      // Change Password
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.success = false;
       });
   },
 });

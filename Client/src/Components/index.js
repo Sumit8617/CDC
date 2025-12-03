@@ -11,6 +11,10 @@ import Card from "./Common/Card";
 import HowItWorks from "./Common/HowItWorks";
 import Testimonials from "./Testimonials/UserReview";
 import UserDashboard from "./Dashboard/UserDashboard";
+import { PageLoaderWrapper } from "./Common/Pageloader";
+import UserProfileCard from "./Profile/UserProfileCard";
+import Modal from "./Common/Modal";
+import UserChangePassword from "./Password/UserPasswordChange";
 
 export {
   GeneralNav,
@@ -26,4 +30,8 @@ export {
   Testimonials,
   UserDashboard,
   Sidebar,
+  PageLoaderWrapper,
+  UserProfileCard,
+  Modal,
+  UserChangePassword,
 };

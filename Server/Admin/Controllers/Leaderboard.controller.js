@@ -1,5 +1,5 @@
 import { asynchandler, APIRES, APIERR } from "../../Utils/index.utils.js";
-import { Leaderboard } from "../../Admin/Models/Leaderboard.models.js";
+import { Leaderboard } from "../Models/Leaderboard.models.js";
 
 const getLeaderboard = asynchandler(async (req, res) => {
   const { contestId } = req.body;

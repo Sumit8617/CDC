@@ -7,7 +7,7 @@ export const protectRoute = asynchandler(async (req, res, next) => {
     //  Extract token from cookie or header
     const tokenFromCookie = req.cookies?.accessToken;
 
-    const authHeader = req.headers?.authorization; // lowercase!!
+    const authHeader = req.headers?.authorization;
     const tokenFromHeader = authHeader?.startsWith("Bearer ")
       ? authHeader.split(" ")[1]
       : null;

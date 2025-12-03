@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Home, Trophy, History, Zap, User, LogOut } from "lucide-react";
 import { Button, Card } from "../index";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import useLogin from "../../Hooks/LoginHook";
 
 const Sidebar = () => {
   const [active, setActive] = useState("Home");
   const [popup, setPopup] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { handleLogout } = useLogin();
 
@@ -43,6 +44,11 @@ const Sidebar = () => {
     navigate(item.path);
     setTimeout(() => setPopup(null), 1500);
   };
+
+  useEffect(() => {
+    const found = menuItems.find((item) => item.path === location.pathname);
+    if (found) setActive(found.name);
+  }, [location.pathname]);
 
   return (
     <>
@@ -94,7 +100,7 @@ const Sidebar = () => {
             size="md"
             round="md"
             className="w-full justify-start gap-3"
-            onClick={handleLogoutClick} // 🔥 updated
+            onClick={handleLogoutClick}
           >
             <LogOut className="w-5 h-5" />
             <span className="text-sm font-medium">Logout</span>
