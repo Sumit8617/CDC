@@ -43,7 +43,7 @@ const Layout = ({ children }) => {
     /^\/dashboard$/,
     /^\/contests$/,
     /^\/contest-history$/,
-    /^\/contest-history\/[^/]+$/, // <-- dynamic route pattern
+    /^\/contest-history\/[^/]+$/,
     /^\/leaderboard$/,
     /^\/profile$/,
     /^\/contest-ended$/,
@@ -108,21 +108,21 @@ const Layout = ({ children }) => {
   }
 
   // Public Pages
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
-      <header className="fixed top-0 left-0 w-full z-50 shadow-sm bg-white">
-        <GeneralNav />
-      </header>
+return (
+  <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
+    <header className="fixed top-0 left-0 w-full z-50 shadow-sm bg-white">
+      <GeneralNav />
+    </header>
 
-      <main className="grow pt-16 px-4 sm:px-6 lg:px-8 flex justify-center">
-        <div className="w-full max-w-8xl mx-auto">{children}</div>
-      </main>
+    <main className="flex-1 pt-16 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-8xl mx-auto">{children}</div>
+    </main>
 
-      <footer className="mt-auto bg-white border-t border-gray-200 shadow-inner">
-        <Footer />
-      </footer>
-    </div>
-  );
+    <footer className="bg-white border-t border-gray-200 shadow-inner">
+      <Footer />
+    </footer>
+  </div>
+);
 };
 
 export default Layout;

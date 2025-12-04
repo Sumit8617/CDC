@@ -382,13 +382,11 @@ const authSlice = createSlice({
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
         const user = extractUser(action.payload);
-        if (user) {
-          state.user = user;
-          try {
-            localStorage.setItem("user", JSON.stringify(user));
-          } catch (e) {
-            console.error(e);
-          }
+        state.user = user || state.user;
+        try {
+          user && localStorage.setItem("user", JSON.stringify(user));
+        } catch (e) {
+          console.error(e);
         }
       })
       .addCase(updateProfile.rejected, (state, action) => {

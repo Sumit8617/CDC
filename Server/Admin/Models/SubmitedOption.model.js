@@ -12,7 +12,6 @@ const submittedOptionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
     questions: [
       {
         question: {

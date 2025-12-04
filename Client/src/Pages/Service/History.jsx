@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Button } from "../../Components/index";
+import { Card, Button, PageLoaderWrapper } from "../../Components/index";
 import { useContestDetails } from "../../Hooks/TestDetailsHook";
 
 const History = () => {
@@ -10,6 +10,7 @@ const History = () => {
   // Fetch contests from Redux hook
   const { contests = [], loading, error, getContests } = useContestDetails();
   const navigate = useNavigate();
+  const contestList = Array.isArray(contests) ? contests : [];
 
   useEffect(() => {
     getContests();
@@ -18,19 +19,32 @@ const History = () => {
   // Calculate indexes for slicing
   const indexOfLastContest = currentPage * contestsPerPage;
   const indexOfFirstContest = indexOfLastContest - contestsPerPage;
-  const currentContests = contests.slice(
+  const currentContests = contestList.slice(
     indexOfFirstContest,
     indexOfLastContest
   );
 
-  const totalPages = Math.ceil(contests.length / contestsPerPage);
+  const totalPages = Math.ceil(contestList.length / contestsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  if (loading) return <p className="pt-24 px-4">Loading...</p>;
-  if (error) return <p className="pt-24 px-4">Error: {error}</p>;
+  if (loading)
+    return (
+      <p className="pt-24 px-4">
+        <PageLoaderWrapper />
+      </p>
+    );
+  if (error)
+    return (
+      <p className="pt-40 px-4">
+        <Card>
+          <h3>ERROR</h3>
+          <p>{error}</p>
+        </Card>
+      </p>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 md:pl-64">

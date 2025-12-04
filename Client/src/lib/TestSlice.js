@@ -4,10 +4,8 @@ import axiosClient from "./AxiosInstance";
 export const fetchContestDetails = createAsyncThunk(
   "contest/fetchContestDetails",
   async () => {
-    const res = await axiosClient.get(
-      `/api/v1/user/contest-details`
-    );
-    return res.data.data;
+    const res = await axiosClient.get(`/api/v1/user/contest-details`);
+    return res.data.data.formattedContests;
   }
 );
 
@@ -38,6 +36,7 @@ const contestDeatilsSlice = createSlice({
       .addCase(fetchContestDetails.fulfilled, (state, action) => {
         state.loading = false;
         state.contests = action.payload;
+        console.log("Contest details fetched =>", action.payload);
       })
       .addCase(fetchContestDetails.rejected, (state, action) => {
         state.loading = false;
@@ -52,7 +51,8 @@ const contestDeatilsSlice = createSlice({
       })
       .addCase(previousContestQuestions.rejected, (state, action) => {
         state.loading = false;
-        state.errors = action.error.message;
+        state.errors =
+          action.error.message || "Unable to fetch contest details.";
       });
   },
 });

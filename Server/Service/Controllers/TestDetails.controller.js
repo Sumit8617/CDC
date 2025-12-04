@@ -29,7 +29,7 @@ const fetchContestDetails = asynchandler(async (req, res) => {
     .json(
       new APIRES(
         200,
-        formattedContests,
+        { formattedContests, totalContest: contests.length },
         "Successfully fetched all contest details"
       )
     );

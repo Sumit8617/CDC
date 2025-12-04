@@ -24,4 +24,7 @@ const leaderboardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Prevent duplicate users per contest
+leaderboardSchema.index({ contest: 1, "data.user": 1 }, { unique: true });
+
 export const Leaderboard = mongoose.model("Leaderboard", leaderboardSchema);

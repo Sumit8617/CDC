@@ -9,7 +9,6 @@ import Input from "./Common/Input";
 import ResponsiveUnderline from "./Common/Underline";
 import Card from "./Common/Card";
 import HowItWorks from "./Common/HowItWorks";
-import Testimonials from "./Testimonials/UserReview";
 import UserDashboard from "./Dashboard/UserDashboard";
 import { PageLoaderWrapper } from "./Common/Pageloader";
 import UserProfileCard from "./Profile/UserProfileCard";
@@ -27,7 +26,6 @@ export {
   ResponsiveUnderline,
   Card,
   HowItWorks,
-  Testimonials,
   UserDashboard,
   Sidebar,
   PageLoaderWrapper,

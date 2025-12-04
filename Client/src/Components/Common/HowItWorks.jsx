@@ -11,7 +11,7 @@ const HowItWorks = () => {
     >
       <div className="max-w-6xl mx-auto px-6 text-center">
         {/* Header */}
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 font-popins">
+        <h2 className="md:text-6xl sm:text-4xl font-extrabold text-gray-900 font-ubuntu">
           How It Works
         </h2>
         <p className="text-gray-500 mt-3 text-lg">
@@ -31,7 +31,8 @@ const HowItWorks = () => {
           "
         >
           <Card
-            height="20"
+            className="px-2"
+            height="16"
             width="20"
             icon={<BookOpen className="h-8 w-8" />}
             title="Sign Up"
@@ -40,8 +41,9 @@ const HowItWorks = () => {
           />
 
           <Card
-            height="20"
+            height="16"
             width="20"
+            className="px-2"
             icon={<Trophy className="h-8 w-8" />}
             title="Participate"
             description="Take part in engaging contests and test your aptitude skills."
@@ -49,8 +51,9 @@ const HowItWorks = () => {
           />
 
           <Card
-            height="20"
+            height="16"
             width="20"
+            className="px-2"
             icon={<TrendingUp className="h-8 w-8" />}
             title="Track Progress"
             description="View detailed analytics and climb the competitive leaderboard."

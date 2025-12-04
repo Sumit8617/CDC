@@ -13,6 +13,12 @@ const testSchema = new mongoose.Schema(
         required: true,
       },
     ],
+    participants: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     status: {
       type: String,
       enum: ["pending", "completed"],
@@ -26,4 +32,4 @@ const testSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Test = mongoose.model("Test", testSchema)
+export const Test = mongoose.model("Test", testSchema);

@@ -25,6 +25,8 @@ import {
   ContestHistory,
   AdminRegister,
   PreviousContestQuestions,
+  About,
+  Contact,
 } from "./Pages/index.js";
 import { store } from "./Store/Store.js";
 import {
@@ -42,6 +44,14 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/about",
+        element: <About />,
+      },
+      {
+        path: "/contact",
+        element: <Contact />,
       },
       {
         path: "/admin/login",

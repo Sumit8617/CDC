@@ -1,5 +1,8 @@
 import jwt from "jsonwebtoken";
 import { User } from "../Models/User.models.js";
+import { SubmittedOption } from "../../Admin/Models/SubmitedOption.model.js";
+import { Leaderboard } from "../../Admin/Models/Leaderboard.models.js";
+import { Test } from "../../Admin/Models/Contest.model.js";
 import {
   asynchandler,
   APIERR,
@@ -256,6 +259,26 @@ const userDetails = asynchandler(async (req, res) => {
 
   if (!user) throw new APIERR(404, "User not found");
 
+  const totalContest = await Test.find({}).countDocuments();
+
+  const totalContestsGiven = await SubmittedOption.countDocuments({
+    user: userId,
+  });
+
+  // Fetch all leaderboards where the user is present
+  const leaderboards = await Leaderboard.find({ "data.user": userId }).lean();
+
+  // Calculate best rank
+  let bestRank = null;
+  for (const lb of leaderboards) {
+    const sortedData = lb.data.sort((a, b) => b.score - a.score); // Higher score = better rank
+    const rank =
+      sortedData.findIndex(
+        (entry) => entry.user.toString() === userId.toString()
+      ) + 1;
+    if (!bestRank || rank < bestRank) bestRank = rank;
+  }
+
   const profilePicUrl =
     user?.profilePic?.url.trim() && user.profilePic.url.trim() !== ""
       ? user.profilePic.url.trim()
@@ -278,6 +301,9 @@ const userDetails = asynchandler(async (req, res) => {
           dob: user.dob,
           bio: user.bio,
           role: user.role,
+          totalContestsGiven,
+          bestRank: bestRank || "N/A",
+          totalContestsAvailable : totalContest
         },
       },
       "User fetched"

@@ -9,9 +9,21 @@ import {
 } from "../lib/UserAuthSlice";
 import { useCallback, useState } from "react";
 
+// Normalized user
+const normalizeUser = (res) => {
+  if (!res) return null;
+  const user = res?.data?.user || res?.user || null;
+  if (!user) return null;
+
+  return {
+    ...user,
+    bestRank: user.bestRank || "N/A",
+    totalContestsGiven: user.totalContestsGiven || 0,
+  };
+};
+
 const useSignup = () => {
   const dispatch = useDispatch();
-
   const {
     loading,
     error,
@@ -21,10 +33,11 @@ const useSignup = () => {
     user: reduxUser,
   } = useSelector((state) => state.auth);
 
-  const [loadingUser, setLoadingUser] = useState(false); // boolean
-  const user = reduxUser; // derive directly from Redux
+  const [loadingUser, setLoadingUser] = useState(false);
 
-  // Fetch User Details
+  const user = reduxUser ? normalizeUser({ user: reduxUser }) : null;
+
+  // FETCH USER DETAILS
   const handleFetchUserDetails = useCallback(async () => {
     try {
       setLoadingUser(true);
@@ -39,12 +52,12 @@ const useSignup = () => {
     }
   }, [dispatch]);
 
-  // Signup User
+  // SIGNUP
   const handleSignup = useCallback(
     async (data) => {
       try {
         const res = await dispatch(signupUser(data)).unwrap();
-        return res?.data?.user || res?.user || null;
+        return normalizeUser(res);
       } catch (err) {
         console.error("Signup failed:", err);
         throw err;
@@ -53,7 +66,7 @@ const useSignup = () => {
     [dispatch]
   );
 
-  // Send OTP
+  // SEND OTP
   const handleSendOtp = useCallback(
     async ({ fullName, email }) => {
       try {
@@ -66,7 +79,7 @@ const useSignup = () => {
     [dispatch]
   );
 
-  // Verify OTP
+  // VERIFY OTP
   const handleVerifyOtp = useCallback(
     async (otp) => {
       try {
@@ -79,12 +92,12 @@ const useSignup = () => {
     [dispatch]
   );
 
-  // Upload Image
+  // UPDATE PROFILE
   const handleUpdateProfile = useCallback(
     async (payload) => {
       try {
-        const updated = await dispatch(updateProfile(payload)).unwrap();
-        return updated?.data?.user || updated?.user || null;
+        const res = await dispatch(updateProfile(payload)).unwrap();
+        return normalizeUser(res);
       } catch (err) {
         console.error("Profile update failed:", err);
         throw err;
@@ -93,12 +106,11 @@ const useSignup = () => {
     [dispatch]
   );
 
-  // Change Password
+  // CHANGE PASSWORD
   const handleChangePassword = useCallback(
     async (payload) => {
       try {
-        const res = await dispatch(changePassword(payload)).unwrap();
-        return res || true;
+        return await dispatch(changePassword(payload)).unwrap();
       } catch (err) {
         console.error("Password change failed:", err);
         throw err;
@@ -108,18 +120,18 @@ const useSignup = () => {
   );
 
   return {
-    handleSignup,
-    handleSendOtp,
-    handleVerifyOtp,
-    handleFetchUserDetails,
-    handleUpdateProfile,
+    user,
     loading,
     loadingUser,
     error,
     success,
     otpSent,
     otpVerified,
-    user,
+    handleSignup,
+    handleSendOtp,
+    handleVerifyOtp,
+    handleFetchUserDetails,
+    handleUpdateProfile,
     handleChangePassword,
   };
 };

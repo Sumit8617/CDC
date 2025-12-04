@@ -35,7 +35,7 @@ const Sidebar = () => {
   // Handel Logout
   const handleLogoutClick = async () => {
     await handleLogout();
-    navigate("/login");
+    navigate("/");
   };
 
   const handleMobileClick = (item) => {

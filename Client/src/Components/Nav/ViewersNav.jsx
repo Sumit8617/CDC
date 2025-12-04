@@ -30,14 +30,16 @@ const ViewersNav = () => {
           </li>
           <li
             className="cursor-pointer hover:text-indigo-600"
-            onClick={() => {
-              const element = document.getElementById("review");
-              if (element) {
-                element.scrollIntoView({ behavior: "smooth" });
-              }
-            }}
+            onClick={() => navigate("/about")}
           >
-            Students Review
+            About us
+          </li>
+
+          <li
+            className="cursor-pointer hover:text-indigo-600"
+            onClick={() => navigate("/contact")}
+          >
+            Contact us
           </li>
         </ul>
 
@@ -87,15 +89,16 @@ const ViewersNav = () => {
             </li>
             <li
               className="hover:text-indigo-600 cursor-pointer"
-              onClick={() => {
-                const element = document.getElementById("review");
-                if (element) {
-                  element.scrollIntoView({ behavior: "smooth" });
-                  setIsOpen(false);
-                }
-              }}
+              onClick={() => navigate("/about")}
             >
-              Students Review
+              About Us
+            </li>
+
+            <li
+              className="hover:text-indigo-600 cursor-pointer"
+              onClick={() => navigate("/contact")}
+            >
+              Contact Us
             </li>
           </ul>
 

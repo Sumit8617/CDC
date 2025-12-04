@@ -7,7 +7,6 @@ export const connectDB = async () => {
     );
 
     console.log("MongoDB Connected Successfully");
-    // START WORKER AFTER DB CONNECTED
   } catch (error) {
     console.error("ERR While Connecting to the DB", error);
   }

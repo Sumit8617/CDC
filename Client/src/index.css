@@ -12,8 +12,18 @@
   display: none;
 }
 
-/* Hide scrollbar for IE, Edge */
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none; /* Firefox */
+/* Hide Scrollbar */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide default password reveal icon in Chrome, Edge, Opera */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
 }

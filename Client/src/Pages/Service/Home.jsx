@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import { HeroSection, HowItWorks, Testimonials } from "../../Components/index";
+import { Footer, HeroSection, HowItWorks } from "../../Components/index";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -41,35 +41,27 @@ const Home = () => {
 
   // --- PUBLIC (not logged in) ---
   return (
-    <div className="overflow-hidden">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.8, 0.25, 1] }}
-      >
-        <HeroSection />
-      </motion.div>
+    <div className="flex flex-col min-h-screen h-auto">
+      <div className="overflow-hidden flex-1">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.8, 0.25, 1] }}
+        >
+          <HeroSection />
+        </motion.div>
 
-      {/* How It Works */}
-      <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-        className="mt-16 sm:mt-24"
-      >
-        <HowItWorks />
-      </motion.div>
-
-      {/* Testimonials */}
-      <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-        className="mt-16 sm:mt-24"
-      >
-        <Testimonials />
-      </motion.div>
+        {/* How It Works */}
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+          className="mt-16 sm:mt-24"
+        >
+          <HowItWorks />
+        </motion.div>
+      </div>
     </div>
   );
 };

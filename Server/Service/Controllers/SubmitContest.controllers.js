@@ -19,11 +19,27 @@ const submitContest = asynchandler(async (req, res) => {
       .json(new APIERR(400, "Questions array cannot be empty"));
   }
 
-  // Check that is the contest exist ?
+  // Check contest exists
   const contestDoc = await Test.findById(contest);
   if (!contestDoc) {
     return res.status(404).json(new APIERR(404, "Contest not found"));
   }
+
+  // Extract correct userId
+  const userId = typeof user === "string" ? user : user._id;
+
+  // Ensure participants array exists
+  if (!Array.isArray(contestDoc.participants)) {
+    contestDoc.participants = [];
+  }
+
+  // Add user only once
+  if (!contestDoc.participants.includes(userId)) {
+    contestDoc.participants.push(userId);
+    await contestDoc.save();
+  }
+
+  console.log("User added to participants =>", userId);
 
   // Verify contest time is valid
   const contestEnd = new Date(
@@ -78,7 +94,13 @@ const submitContest = asynchandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new APIRES(200, submission, "Successfully Submitted"));
+    .json(
+      new APIRES(
+        200,
+        { submission, contest: contestDoc },
+        "Successfully Submitted"
+      )
+    );
 });
 
 export { submitContest };

@@ -1,5 +1,5 @@
-import React, { lazy, useEffect, useState } from "react";
-import { Card, Button } from "../../Components/index";
+import React, { lazy, Suspense, useEffect, useState } from "react";
+import { Card, Button, PageLoaderWrapper } from "../../Components/index";
 import {
   BarChart,
   Bar,
@@ -11,6 +11,7 @@ import {
   Cell,
 } from "recharts";
 import { useContestDetails } from "../../Hooks/TestDetailsHook";
+import useSignup from "../../Hooks/AuthHooks";
 
 // Lazy Loading
 const UserProfileCard = lazy(
@@ -19,55 +20,55 @@ const UserProfileCard = lazy(
 const ChangePassword = lazy(
   () => import("../../Components/Password/UserPasswordChange")
 );
+
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [loading, setLoading] = useState(true); // track loading state
 
-  // Test Details Hook
   const { contests = [], getContests } = useContestDetails();
-
-  // Dummy placeholders until UserProfileCard loads user
-  const emptyStats = {
-    totalContests: contests.length,
-    yourApperance: "20%",
-    // averageScore: "0%",
-    bestRank: "#09",
-  };
-
-  useEffect(() => {
-    getContests()
-  },[]);
+  const { user, handleFetchUserDetails } = useSignup();
 
   const emptyPerformance = [
-    { category: "Reasoning", score: 0 },
-    { category: "Quant", score: 0 },
-    { category: "Verbal", score: 0 },
-    { category: "Logic", score: 0 },
-    { category: "Data", score: 0 },
+    { category: "Reasoning", score: 20 },
+    { category: "Quant", score: 50 },
+    { category: "Verbal", score: 30 },
+    { category: "Logic", score: 80 },
+    { category: "Data", score: 10 },
   ];
-
-  const emptyAchievements = [
-    {
-      title: "Top Performer",
-      description: "Ranked in top 100 globally",
-      color: "bg-yellow-100",
-      icon: null,
-      earned: true,
-    },
-    {
-      title: "Consistency Master",
-      description: "Participated in 30 consecutive contests",
-      color: "bg-blue-100",
-      icon: null,
-      earned: true,
-    },
-  ];
-
-  // These will be passed from UserProfileCard later using context/redux
-  const stats = emptyStats;
   const performance = emptyPerformance;
-  const achievements = emptyAchievements;
-
   const activeIndex = 1;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([getContests(), handleFetchUserDetails()]);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  // Show loader if user data is not ready or fetching
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <PageLoaderWrapper />
+      </div>
+    );
+  }
+
+  // Compute stats after data is fetched
+  const totalContestsAvailable =
+    user.totalContestsAvailable || contests.length || 0;
+  const totalContestsGiven = user.totalContestsGiven || 0;
+  const appearance = totalContestsAvailable
+    ? Math.round((totalContestsGiven / totalContestsAvailable) * 100)
+    : 0;
+
+  const stats = {
+    totalContests: totalContestsAvailable,
+    yourAppearance: appearance + "%",
+    bestRank: user.bestRank ? "#" + user.bestRank : "N/A",
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 md:pl-64">
@@ -92,15 +93,6 @@ const Profile = () => {
           </Button>
 
           <Button
-            variant={activeTab === "achievements" ? "primary" : "outline"}
-            size="sm"
-            round="full"
-            onClick={() => setActiveTab("achievements")}
-          >
-            Achievements
-          </Button>
-
-          <Button
             variant={activeTab === "security" ? "primary" : "outline"}
             size="sm"
             round="full"
@@ -114,7 +106,9 @@ const Profile = () => {
         {activeTab === "overview" && (
           <>
             <Card className="">
-              <UserProfileCard />
+              <Suspense fallback={<PageLoaderWrapper />}>
+                <UserProfileCard />
+              </Suspense>
             </Card>
 
             {/* Stats */}
@@ -177,54 +171,12 @@ const Profile = () => {
           </>
         )}
 
-        {/* Achievements Tab */}
-        {activeTab === "achievements" && (
-          <Card className="p-6 rounded-2xl shadow-sm border border-gray-100 bg-white">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">
-              Achievements & Badges
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {achievements.map((item, index) => (
-                <div
-                  key={index}
-                  className={`flex flex-col items-center text-center p-6 rounded-2xl border transition-all ${
-                    item.earned
-                      ? "bg-white hover:shadow-md border-gray-100"
-                      : "bg-gray-50 border-gray-200 opacity-70"
-                  }`}
-                >
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${item.color}`}
-                  >
-                    {item.icon}
-                  </div>
-
-                  <h3
-                    className={`text-base font-semibold ${
-                      item.earned ? "text-gray-800" : "text-gray-500"
-                    }`}
-                  >
-                    {item.title}
-                  </h3>
-
-                  <p
-                    className={`text-sm mt-1 ${
-                      item.earned ? "text-gray-600" : "text-gray-400"
-                    }`}
-                  >
-                    {item.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
         {/* SECURITY TAB */}
         {activeTab === "security" && (
           <Card>
-            <ChangePassword />
+            <Suspense fallback={<PageLoaderWrapper />}>
+              <ChangePassword />
+            </Suspense>
           </Card>
         )}
       </div>

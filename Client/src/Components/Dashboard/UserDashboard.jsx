@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Flame, Award, Target, TrendingUp } from "lucide-react";
-import { Card, Button } from "../index";
+import { Card, Button, PageLoaderWrapper } from "../index";
 import {
   AreaChart,
   Area,
@@ -10,14 +10,23 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import useSignup from "../../Hooks/AuthHooks";
 
-const UserDashboard = ({ userName = "Subhas" }) => {
+const UserDashboard = () => {
+  const { user, loadingUser, handleFetchUserDetails } = useSignup();
+
+  useEffect(() => {
+    handleFetchUserDetails();
+  }, [handleFetchUserDetails]);
+
+  console.log("Data =>", user);
+
   const [activeTab, setActiveTab] = useState("Performance Overview");
 
   const stats = [
     {
-      label: "Total Contests",
-      value: "24",
+      label: "Total Contest",
+      value: user?.totalContestsGiven || 0,
       icon: <Award className="w-6 h-6 text-blue-600" />,
       bg: "bg-blue-50",
     },
@@ -63,6 +72,10 @@ const UserDashboard = ({ userName = "Subhas" }) => {
     { week: "Week 16", score: 95, percentile: 90 },
   ];
 
+  if (loadingUser) {
+    return <PageLoaderWrapper />;
+  }
+
   return (
     <div className="md:pl-64">
       <div
@@ -78,7 +91,7 @@ const UserDashboard = ({ userName = "Subhas" }) => {
         {/* Header */}
         <div className="mb-6 sm:mb-8 text-center sm:text-left">
           <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
-            Hello, {userName}!
+            Hello, {user?.fullName?.split(" ")[0] || "User"}!
           </h1>
           <p className="text-gray-500 mt-1 text-sm sm:text-base">
             Your personal dashboard to track and improve your aptitude.
@@ -221,7 +234,7 @@ const UserDashboard = ({ userName = "Subhas" }) => {
                 </div>
 
                 <div className="flex justify-around mt-4 text-gray-600 text-xs sm:text-sm">
-                  <span>Average Score</span>
+                  {/* <span>Average Score</span> */}
                   <span>Percentile Rank</span>
                 </div>
               </Card>

@@ -6,7 +6,6 @@ import { contestNotification } from "../Utils/Mail/ContestNotification.js";
 
 cron.schedule("0 0 * * *", async () => {
     console.log("Running Daily Check Notification check...")
-// 07/12/2025
     const today = new Date();
 
     const targetDate = new Date(today);

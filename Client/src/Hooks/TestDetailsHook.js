@@ -28,7 +28,7 @@ export const useContestDetails = () => {
     contests,
     questions,
     loading,
-    error: errors,
+    error: errors || null,
     getContests,
     getPreviousQuestions,
   };
