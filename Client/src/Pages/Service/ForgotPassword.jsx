@@ -1,17 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Card, Button, Input } from "../../Components/index";
 import { Mail } from "lucide-react";
+import { useForgotPassword } from "../../Hooks/ForgotPasswordHook";
 
 const ForgotPassword = () => {
   const methods = useForm();
   const { handleSubmit } = methods;
+
+  const {
+    loading,
+    success,
+    error,
+    handleSendEmail,
+    clearState
+  } = useForgotPassword();
+
   const [isSent, setIsSent] = useState(false);
 
-  const onSubmit = (data) => {
-    console.log(data);
-    setIsSent(true);
+  // Submit form → call Redux thunk
+  const onSubmit = async (data) => {
+    await handleSendEmail(data.email); // backend call
   };
+
+  // When backend succeeds update UI
+  useEffect(() => {
+    if (success) {
+      setIsSent(true);
+    }
+  }, [success]);
+
+  // Cleanup slice on unmount
+  useEffect(() => {
+    return () => clearState();
+  }, [clearState]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -24,6 +46,7 @@ const ForgotPassword = () => {
           reset your password.
         </p>
 
+        {/* Form Section */}
         {!isSent ? (
           <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -44,13 +67,21 @@ const ForgotPassword = () => {
                     size={18}
                   />
                 </div>
+
+                {/* REDUX ERROR MESSAGE */}
+                {error && (
+                  <p className="text-red-500 text-sm mt-1 text-center">
+                    {error}
+                  </p>
+                )}
               </div>
 
               <Button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium"
+                disabled={loading}
               >
-                Send Reset Link
+                {loading ? "Sending..." : "Send Reset Link"}
               </Button>
             </form>
           </FormProvider>
@@ -59,9 +90,13 @@ const ForgotPassword = () => {
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
               ✅ A password reset link has been sent to your email.
             </div>
+
             <Button
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg"
-              onClick={() => setIsSent(false)}
+              onClick={() => {
+                clearState();
+                setIsSent(false);
+              }}
             >
               Resend Email
             </Button>

@@ -4,7 +4,7 @@ import { contestNotification } from "../Mail/ContestNotification.js";
 
 
 export const sendPasswordResetOTP = asynchandler(async (req,res) =>{
-    const { email} = req.body;
+    const {email} = req.body;
     if(!email){
         throw new APIERR(400,"Please provide your email");
     }
@@ -19,11 +19,12 @@ export const sendPasswordResetOTP = asynchandler(async (req,res) =>{
 
     const templateId = process.env.EMAILJS_FORGOT_PASSWORD_OTP_TEMPLATE_ID;
     const templateData = {
-        to_name: user.fullName,
+        to_name: user.fullName.split(" ")[0],
         to_email: user.email,
         otp,
         expiry: 5,
         date: new Date().getFullYear(),
+        APP_NAME : process.env.APP_NAME
     };
 
     const mailSent = await contestNotification(templateId, templateData);

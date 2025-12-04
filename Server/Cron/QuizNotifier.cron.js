@@ -6,7 +6,7 @@ import { contestNotification } from "../Utils/Mail/ContestNotification.js";
 
 cron.schedule("0 0 * * *", async () => {
     console.log("Running Daily Check Notification check...")
-
+// 07/12/2025
     const today = new Date();
 
     const targetDate = new Date(today);
@@ -16,7 +16,7 @@ cron.schedule("0 0 * * *", async () => {
     const end = new Date(targetDate.setHours(23, 59, 59, 999));
 
     const upcomingQuizConstest = await Test.find({
-        date: { $gte: start, $lte: end },
+        date: { $gte: start, $lte: end }, // 05/12/2025
         notificationsSent: false
     });
 
@@ -31,10 +31,9 @@ cron.schedule("0 0 * * *", async () => {
         for(const user of users){
             try {
                 await contestNotification(process.env.EMAILJS_QUIZ_NOTIFICATION_TEMPLATE_ID,{
-                    to_name: user.fullName,
+                    to_name: user.fullName.split(" ")[0],
                     to_email: user.email,
                     contest_name: contest.testName,
-                    constest_description: contest.description,
                     contest_date: contest.date.toDateString(),
                     contest_time: contest.date.toTimeString(),
                     contest_duration: contest.duration.toString()
