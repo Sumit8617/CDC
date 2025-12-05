@@ -108,19 +108,19 @@ const Leaderboard = () => {
     switch (rank) {
       case 1:
         return (
-          <div className="flex items-center justify-center bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-bold rounded-md px-3 py-1 text-sm">
+          <div className="flex items-center justify-center bg-lineargradient-to-r from-yellow-400 to-yellow-500 text-white font-bold rounded-md px-3 py-1 text-sm">
             <Trophy className="w-4 h-4 mr-1" /> #1
           </div>
         );
       case 2:
         return (
-          <div className="flex items-center justify-center bg-gradient-to-r from-gray-400 to-gray-500 text-white font-bold rounded-md px-3 py-1 text-sm">
+          <div className="flex items-center justify-center bg-linear-to-r from-gray-400 to-gray-500 text-white font-bold rounded-md px-3 py-1 text-sm">
             <Trophy className="w-4 h-4 mr-1" /> #2
           </div>
         );
       case 3:
         return (
-          <div className="flex items-center justify-center bg-gradient-to-r from-orange-400 to-orange-500 text-white font-bold rounded-md px-3 py-1 text-sm">
+          <div className="flex items-center justify-center bg-linear-to-r from-orange-400 to-orange-500 text-white font-bold rounded-md px-3 py-1 text-sm">
             <Trophy className="w-4 h-4 mr-1" /> #3
           </div>
         );

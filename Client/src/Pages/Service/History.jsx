@@ -32,9 +32,10 @@ const History = () => {
 
   if (loading)
     return (
-      <p className="pt-24 px-4">
-        <PageLoaderWrapper />
-      </p>
+      <div>
+        {" "}
+        <PageLoaderWrapper loading={loading} />{" "}
+      </div>
     );
   if (error)
     return (

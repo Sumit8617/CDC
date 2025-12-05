@@ -48,13 +48,13 @@ const Profile = () => {
   }, []);
 
   // Show loader if user data is not ready or fetching
-  if (loading || !user) {
+  if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <PageLoaderWrapper />
+      <div>
+        {" "}
+        <PageLoaderWrapper loading={loading} />{" "}
       </div>
     );
-  }
 
   // Compute stats after data is fetched
   const totalContestsAvailable =

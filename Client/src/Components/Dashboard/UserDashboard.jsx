@@ -72,9 +72,13 @@ const UserDashboard = () => {
     { week: "Week 16", score: 95, percentile: 90 },
   ];
 
-  if (loadingUser) {
-    return <PageLoaderWrapper />;
-  }
+  if (loadingUser)
+    return (
+      <div>
+        {" "}
+        <PageLoaderWrapper loading={loadingUser} />{" "}
+      </div>
+    );
 
   return (
     <div className="md:pl-64">
