@@ -39,12 +39,11 @@ const History = () => {
     );
   if (error)
     return (
-      <p className="pt-40 px-4">
-        <Card>
-          <h3>ERROR</h3>
-          <p>{error}</p>
-        </Card>
-      </p>
+      <div className="flex justify-center items-center h-screen md:pl-64">
+        <span className="text-white bg-red-500 p-2 rounded-md font-bold text-2xl">
+          <h3>ERROR : {error}</h3>
+        </span>
+      </div>
     );
 
   return (

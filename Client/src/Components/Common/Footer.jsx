@@ -71,13 +71,12 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between text-gray-600 text-sm space-y-4 md:space-y-0">
           <div className="flex items-center space-x-2">
-            <span className="font-semibold text-gray-900">
-              {import.meta.env.VITE_APP_NAME}
-            </span>
+            <span className="font-semibold text-gray-900">CDC JGEC</span>
           </div>
 
           <p className="text-center md:text-right">
-            © {new Date().getFullYear()} AptiQuest. All rights reserved.
+            © {new Date().getFullYear()} {import.meta.env.VITE_APP_NAME}. All
+            rights reserved.
             <br />
             Maintained and Developed by <strong>CDC WEB TEAM</strong>
           </p>

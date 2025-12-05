@@ -118,7 +118,7 @@ return (
       <div className="w-full max-w-8xl mx-auto">{children}</div>
     </main>
 
-    <footer className="bg-white border-t border-gray-200 shadow-inner">
+    <footer className="hidden md:block bg-white border-t border-gray-200 shadow-inner">
       <Footer />
     </footer>
   </div>
