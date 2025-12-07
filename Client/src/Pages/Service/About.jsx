@@ -249,7 +249,7 @@ const About = () => {
           </p>
 
           {/* TEAM GRID (paginated) */}
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-10">
+          <div className="sm:grid sm:grid-cols-2 md:grid-cols-3 gap-10 md:hidden">
             {currentMembers.map((member, i) => (
               <div
                 key={i}
@@ -346,7 +346,7 @@ const About = () => {
           </div>
 
           {/* PAGINATION BUTTONS */}
-          <div className="flex justify-center items-center gap-3 mt-12">
+          <div className="flex justify-center items-center gap-3 mt-12 hidden">
             <Button
               variant="outline"
               disabled={currentPage === 1}

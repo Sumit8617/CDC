@@ -27,6 +27,8 @@ const AdminLogin = () => {
   useEffect(() => {
     if (!user) return;
 
+    console.log("User Role is =>", user?.role)
+
     if (user?.role === "admin") {
       navigate("/admin/dashboard");
     } else {

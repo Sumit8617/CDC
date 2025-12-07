@@ -11,6 +11,7 @@ const Home = () => {
   const { user } = useSelector((state) => state.auth);
 
   const userRole = user?.role || "public";
+  console.log("User Role is =>", userRole);
 
   // Redirect Handeler
   useEffect(() => {

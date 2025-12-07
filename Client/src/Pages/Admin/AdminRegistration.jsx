@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useForm, FormProvider } from "react-hook-form";
 import { Button, Input } from "../../Components/index";
-import useSignup from "../../Hooks/AuthHooks"; // Add this
+import useSignup from "../../Hooks/AuthHooks";
 import axios from "axios";
 
 const AdminRegister = () => {
@@ -12,7 +12,7 @@ const AdminRegister = () => {
   const [token, setToken] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
+  // TODO: OTP Should be removed from this
   const methods = useForm({
     defaultValues: {
       fullName: "",

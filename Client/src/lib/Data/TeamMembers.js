@@ -729,17 +729,18 @@ export const teamMembers = [
 
   // 2nd Year CE
   {
-    name: "John",
-    role: "SPOC",
-    image: "https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg",
+    name: "Bishal Mondal",
+    role: "TPO",
+    image: "/Team/Bishal CE 27.jpg",
     description:
       "Coordinating events and ensuring smooth operations of all club activities.",
     socials: {
-      linkedin: "https://linkedin.com",
+      linkedin: "https://www.linkedin.com/in/bishal-mondal-383b10321",
       email: "mailto:john@gmail.com",
-      facebook: "https://facebook.com",
-      instagram: "https://instagram.com",
-      github: "https://github.com",
+      facebook: "https://www.facebook.com/dipesh1899",
+      instagram: "https://www.instagram.com/dipesh_184",
+      github: "https://github.com/dipesh-2874",
+      twitter: "https://x.com/DipeshD12345",
     },
   },
   {
@@ -786,7 +787,6 @@ export const teamMembers = [
   },
 
   // 2nd Year EE
-
   {
     name: "John",
     role: "SPOC",
@@ -1020,17 +1020,16 @@ export const teamMembers = [
 
   // 2nd Year IT
   {
-    name: "John",
-    role: "SPOC",
-    image: "https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg",
+    name: "Nilanjan Chandra",
+    role: "TPO",
+    image: "/Team/Nilanjan IT 28.jpg",
     description:
       "Coordinating events and ensuring smooth operations of all club activities.",
     socials: {
-      linkedin: "https://linkedin.com",
-      email: "mailto:john@gmail.com",
-      facebook: "https://facebook.com",
-      instagram: "https://instagram.com",
-      github: "https://github.com",
+      linkedin: "https://www.linkedin.com/in/nilanjan-chandra-494066325",
+      email: "mailto:nilanjanchandra22@gmail.com",
+      instagram: "https://instagram.com/nilanjan_chandra22",
+      github: "https://github.com/nilanjan1",
     },
   },
   {

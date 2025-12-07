@@ -317,16 +317,16 @@ const authSlice = createSlice({
       .addCase(adminLogin.fulfilled, (state, action) => {
         state.loading = false;
 
-        const user = extractUser(action.payload.data);
+        const raw = action.payload?.data;
+        if (raw) {
+          // Construct a proper user object
+          const user = {
+            _id: raw.user,
+            role: raw.role,
+          };
 
-        // Store admin user
-        if (user) {
           state.user = user;
-          try {
-            localStorage.setItem("user", JSON.stringify(user));
-          } catch (e) {
-            console.error(e);
-          }
+          localStorage.setItem("user", JSON.stringify(user));
         } else {
           state.user = null;
         }
