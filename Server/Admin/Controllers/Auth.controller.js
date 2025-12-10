@@ -148,7 +148,7 @@ const verifyAdminInvite = asynchandler(async (req, res) => {
     )
   );
 });
-
+// TODO: Sent the welcome mail to the Admin
 const registerAdmin = asynchandler(async (req, res) => {
   const { token, mobileNumber, rollNumber, dob, password, confirmPassword } =
     req.body;
@@ -179,7 +179,7 @@ const registerAdmin = asynchandler(async (req, res) => {
   const email = invite.isEncrypted ? decryptEmail(invite.email) : invite.email;
 
   const fullName = invite.fullName;
-  const role = "admin"; // Always admin
+  const role = "admin";
 
   // Check if user already exists
   const existedUser = await User.findOne({ email });
@@ -220,6 +220,7 @@ const registerAdmin = asynchandler(async (req, res) => {
     secure: process.env.NODE_ENV === "production",
     maxAge: 24 * 60 * 60 * 1000,
   });
+
 
   // Return success
   res

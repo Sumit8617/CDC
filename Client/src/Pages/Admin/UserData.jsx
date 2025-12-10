@@ -1,132 +1,128 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, Button } from "../../Components/index";
+import { useAdminStats } from "../../Hooks/AdminStatsHook";
 import { User, Mail, Shield, Ban, Edit, Trash2 } from "lucide-react";
 
 const ManageUsers = () => {
-  // Example data — later, fetch this from backend
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Subhas Mondal",
-      email: "subhas@example.com",
-      role: "Admin",
-      status: "Active",
-      contestsTaken: 12,
-      avgScore: 87,
-    },
-    {
-      id: 2,
-      name: "Riya Sharma",
-      email: "riya.sharma@example.com",
-      role: "User",
-      status: "Active",
-      contestsTaken: 8,
-      avgScore: 76,
-    },
-    {
-      id: 3,
-      name: "Amit Verma",
-      email: "amit.verma@example.com",
-      role: "User",
-      status: "Blocked",
-      contestsTaken: 5,
-      avgScore: 61,
-    },
-  ]);
-
+  const { userDetails, loading, error, refresh } = useAdminStats();
+  console.log(userDetails);
   const handleEdit = (id) => {
     alert(`Edit user with ID: ${id}`);
   };
 
   const handleBlock = (id) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              status: user.status === "Active" ? "Blocked" : "Active",
-            }
-          : user
-      )
-    );
+    console.log("Toggle block user:", id);
   };
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((user) => user.id !== id));
+      console.log("Delete user:", id);
     }
   };
 
   return (
-    <section className="min-h-screen flex flex-col space-y-6 md:pl-64">
+    <section className="min-h-screen flex flex-col space-y-8 md:pl-64 pt-4 px-4 md:px-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Manage Users</h1>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Manage Users
+          </h1>
           <p className="text-gray-500 text-sm">
-            View and manage all registered users.
+            View and manage all registered users and their activity.
           </p>
         </div>
+
+        <Button variant="indigo" size="sm" onClick={refresh}>
+          Refresh
+        </Button>
       </div>
 
+      {/* Loading */}
+      {loading && (
+        <Card className="p-8 text-center bg-gray-50 border border-gray-200 rounded-xl">
+          <p className="text-gray-700">Loading users...</p>
+        </Card>
+      )}
+
+      {/* Error */}
+      {error && (
+        <Card className="p-8 text-center bg-red-50 border border-red-300 rounded-xl">
+          <p className="text-red-600 font-medium">{error}</p>
+        </Card>
+      )}
+
       {/* User List */}
-      {users.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {users.map((user) => (
+      {!loading && !error && userDetails?.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {userDetails.map((user) => (
             <Card
-              key={user.id}
-              className="p-6 bg-white shadow-sm border border-gray-200 rounded-2xl hover:shadow-md transition-shadow"
+              key={user._id}
+              className="
+                p-6 bg-white shadow-sm border border-gray-200 rounded-2xl 
+                hover:shadow-lg hover:border-indigo-200 
+                transition-all duration-300
+              "
             >
               {/* Header */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="bg-indigo-100 text-indigo-700 rounded-full p-3">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      {user.name}
-                    </h2>
-                    <p className="text-sm text-gray-500 flex items-center gap-1">
-                      <Mail className="w-4 h-4" /> {user.email}
-                    </p>
+              <div className="flex items-center justify-start mb-6 gap-5">
+                {/* Profile Picture */}
+                <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-indigo-200 flex items-center justify-center bg-indigo-100">
+                  <img
+                    src={user?.profilePic?.url || "/default-avatar.png"}
+                    alt={`${user.fullName} Profile Picture`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* User Info */}
+                <div className="flex flex-col justify-center">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {user.fullName}
+                  </h2>
+
+                  <div className="flex items-center gap-1 text-gray-500 text-sm">
+                    <Mail className="w-4 h-4 opacity-70" />
+                    <span>{user.email}</span>
                   </div>
                 </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    user.status === "Active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {user.status}
-                </span>
               </div>
 
-              {/* User Details */}
-              <div className="text-sm text-gray-600 mb-4 space-y-1">
-                <p className="flex items-center gap-2">
+              {/* User Stats */}
+              <div className="text-sm text-gray-700 mb-5 space-y-3">
+                <p className="flex items-center gap-2 ">
                   <Shield className="w-4 h-4 text-gray-400" />
-                  Role: <span className="font-medium">{user.role}</span>
+                  <span className="text-gray-600">Role:</span>
+                  <span className="font-semibold">{user.role}</span>
                 </p>
-                <p>
-                  Contests Taken:{" "}
-                  <span className="font-medium">{user.contestsTaken}</span>
-                </p>
-                <p>
-                  Avg. Score:{" "}
-                  <span className="font-medium">{user.avgScore}%</span>
-                </p>
+
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500">
+                      Contests Taken
+                    </span>
+                    <span className="text-base font-semibold">
+                      {user.contestsTaken ?? 0}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500">Avg Score</span>
+                    <span className="text-base font-semibold">
+                      {user.avgScore ?? 0}%
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-between pt-3 border-t border-gray-100">
                 <Button
                   variant="secondary"
                   size="sm"
                   round="md"
                   className="flex items-center gap-1"
-                  onClick={() => handleEdit(user.id)}
+                  onClick={() => handleEdit(user._id)}
                 >
                   <Edit size={16} /> Edit
                 </Button>
@@ -136,7 +132,7 @@ const ManageUsers = () => {
                   size="sm"
                   round="md"
                   className="flex items-center gap-1"
-                  onClick={() => handleBlock(user.id)}
+                  onClick={() => handleBlock(user._id)}
                 >
                   <Ban size={16} />
                   {user.status === "Active" ? "Block" : "Unblock"}
@@ -147,7 +143,7 @@ const ManageUsers = () => {
                   size="sm"
                   round="md"
                   className="flex items-center gap-1"
-                  onClick={() => handleDelete(user.id)}
+                  onClick={() => handleDelete(user._id)}
                 >
                   <Trash2 size={16} />
                   Delete
@@ -157,12 +153,17 @@ const ManageUsers = () => {
           ))}
         </div>
       ) : (
-        <Card className="p-8 text-center bg-gray-50 border border-gray-200 rounded-2xl">
-          <h3 className="text-gray-700 font-medium text-lg mb-2">
-            No users found
-          </h3>
-          <p className="text-gray-500 text-sm">No registered users yet.</p>
-        </Card>
+        !loading &&
+        !error && (
+          <Card className="p-8 text-center bg-gray-50 border border-gray-200 rounded-xl">
+            <h3 className="text-gray-700 font-medium text-lg mb-1">
+              No users found
+            </h3>
+            <p className="text-gray-500 text-sm">
+              There are no registered users yet.
+            </p>
+          </Card>
+        )
       )}
     </section>
   );

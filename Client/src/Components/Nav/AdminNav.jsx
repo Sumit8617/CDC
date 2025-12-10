@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -19,43 +19,51 @@ const AdminNav = () => {
   const navigate = useNavigate();
   const { handleLogout } = useLogin();
 
-  const menuItems = [
-    {
-      name: "Dashboard",
-      icon: <LayoutDashboard className="w-5 h-5" />,
-      path: "/admin/dashboard",
-    },
-    {
-      name: "Create Contest",
-      icon: <PlusCircle className="w-5 h-5" />,
-      path: "/admin/create-contest",
-    },
-    {
-      name: "Manage Contests",
-      icon: <Trophy className="w-5 h-5" />,
-      path: "/admin/manage-contests",
-    },
-    {
-      name: "User Data",
-      icon: <Users className="w-5 h-5" />,
-      path: "/admin/manageusers",
-    },
-    {
-      name: "Analytics",
-      icon: <BarChart3 className="w-5 h-5" />,
-      path: "/admin/analytics",
-    },
-    {
-      name: "Profile",
-      icon: <User className="w-5 h-5" />,
-      path: "/admin/profile",
-    },
-    {
-      name: "Settings",
-      icon: <Settings className="w-5 h-5" />,
-      path: "/admin/settings",
-    },
-  ];
+  const menuItems = useMemo(
+    () => [
+      {
+        name: "Dashboard",
+        icon: <LayoutDashboard className="w-5 h-5" />,
+        path: "/admin/dashboard",
+      },
+      {
+        name: "Create Contest",
+        icon: <PlusCircle className="w-5 h-5" />,
+        path: "/admin/create-contest",
+      },
+      {
+        name: "Manage Contests",
+        icon: <Trophy className="w-5 h-5" />,
+        path: "/admin/manage-contests",
+      },
+      {
+        name: "User Data",
+        icon: <Users className="w-5 h-5" />,
+        path: "/admin/manageusers",
+      },
+      {
+        name: "Analytics",
+        icon: <BarChart3 className="w-5 h-5" />,
+        path: "/admin/analytics",
+      },
+      {
+        name: "Profile",
+        icon: <User className="w-5 h-5" />,
+        path: "/admin/profile",
+      },
+      {
+        name: "Settings",
+        icon: <Settings className="w-5 h-5" />,
+        path: "/admin/settings",
+      },
+    ],
+    []
+  );
+
+  useEffect(() => {
+    const found = menuItems.find((item) => item.path === location.pathname);
+    if (found) setActive(found.name);
+  }, [menuItems, location.pathname]);
 
   const logoutAdmin = async () => {
     try {
