@@ -2,22 +2,19 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useForm, FormProvider } from "react-hook-form";
 import { Button, Input } from "../../Components/index";
-import useSignup from "../../Hooks/AuthHooks";
-import axios from "axios";
+import useAdminInvite from "../../Hooks/Admin/VerifyAdminInviteHook";
+import useRegisterAdmin from "../../Hooks/Admin/RegisterAdminHook";
 
 const AdminRegister = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
   const [token, setToken] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  // TODO: OTP Should be removed from this
+
   const methods = useForm({
     defaultValues: {
       fullName: "",
       email: "",
-      otp: "",
       mobileNumber: "",
       password: "",
       confirmPassword: "",
@@ -27,59 +24,47 @@ const AdminRegister = () => {
     },
   });
 
-  const { handleSubmit, watch, register, getValues, reset } = methods;
+  const { handleSubmit, watch, register, reset } = methods;
   const password = watch("password");
 
-  const { handleSendOtp, handleVerifyOtp, otpSent, otpVerified, error } =
-    useSignup(); // Add OTP hooks
+  // Hooks
+  const { inviteLoading, inviteError, inviteSuccess, verifyToken } =
+    useAdminInvite();
+  const {
+    loading: registerLoading,
+    error: registerError,
+    success: registerSuccess,
+    register: registerAdmin,
+  } = useRegisterAdmin();
 
-  // Get token from URL
+  // Verify invite token from URL
   useEffect(() => {
     const t = searchParams.get("token");
     if (!t) {
       setMessage("Invalid or missing token");
-    } else {
-      setToken(t);
-    }
-  }, [searchParams]);
-
-  const onSendOtp = async () => {
-    const email = getValues("email");
-    const fullName = getValues("fullName");
-
-    if (!email || !fullName) {
-      alert("Please enter Full Name and Email first");
       return;
     }
+    setToken(t);
 
-    try {
-      await handleSendOtp({ email, fullName });
-      alert("OTP sent successfully!");
-    } catch {
-      alert("Failed to send OTP");
-    }
-  };
+    const verifyInvite = async () => {
+      try {
+        const result = await verifyToken(t);
+        if (result?.email && result?.fullName) {
+          reset({ fullName: result.fullName, email: result.email });
+        } else {
+          setMessage("Invalid or expired invite link");
+        }
+      } catch (err) {
+        setMessage("Error verifying invite token", err);
+      }
+    };
 
-  const onVerifyOtp = async () => {
-    const otp = getValues("otp");
-    if (!otp) return alert("Enter OTP before verifying");
-
-    try {
-      await handleVerifyOtp(otp);
-      alert("OTP Verified!");
-    } catch {
-      alert("Invalid OTP");
-    }
-  };
+    verifyInvite();
+  }, [searchParams, reset, verifyToken]);
 
   const onSubmit = async (data) => {
     if (!token) {
-      setMessage("Invalid or missing token");
-      return;
-    }
-
-    if (!otpVerified) {
-      alert("Please verify your OTP before signing up.");
+      setMessage("Invalid invite token");
       return;
     }
 
@@ -89,27 +74,19 @@ const AdminRegister = () => {
     }
 
     try {
-      setLoading(true);
-      const response = await axios.post("/api/admin/register", {
-        fullName: data.fullName,
-        password: data.password,
+      // Complete registration
+      await registerAdmin(
         token,
-      });
-
-      if (response.data.status === 200) {
-        setMessage("Admin registered successfully! Redirecting...");
-        reset();
-        setTimeout(() => {
-          navigate("/admin/login");
-        }, 2000);
-      } else {
-        setMessage(response.data.message || "Registration failed");
-      }
+        data.password,
+        data.mobileNumber,
+        data.rollNumber,
+        data.dob,
+        data.confirmPassword
+      );
+      setMessage("Admin registered successfully! Redirecting...");
+      setTimeout(() => navigate("/admin/dashboard"), 2000);
     } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
+      setMessage(err?.message || "Registration failed");
     }
   };
 
@@ -122,7 +99,7 @@ const AdminRegister = () => {
           <div className="relative z-10 text-center p-4">
             <h2 className="text-4xl font-bold font-ubuntu">Admin Invite</h2>
             <p className="mt-4 text-lg">
-              Complete your registration using the invite link.
+              Complete your admin registration using your invite link.
             </p>
           </div>
         </div>
@@ -133,74 +110,43 @@ const AdminRegister = () => {
             Admin Registration
           </h2>
 
-          {message && (
-            <p className="text-center mb-4 text-red-500 font-medium">
-              {message}
+          {(message ||
+            inviteError ||
+            inviteSuccess ||
+            registerError ||
+            registerSuccess) && (
+            <p
+              className={`text-center mb-4 font-medium ${
+                inviteError || registerError ? "text-red-500" : "text-green-500"
+              }`}
+            >
+              {message ||
+                inviteError ||
+                inviteSuccess ||
+                registerError ||
+                registerSuccess}
             </p>
           )}
 
           <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-              {/* FULL NAME */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-2 p-2">
               <Input
                 name="fullName"
                 label="Full Name"
-                placeholder="John Doe"
+                placeholder="Full Name"
                 rules={{ required: "Full name is required" }}
+                readOnly
+                disabled
               />
-
-              {/* EMAIL + SEND OTP */}
-              <div className="flex gap-3 items-end">
-                <div className="flex-1">
-                  <Input
-                    name="email"
-                    label="Email"
-                    type="email"
-                    placeholder="john@example.com"
-                    rules={{ required: "Email is required" }}
-                  />
-                </div>
-
-                {!otpSent && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onSendOtp}
-                    disabled={loading}
-                    className="h-[42px]"
-                  >
-                    Send OTP
-                  </Button>
-                )}
-              </div>
-
-              {/* OTP + VERIFY */}
-              {otpSent && (
-                <div className="flex gap-3 items-end">
-                  <div className="flex-1">
-                    <Input
-                      name="otp"
-                      placeholder="Enter OTP"
-                      type="number"
-                      rules={{ required: "OTP is required" }}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    round="full"
-                    onClick={onVerifyOtp}
-                    disabled={otpVerified}
-                    className="h-[30px]"
-                  >
-                    {otpVerified ? "Verified" : "Verify"}
-                  </Button>
-                </div>
-              )}
-
-              {/* MOBILE NUMBER + ROLL NUMBER */}
+              <Input
+                name="email"
+                label="Email"
+                type="email"
+                placeholder="Email"
+                rules={{ required: "Email is required" }}
+                readOnly
+                disabled
+              />
               <div className="flex gap-3">
                 <div className="flex-1">
                   <Input
@@ -211,44 +157,38 @@ const AdminRegister = () => {
                     rules={{ required: "Mobile number is required" }}
                   />
                 </div>
-
                 <div className="flex-1">
                   <Input
                     name="rollNumber"
                     label="College Roll Number"
-                    type="number"
+                    type="tel"
                     placeholder="2310110XXXX"
                     rules={{ required: "Roll number is required" }}
-                    className="[appearance:textfield] [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
                   />
                 </div>
               </div>
-
-              {/* ROLE + DOB */}
               <div className="flex gap-3">
                 <div className="flex-1">
                   <label className="text-sm font-medium text-gray-700">
-                    Select Role
+                    Role
                   </label>
                   <select
                     {...register("role")}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 mt-1"
+                    disabled
                   >
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-
                 <div className="flex-1">
                   <Input
                     name="dob"
                     label="Date of Birth"
                     type="date"
-                    rules={{ required: "Date of Birth is required" }}
+                    rules={{ required: "DOB is required" }}
                   />
                 </div>
               </div>
-
-              {/* PASSWORD */}
               <Input
                 name="password"
                 label="Password"
@@ -259,8 +199,6 @@ const AdminRegister = () => {
                   minLength: { value: 6, message: "Minimum 6 characters" },
                 }}
               />
-
-              {/* CONFIRM PASSWORD */}
               <Input
                 name="confirmPassword"
                 label="Confirm Password"
@@ -271,15 +209,15 @@ const AdminRegister = () => {
                   validate: (v) => v === password || "Passwords do not match",
                 }}
               />
-
-              {/* SUBMIT BUTTON */}
-              <Button type="submit" className="w-full mt-4" disabled={loading}>
-                {loading ? "Signing up..." : "Sign Up"}
+              <Button
+                type="submit"
+                className="w-full mt-4"
+                disabled={inviteLoading || registerLoading}
+              >
+                {inviteLoading || registerLoading
+                  ? "Registering..."
+                  : "Register"}
               </Button>
-
-              {error && (
-                <p className="text-red-500 text-center mt-2">{error}</p>
-              )}
             </form>
           </FormProvider>
         </div>

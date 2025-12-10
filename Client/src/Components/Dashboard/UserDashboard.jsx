@@ -19,8 +19,6 @@ const UserDashboard = () => {
     handleFetchUserDetails();
   }, [handleFetchUserDetails]);
 
-  console.log("Data =>", user);
-
   const [activeTab, setActiveTab] = useState("Performance Overview");
 
   const stats = [

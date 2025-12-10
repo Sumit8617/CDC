@@ -21,6 +21,7 @@ const Layout = ({ children }) => {
     "/signup",
     "/forgot-password",
     "/admin/login",
+    "/admin/register",
   ];
 
   const adminRoutes = [
@@ -108,21 +109,21 @@ const Layout = ({ children }) => {
   }
 
   // Public Pages
-return (
-  <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
-    <header className="fixed top-0 left-0 w-full z-50 shadow-sm bg-white">
-      <GeneralNav />
-    </header>
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
+      <header className="fixed top-0 left-0 w-full z-50 shadow-sm bg-white">
+        <GeneralNav />
+      </header>
 
-    <main className="flex-1 pt-16 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-8xl mx-auto">{children}</div>
-    </main>
+      <main className="flex-1 pt-16 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-8xl mx-auto">{children}</div>
+      </main>
 
-    <footer className="hidden md:block bg-white border-t border-gray-200 shadow-inner">
-      <Footer />
-    </footer>
-  </div>
-);
+      <footer className="hidden md:block bg-white border-t border-gray-200 shadow-inner">
+        <Footer />
+      </footer>
+    </div>
+  );
 };
 
 export default Layout;

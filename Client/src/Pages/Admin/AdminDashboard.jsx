@@ -3,24 +3,30 @@ import { useSelector } from "react-redux";
 import { Card, Button } from "../../Components/index";
 import { PlusCircle, BarChart3, Send } from "lucide-react";
 import { useAdminStats } from "../../Hooks/AdminStatsHook";
+import { useAdminInvite } from "../../Hooks/Admin/AdminAuthHook";
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const [openModal, setOpenModal] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [inviteSent, setInviteSent] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
 
-  // Using hook
   const { stats, recentContests } = useAdminStats();
 
+  const {
+    sendAdminInvite,
+    inviteLoading,
+    inviteError,
+    inviteSuccess,
+    resetInviteState,
+  } = useAdminInvite();
+
   const navigate = useNavigate();
-  // Prevent crash if user loading
+
   if (!user) return null;
 
-  // Protect route
   if (user.role !== "admin") {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -31,8 +37,25 @@ const AdminDashboard = () => {
     );
   }
 
-  const adminInvite = () => {
-    setOpenModal(true);
+  const handleAdminInvite = async (e) => {
+    try {
+      e.preventDefault();
+      await sendAdminInvite(fullName, email);
+      setFullName("");
+      setEmail("");
+      setTimeout(() => {
+        setOpenModal(false);
+      }, 2000);
+    } catch (error) {
+      console.log("Err While Sending the Admin invite", error);
+    }
+  };
+
+  const closeModal = () => {
+    setOpenModal(false);
+    setFullName("");
+    setEmail("");
+    resetInviteState();
   };
 
   return (
@@ -54,7 +77,7 @@ const AdminDashboard = () => {
             size="md"
             round="md"
             className="flex items-center justify-end gap-2"
-            onClick={adminInvite}
+            onClick={() => setOpenModal(true)}
           >
             <Send className="w-5 h-5" />
             Admin Invite
@@ -173,10 +196,9 @@ const AdminDashboard = () => {
       {openModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="w-full max-w-md p-6 relative">
-            {/* Close button */}
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={() => setOpenModal(false)}
+              onClick={closeModal}
             >
               ✕
             </button>
@@ -185,14 +207,7 @@ const AdminDashboard = () => {
               Invite Admin
             </h2>
 
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                // Simulate sending invite
-                setInviteSent(true);
-              }}
-            >
+            <form className="flex flex-col gap-4" onSubmit={handleAdminInvite}>
               <div className="flex flex-col">
                 <label className="text-sm font-medium text-gray-600 mb-1">
                   Full Name
@@ -209,7 +224,7 @@ const AdminDashboard = () => {
 
               <div className="flex flex-col">
                 <label className="text-sm font-medium text-gray-600 mb-1">
-                  Email
+                  Enter the College mail
                 </label>
                 <input
                   type="email"
@@ -229,14 +244,28 @@ const AdminDashboard = () => {
                 className="mt-2 flex items-center justify-center gap-2"
               >
                 <Send className="w-5 h-5" />
-                Send
+
+                {inviteLoading
+                  ? "Sending Invite..."
+                  : inviteSuccess
+                    ? "Invite Sent!"
+                    : inviteError
+                      ? "Failed to Send Invite"
+                      : "Send"}
               </Button>
             </form>
 
             {/* Success message */}
-            {inviteSent && (
+            {inviteSuccess && (
               <p className="mt-4 text-green-600 font-medium text-center">
-                Admin invite sent successfully!
+                {inviteSuccess}
+              </p>
+            )}
+
+            {/* Error message */}
+            {inviteError && (
+              <p className="mt-4 text-red-600 font-medium text-center">
+                {inviteError}
               </p>
             )}
           </Card>

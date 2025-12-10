@@ -8,12 +8,12 @@ export const AdminMail = async (templateId, templateData) => {
 
   try {
     const response = await emailjs.send(
-      process.env.EMAILJS_ADMIN_SERVICE_ID,
+      process.env.ADMIN_INVITE_EMAIL_SERVICE,
       templateId,
       templateData,
       {
-        publicKey: process.env.EMAILJS_ADMIN_PUBLIC_KEY,
-        privateKey: process.env.EMAILJS_ADMIN_PRIVATE_KEY,
+        publicKey: process.env.ADMIN_INVITE_EMAIL_PUBLIC_KEY,
+        privateKey: process.env.ADMIN_INVITE_EMAIL_PRIVATE_KEY,
       }
     );
 

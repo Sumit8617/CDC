@@ -3,6 +3,7 @@ import { User } from "../../Service/Models/User.models.js";
 import { Test } from "../Models/Contest.model.js";
 import { generateAccessAndRefreshTokens } from "../../Service/Controllers/Auth.controllers.js";
 import { InviteToken } from "../Models/InviteTokenSchema.model.js";
+import { AdminMail } from "../../Utils/Mail/AdminMail.utils.js";
 import crypto from "crypto-js";
 
 const adminLogin = asynchandler(async (req, res) => {
@@ -57,10 +58,9 @@ const adminLogin = asynchandler(async (req, res) => {
     )
   );
 });
-// TODO: Add the Email Sending
+
 const adminInvite = asynchandler(async (req, res) => {
   const { fullName, email } = req.body;
-  console.log("Coming From the body =>", fullName, email);
   if (!fullName || !email) {
     throw new APIERR(400, "Please provide all the fields");
   }
@@ -78,24 +78,35 @@ const adminInvite = asynchandler(async (req, res) => {
   const tokenSecretKey = process.env.CRYPTO_SECRET_KEY;
   const tokenPayload = `${email}-${Date.now()}`;
   const token = crypto.AES.encrypt(tokenPayload, tokenSecretKey).toString();
-  console.log("Generated Token is =>", token);
-
-  // Sent the mail to the user
 
   // Save the token in DB
   const savedToken = await InviteToken.create({
-    email,
     fullName,
+    email,
     token,
     role: "admin",
   });
-
+  console.log(savedToken);
   // Create the Invite link for the User
   const inviteLink = `${process.env.FRONTEND_URL}/admin/register?token=${encodeURIComponent(
     token
   )}`;
 
-  console.log("Admin Invite link is =>", inviteLink);
+  // Sent the mail to the user
+  const templateId = process.env.ADMIN_INVITE_EMAIL_TEMPLATE;
+  const templateData = {
+    name: fullName,
+    email,
+    invite_link: inviteLink,
+    expiry_hours: 24,
+    support_email: "sm2733@it.jgec.ac.in",
+  };
+  try {
+    AdminMail(templateId, templateData);
+    console.log("Successfully Sent the Mail");
+  } catch (error) {
+    console.log("ERROR While Sending the admin invite mail", error);
+  }
 
   // Sent the Data
   res
@@ -109,40 +120,111 @@ const adminInvite = asynchandler(async (req, res) => {
     );
 });
 
-// TODO: add the Email Service here
 const verifyAdminInvite = asynchandler(async (req, res) => {
-  const { token } = req.body;
-  if (!token) {
-    throw new APIERR(404, "Token Not Found or Maybe Expire");
+  const token = decodeURIComponent(req.query.token);
+
+  if (!token) throw new APIERR(400, "Token missing");
+
+  // Find token in DB and ensure it's not expired
+  const invite = await InviteToken.findOne({
+    token,
+    createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+  });
+
+  if (!invite) throw new APIERR(404, "Invalid or expired token");
+
+  const existedUser = await User.findOne({ email: invite.email });
+  if (existedUser) throw new APIERR(400, "User already exists");
+
+  res.status(200).json(
+    new APIRES(
+      200,
+      {
+        email: invite.email,
+        fullName: invite.fullName,
+        role: invite.role,
+      },
+      "Valid token"
+    )
+  );
+});
+
+const registerAdmin = asynchandler(async (req, res) => {
+  const { token, mobileNumber, rollNumber, dob, password, confirmPassword } =
+    req.body;
+
+  console.log("Incoming body =>", req.body);
+
+  if (!password || !confirmPassword) {
+    throw new APIERR(400, "Password and Confirm Password are required");
   }
 
-  const tokenSecretKey = process.env.CRYPTO_SECRET_KEY;
-  let email;
-  try {
-    const bytes = crypto.AES.decrypt(token, tokenSecretKey);
-    const decrypted = (bytes.toString(crypto.enc.Utf8)[email] =
-      decrypted.split("-"));
-  } catch (error) {
-    console.log("Error While Decrypting the Token", error);
-    throw new APIERR(402, "Token Invalid");
+  if (password !== confirmPassword) {
+    throw new APIERR(400, "Password and Confirm Password must match");
   }
 
-  // Check that the token is exist in the DB or not
-  const existedToken = await InviteToken.findOne({ email, token });
-  if (!existedToken) throw new APIERR(404, "Token Invalid or expired");
+  if (password.length < 6) {
+    throw new APIERR(400, "Password must be at least 6 characters");
+  }
 
-  // Check that if the user already existed with that user
+  // Find invite token and ensure it's valid
+  const invite = await InviteToken.findOne({
+    token,
+    createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+  });
+
+  if (!invite) throw new APIERR(404, "Invalid or expired invite token");
+
+  // Decrypt email if stored encrypted
+  const email = invite.isEncrypted ? decryptEmail(invite.email) : invite.email;
+
+  const fullName = invite.fullName;
+  const role = "admin"; // Always admin
+
+  // Check if user already exists
   const existedUser = await User.findOne({ email });
-  if (existedUser) throw new APIERR(402, "User with this mail already exist");
+  if (existedUser) throw new APIERR(400, "User already registered");
 
-  const newAdmin = await User.create({ email, fullName, role: "admin" });
-  console.log("New Admin Details =>", newAdmin);
-  // Sent the Successfully Signup mail to the new Admin
+  // Create the Admin
+  const createdAdmin = await User.create({
+    fullName,
+    email,
+    mobileNumber,
+    rollNumber,
+    role,
+    dob,
+    password,
+  });
 
-  // Delete the Token after successfull signup
-  await InviteToken.deleteOne({ _id: token._id });
+  // Generate tokens
+  const { accessToken, refreshToken } = generateAccessAndRefreshTokens(
+    createdAdmin._id
+  );
 
-  res.status(200).json(new APIRES(200, "Successfully Create the User"));
+  // Prepare user data without sensitive fields
+  const sentCreatedAdmin = await User.findById(createdAdmin._id).select(
+    "-password -refreshToken"
+  );
+
+  // Set cookies
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+  });
+
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
+  // Return success
+  res
+    .status(200)
+    .json(new APIRES(200, sentCreatedAdmin, "Admin registered successfully"));
 });
 
 const getUser = asynchandler(async (req, res) => {
@@ -207,6 +289,7 @@ export {
   adminLogin,
   adminInvite,
   verifyAdminInvite,
+  registerAdmin,
   getUser,
   getAdmin,
   getContest,
