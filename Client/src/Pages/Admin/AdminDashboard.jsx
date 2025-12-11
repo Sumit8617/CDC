@@ -14,7 +14,6 @@ const AdminDashboard = () => {
   const { user } = useSelector((state) => state.auth);
 
   const { stats, recentContests } = useAdminStats();
-
   const {
     sendAdminInvite,
     inviteLoading,
@@ -142,14 +141,18 @@ const AdminDashboard = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left border-collapse">
+          <table className="w-full text-base text-left border-collapse">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="py-2 px-3 font-medium text-gray-600">Name</th>
-                <th className="py-2 px-3 font-medium text-gray-600">
+                <th className="py-4 px-3 font-medium text-gray-800 text-lg">
+                  Name
+                </th>
+                <th className="py-4 px-3 font-medium text-gray-800 text-lg">
                   Participants
                 </th>
-                <th className="py-2 px-3 font-medium text-gray-600">Status</th>
+                <th className="py-4 px-3 font-medium text-gray-800 text-lg">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -157,32 +160,51 @@ const AdminDashboard = () => {
                 recentContests.slice(0, 7).map((contest) => (
                   <tr
                     key={contest._id}
-                    className="border-b last:border-none hover:bg-gray-50 transition-all"
+                    className={`
+            border-b last:border-none transition-all
+            ${
+              contest.status === "pending"
+                ? "bg-yellow-50 hover:bg-yellow-100"
+                : contest.status === "completed"
+                  ? "bg-blue-50 hover:bg-blue-100"
+                  : contest.status === "ongoing"
+                    ? "bg-green-50 hover:bg-green-100"
+                    : ""
+            }
+          `}
                   >
-                    <td className="py-2 px-3 text-gray-800">
+                    <td className="py-2 px-3 text-gray-800 text-md">
                       {contest.testName}
                     </td>
-                    <td className="py-2 px-3 text-gray-600">
-                      {contest.participants || 0}
+                    <td className="py-2 px-3 text-gray-600 text-md">
+                      {contest.participants ? contest.participants.length : 0}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-4 px-3">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          contest.status === "Ongoing"
-                            ? "bg-green-100 text-green-600"
-                            : contest.status === "Completed"
-                              ? "bg-blue-100 text-blue-600"
-                              : "bg-yellow-100 text-yellow-600"
+                        className={`text-sm font-bold px-3 py-3 text-center rounded-full ${
+                          contest.status === "pending"
+                            ? "bg-yellow-500 text-white"
+                            : contest.status === "completed"
+                              ? "bg-blue-600 text-white"
+                              : contest.status === "ongoing"
+                                ? "bg-green-500 text-white"
+                                : ""
                         }`}
                       >
-                        {contest.status || "Pending"}
+                        {contest.status
+                          ? contest.status.charAt(0).toUpperCase() +
+                            contest.status.slice(1)
+                          : "Pending"}
                       </span>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="text-center py-4 text-gray-500">
+                  <td
+                    colSpan={3}
+                    className="text-center py-6 text-gray-500 text-lg"
+                  >
                     No contests found.
                   </td>
                 </tr>

@@ -17,7 +17,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
         {/* Title */}
         {title && (
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">{title}</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 text-center">{title}</h2>
         )}
 
         {/* Modal Content */}

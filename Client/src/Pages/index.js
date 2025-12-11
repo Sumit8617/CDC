@@ -11,7 +11,6 @@ import AdminDashboard from "./Admin/AdminDashboard";
 import CreateContest from "./Admin/CreateContest";
 import ManageContest from "./Admin/ManageContest";
 import ManageUsers from "./Admin/UserData";
-import AdminAnalytics from "./Admin/Analytics";
 import AdminProfile from "./Admin/AdminProfile";
 import AdminSettings from "./Admin/AdminSettings";
 import AdminLogin from "./Admin/AdminLogin";
@@ -35,7 +34,6 @@ export {
   CreateContest,
   ManageContest,
   ManageUsers,
-  AdminAnalytics,
   AdminProfile,
   AdminSettings,
   AdminLogin,

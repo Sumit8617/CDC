@@ -18,7 +18,6 @@ import {
   CreateContest,
   ManageContest,
   ManageUsers,
-  AdminAnalytics,
   AdminProfile,
   AdminSettings,
   AdminLogin,
@@ -128,10 +127,6 @@ const router = createBrowserRouter([
           {
             path: "admin/manageusers",
             element: <ManageUsers />,
-          },
-          {
-            path: "admin/analytics",
-            element: <AdminAnalytics />,
           },
           {
             path: "admin/profile",

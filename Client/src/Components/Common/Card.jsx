@@ -15,7 +15,7 @@ const Card = ({
   layout = "vertical",
   padding = "",
   margin = "",
-  onClick, // <-- added
+  onClick,
 }) => {
   // Base layout styles
   const baseStyles = clsx(

@@ -221,13 +221,13 @@ const registerAdmin = asynchandler(async (req, res) => {
     maxAge: 24 * 60 * 60 * 1000,
   });
 
-
   // Return success
   res
     .status(200)
     .json(new APIRES(200, sentCreatedAdmin, "Admin registered successfully"));
 });
 
+// TODO: Some Bug fix if the user is empty it don't sent No user Found instead sending the status code and get failed
 const getUser = asynchandler(async (req, res) => {
   // const { userId } = req.params;
   // if (!userId) {
@@ -239,7 +239,7 @@ const getUser = asynchandler(async (req, res) => {
     .lean();
 
   if (totalUsers === 0) {
-    throw new APIERR(404, "No users found");
+    return res.status(404).json(new APIRES(404, "No User Found"));
   }
 
   res

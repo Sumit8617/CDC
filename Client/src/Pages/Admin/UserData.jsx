@@ -1,22 +1,50 @@
-import React from "react";
-import { Card, Button } from "../../Components/index";
+import React, { useState } from "react";
+import { Card, Button, Modal } from "../../Components/index";
 import { useAdminStats } from "../../Hooks/AdminStatsHook";
+import useSignup from "../../Hooks/AuthHooks";
 import { User, Mail, Shield, Ban, Edit, Trash2 } from "lucide-react";
 
 const ManageUsers = () => {
   const { userDetails, loading, error, refresh } = useAdminStats();
-  console.log(userDetails);
+  const { handleDeleteUser } = useSignup();
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
+
   const handleEdit = (id) => {
-    alert(`Edit user with ID: ${id}`);
+    alert(`Edit user feature coming soon with this ID : ${id}`);
   };
 
   const handleBlock = (id) => {
-    console.log("Toggle block user:", id);
+    alert(`Blocking Features Will coming Soon for this ID : ${id}`);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      console.log("Delete user:", id);
+  const openDeleteModal = (user) => {
+    setModalOpen(true);
+    setSelectedUser(user);
+    setDeleteMessage("");
+  };
+
+  const closeDeleteModal = () => {
+    setSelectedUser(null);
+    setModalOpen(false);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedUser) return;
+    setDeleteLoading(true);
+    setDeleteMessage("");
+    try {
+      await handleDeleteUser(selectedUser._id);
+      setDeleteMessage("User deleted successfully!");
+      await refresh();
+      openDeleteModal(false);
+    } catch (err) {
+      setDeleteMessage("Failed to delete user. Try again.", err);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -143,7 +171,7 @@ const ManageUsers = () => {
                   size="sm"
                   round="md"
                   className="flex items-center gap-1"
-                  onClick={() => handleDelete(user._id)}
+                  onClick={() => openDeleteModal(user)}
                 >
                   <Trash2 size={16} />
                   Delete
@@ -164,6 +192,51 @@ const ManageUsers = () => {
             </p>
           </Card>
         )
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {modalOpen && selectedUser && (
+        <Modal isOpen={modalOpen} onClose={closeDeleteModal}>
+          <div className="p-6 flex flex-col items-center gap-4">
+            <h2 className="text-lg font-bold text-gray-900">
+              Delete {selectedUser.fullName}?
+            </h2>
+            <p className="text-gray-600 text-sm text-center">
+              This action cannot be undone.
+            </p>
+
+            {deleteMessage && (
+              <p
+                className={`${
+                  deleteMessage.includes("Failed")
+                    ? "text-red-600"
+                    : "text-green-600"
+                } font-medium`}
+              >
+                {deleteMessage}
+              </p>
+            )}
+
+            <div className="flex gap-4 mt-4">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={closeDeleteModal}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={confirmDelete}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </section>
   );

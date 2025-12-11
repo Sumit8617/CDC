@@ -6,6 +6,7 @@ import {
   fetchUserDetails,
   updateProfile,
   changePassword,
+  deleteUser,
 } from "../lib/UserAuthSlice";
 import { useCallback, useState } from "react";
 
@@ -119,6 +120,21 @@ const useSignup = () => {
     [dispatch]
   );
 
+  // Delete User
+  const handleDeleteUser = useCallback(
+    async (userId) => {
+      try {
+        const res = await dispatch(deleteUser(userId)).unwrap();
+        console.log("User deleted:", res);
+        return res;
+      } catch (err) {
+        console.error("Delete user failed:", err);
+        throw err;
+      }
+    },
+    [dispatch]
+  );
+
   return {
     user,
     loading,
@@ -133,6 +149,7 @@ const useSignup = () => {
     handleFetchUserDetails,
     handleUpdateProfile,
     handleChangePassword,
+    handleDeleteUser,
   };
 };
 

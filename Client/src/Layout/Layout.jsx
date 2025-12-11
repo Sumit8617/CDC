@@ -30,7 +30,6 @@ const Layout = ({ children }) => {
     "/admin/create-contest",
     "/admin/manage-contests",
     "/admin/manageusers",
-    "/admin/analytics",
     "/admin/profile",
     "/admin/settings",
   ];
@@ -53,7 +52,6 @@ const Layout = ({ children }) => {
     /^\/admin\/create-contest$/,
     /^\/admin\/manage-contests$/,
     /^\/admin\/manageusers$/,
-    /^\/admin\/analytics$/,
     /^\/admin\/profile$/,
     /^\/admin\/settings$/,
     /^\/admin\/register$/,

@@ -179,6 +179,24 @@ export const changePassword = createAsyncThunk(
   }
 );
 
+// Delete user
+export const deleteUser = createAsyncThunk(
+  "auth/deleteUser",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.delete(
+        `/api/v1/admin/auth/delete-user/${userId}`
+      );
+      return res.data;
+    } catch (error) {
+      // axios error response
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete user"
+      );
+    }
+  }
+);
+
 // INITIAL USER
 const initialUser = (() => {
   try {
@@ -408,6 +426,20 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.success = false;
+      })
+      // Delete User
+      .addCase(deleteUser.pending, (state) => {
+        state.loading = true;
+        state.success = false;
+        state.error = null;
+      })
+      .addCase(deleteUser.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to delete user";
       });
   },
 });

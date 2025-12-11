@@ -3,9 +3,7 @@ import {
   LayoutDashboard,
   Users,
   Trophy,
-  Settings,
   User,
-  BarChart3,
   LogOut,
   PlusCircle,
 } from "lucide-react";
@@ -42,19 +40,9 @@ const AdminNav = () => {
         path: "/admin/manageusers",
       },
       {
-        name: "Analytics",
-        icon: <BarChart3 className="w-5 h-5" />,
-        path: "/admin/analytics",
-      },
-      {
         name: "Profile",
         icon: <User className="w-5 h-5" />,
         path: "/admin/profile",
-      },
-      {
-        name: "Settings",
-        icon: <Settings className="w-5 h-5" />,
-        path: "/admin/settings",
       },
     ],
     []
