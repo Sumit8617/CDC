@@ -1,7 +1,7 @@
 import {
   deleteFromCloudinary,
   uploadOnCloudinary,
-} from "../../Config/Cloudinary.config.js";
+} from "../../config/cloudinary.config.js";
 import { User } from "../../Service/Models/User.models.js";
 
 import { asynchandler, APIERR, APIRES } from "../index.utils.js";
