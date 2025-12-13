@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Card, Button, Modal } from "../../Components/index";
+import React, { useState, useEffect } from "react";
+import { Card, Button, Modal, PageLoaderWrapper } from "../../Components/index";
 import { useNavigate } from "react-router-dom";
 import {
   Trophy,
@@ -35,7 +35,7 @@ const AdminProfile = () => {
     }
   };
 
-  // upload Image
+  // Upload Image
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -62,46 +62,13 @@ const AdminProfile = () => {
     setTimeout(() => setUploadStatus(null), 2000);
   };
 
-  if (loading) {
-    return (
-      <div className="text-center bg-gray-50 min-h-screen flex flex-col items-center justify-center gap-4">
-        {/* Spinning Circle Loader */}
-        <svg
-          className="animate-spin h-8 w-8 text-indigo-600"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-          ></path>
-        </svg>
-
-        <p className="text-gray-700 font-medium">Loading admin details...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="p-8 text-center bg-red-50 border border-red-300 rounded-xl">
-        <p className="text-red-600 font-medium">{error}</p>
-      </Card>
-    );
-  }
+  useEffect(() => {
+    handleFetchUserDetails();
+  }, [handleFetchUserDetails]);
 
   // Use first admin as example
   const admin = adminDetails?.[0] || {};
+
   // Dynamic stats
   const quickStats = [
     {
@@ -125,156 +92,181 @@ const AdminProfile = () => {
   ];
 
   return (
-    <div className="min-h-auto flex flex-col gap-6 md:pl-64">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900">
-          {`${admin.fullName.split(" ")[0]}'s`} Profile
-        </h1>
-        <Button
-          variant="indigo"
-          size="md"
-          round="md"
-          onClick={() => navigate("/admin/settings")}
-        >
-          <Settings className="w-4 h-4 mr-2" /> Admin Settings
-        </Button>
-      </div>
+    <>
+      {/* Page Loader */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70">
+          <PageLoaderWrapper loading={loading} />
+        </div>
+      )}
 
-      <Card className="p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 bg-white transition-all duration-300 hover:brightness-105 hover:shadow-2xl hover:shadow-gray-300/50">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-            {/* Profile Picture */}
-            <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-md flex items-center justify-center bg-gray-100">
-              {/* IMAGE OR DEFAULT ICON */}
-              {admin.profilePic ? (
-                <img
-                  src={admin?.profilePic?.url}
-                  alt="User Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User2Icon className="w-16 h-16 text-gray-400" />
-              )}
+      {/* Error */}
+      {!loading && error && (
+        <Card className="p-8 text-center bg-red-50 border border-red-300 rounded-xl">
+          <p className="text-red-600 font-medium">{error}</p>
+        </Card>
+      )}
 
-              {/* UPLOAD STATUS INDICATOR */}
-              {uploadStatus === "uploading" && (
-                <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center text-white text-sm">
-                  Uploading...
-                </div>
-              )}
-
-              {uploadStatus === "success" && (
-                <div className="absolute top-0 left-0 w-full h-full bg-green-600/60 flex items-center justify-center text-white text-sm">
-                  Uploaded ✓
-                </div>
-              )}
-
-              {uploadStatus === "failed" && (
-                <div className="absolute top-0 left-0 w-full h-full bg-red-600/60 flex items-center justify-center text-white text-sm">
-                  Failed ✗
-                </div>
-              )}
-
-              {/* CAMERA LABEL */}
-              <label
-                htmlFor="profilePicUpload"
-                className="absolute bottom-0 left-0 right-0 bg-black/60 py-1 
-                flex items-center justify-center cursor-pointer"
-              >
-                <Camera className="w-6 h-6 text-white" />
-              </label>
-
-              {/* INPUT */}
-              <input
-                id="profilePicUpload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-                disabled={uploadStatus === "uploading"}
-              />
-            </div>
-
-            {/* User Info */}
-            <div className="text-center sm:text-left mt-5">
-              <h2 className="text-xl font-bold text-gray-900">
-                {admin.fullName || "Name not found"}
-              </h2>
-              <p className="text-gray-600">
-                {admin.email || "mail not fouund"}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                <span className="mb-2">{admin.role || "Role not found"}</span>{" "}
-                <br />
-                <span>
-                  Joined{" "}
-                  {admin?.createdAt
-                    ? new Date(admin.createdAt).toLocaleDateString("en-US", {
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : "Date Unknown"}
-                </span>
-              </p>
-            </div>
+      {/* Main Profile Content */}
+      {!loading && !error && (
+        <div className="min-h-auto flex flex-col gap-6 md:pl-64">
+          {/* Page Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              {admin?.fullName
+                ? String(`${admin?.fullName.split(" ")[0]}'s Profile`)
+                : "Admin Profile"}
+            </h1>
+            <Button
+              variant="indigo"
+              size="md"
+              round="md"
+              onClick={() => navigate("/admin/settings")}
+            >
+              <Settings className="w-4 h-4 mr-2" /> Admin Settings
+            </Button>
           </div>
 
-          {/* Edit Button */}
-          <Button
-            variant="primary"
-            size="sm"
-            className="mt-4 sm:mt-0 flex items-center gap-2 hover:cursor-pointer"
-            onClick={() => {
-              setModalBioInput(admin.bio);
-              setIsBioModalOpen(true);
-            }}
-          >
-            <Edit2 className="w-4 h-4" /> Edit Profile
-          </Button>
-        </div>
+          <Card className="p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 bg-white transition-all duration-300 hover:brightness-105 hover:shadow-2xl hover:shadow-gray-300/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                {/* Profile Picture */}
+                <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-md flex items-center justify-center bg-gray-100">
+                  {admin.profilePic ? (
+                    <img
+                      src={admin?.profilePic?.url}
+                      alt="User Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User2Icon className="w-16 h-16 text-gray-400" />
+                  )}
 
-        <hr className="my-6 border-gray-200" />
+                  {/* Upload Status */}
+                  {uploadStatus === "uploading" && (
+                    <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center text-white text-sm">
+                      Uploading...
+                    </div>
+                  )}
+                  {uploadStatus === "success" && (
+                    <div className="absolute top-0 left-0 w-full h-full bg-green-600/60 flex items-center justify-center text-white text-sm">
+                      Uploaded ✓
+                    </div>
+                  )}
+                  {uploadStatus === "failed" && (
+                    <div className="absolute top-0 left-0 w-full h-full bg-red-600/60 flex items-center justify-center text-white text-sm">
+                      Failed ✗
+                    </div>
+                  )}
 
-        <p className="text-gray-700 text-center sm:text-left">{admin.bio}</p>
-      </Card>
+                  {/* Camera Label */}
+                  <label
+                    htmlFor="profilePicUpload"
+                    className="absolute bottom-0 left-0 right-0 bg-black/60 py-1 flex items-center justify-center cursor-pointer"
+                  >
+                    <Camera className="w-6 h-6 text-white" />
+                  </label>
 
-      {/* BIO EDIT MODAL */}
-      <Modal
-        isOpen={isBioModalOpen}
-        onClose={() => setIsBioModalOpen(false)}
-        title="Edit Bio"
-      >
-        <div className="space-y-4 flex flex-col justify-center">
-          <input
-            value={modalBioInput}
-            onChange={(e) => setModalBioInput(e.target.value)}
-            placeholder="Write something about yourself"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+                  <input
+                    id="profilePicUpload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={uploadStatus === "uploading"}
+                  />
+                </div>
 
-          <Button variant="primary" onClick={handleModalBioUpdate}>
-            Save Changes
-          </Button>
-        </div>
-      </Modal>
+                {/* User Info */}
+                <div className="text-center sm:text-left mt-5">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {admin.fullName || "Name not found"}
+                  </h2>
+                  <p className="text-gray-600">
+                    {admin.email || "mail not found"}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    <span className="mb-2">
+                      {admin.role || "Role not found"}
+                    </span>{" "}
+                    <br />
+                    <span>
+                      Joined{" "}
+                      {admin?.createdAt
+                        ? new Date(admin.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "long",
+                              year: "numeric",
+                            }
+                          )
+                        : "Date Unknown"}
+                    </span>
+                  </p>
+                </div>
+              </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {quickStats.map((stat, index) => (
-          <Card
-            key={index}
-            className="p-5 text-center bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className={`flex justify-center mb-2 ${stat.color}`}>
-              {stat.icon}
+              {/* Edit Button */}
+              <Button
+                variant="primary"
+                size="sm"
+                className="mt-4 sm:mt-0 flex items-center gap-2 hover:cursor-pointer"
+                onClick={() => {
+                  setModalBioInput(admin.bio);
+                  setIsBioModalOpen(true);
+                }}
+              >
+                <Edit2 className="w-4 h-4" /> Edit Profile
+              </Button>
             </div>
-            <h3 className="text-2xl font-bold text-gray-800">{stat.value}</h3>
-            <p className="text-sm text-gray-500">{stat.label}</p>
+
+            <hr className="my-6 border-gray-200" />
+
+            <p className="text-gray-700 text-center sm:text-left">
+              {admin.bio}
+            </p>
           </Card>
-        ))}
-      </div>
-    </div>
+
+          {/* BIO EDIT MODAL */}
+          <Modal
+            isOpen={isBioModalOpen}
+            onClose={() => setIsBioModalOpen(false)}
+            title="Edit Bio"
+          >
+            <div className="space-y-4 flex flex-col justify-center">
+              <input
+                value={modalBioInput}
+                onChange={(e) => setModalBioInput(e.target.value)}
+                placeholder="Write something about yourself"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <Button variant="primary" onClick={handleModalBioUpdate}>
+                Save Changes
+              </Button>
+            </div>
+          </Modal>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {quickStats.map((stat, index) => (
+              <Card
+                key={index}
+                className="p-5 text-center bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className={`flex justify-center mb-2 ${stat.color}`}>
+                  {stat.icon}
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {stat.value}
+                </h3>
+                <p className="text-sm text-gray-500">{stat.label}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

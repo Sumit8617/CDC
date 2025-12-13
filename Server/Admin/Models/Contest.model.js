@@ -28,6 +28,14 @@ const testSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // to track if notifications have been sent
     },
+    isDraft: {
+      type: Boolean,
+      default: false,
+    },
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

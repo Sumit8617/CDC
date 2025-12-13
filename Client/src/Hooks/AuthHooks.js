@@ -7,6 +7,7 @@ import {
   updateProfile,
   changePassword,
   deleteUser,
+  setUser,
 } from "../lib/UserAuthSlice";
 import { useCallback, useState } from "react";
 
@@ -43,8 +44,12 @@ const useSignup = () => {
     try {
       setLoadingUser(true);
       const res = await dispatch(fetchUserDetails()).unwrap();
-      // Normalize user object
-      return res?.data?.user || null;
+
+      const fetchedUser = normalizeUser(res);
+
+      dispatch(setUser(fetchedUser));
+
+      return fetchedUser;
     } catch (err) {
       console.error("Failed to fetch user details:", err);
       return null;

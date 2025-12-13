@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, Button, Modal } from "../../Components/index";
+import { Card, Button, Modal, PageLoaderWrapper } from "../../Components/index";
 import { useAdminStats } from "../../Hooks/AdminStatsHook";
 import useSignup from "../../Hooks/AuthHooks";
 import { User, Mail, Shield, Ban, Edit, Trash2 } from "lucide-react";
@@ -67,11 +67,7 @@ const ManageUsers = () => {
       </div>
 
       {/* Loading */}
-      {loading && (
-        <Card className="p-8 text-center bg-gray-50 border border-gray-200 rounded-xl">
-          <p className="text-gray-700">Loading users...</p>
-        </Card>
-      )}
+      {loading && <PageLoaderWrapper loading={loading} />}
 
       {/* Error */}
       {error && (

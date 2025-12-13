@@ -6,6 +6,7 @@ import forgotPasswordReducer from "../lib/ForgotPasswordSlice";
 import adminInviteReducer from "../lib/Admin/AdminSlice";
 import verifyAdminInviteReducer from "../lib/Admin/VerifyAdminSlice";
 import registerAdminReducer from "../lib/Admin/RegisterAdmin";
+import ManageContestReducer from "../lib/Admin/ManageContestSlice";
 
 const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ const store = configureStore({
     adminInvite: adminInviteReducer,
     verifyAdmin: verifyAdminInviteReducer,
     registerAdmin: registerAdminReducer,
+    manageContest: ManageContestReducer,
   },
 });
 
