@@ -2,7 +2,7 @@ import { asynchandler, APIERR, APIRES } from "../../Utils/index.utils.js";
 import { Test } from "../../Admin/Models/Contest.model.js";
 
 const fetchContestDetails = asynchandler(async (req, res) => {
-  const contests = await Test.find({})
+  const contests = await Test.find({ status: "completed" })
     .sort({ createdAt: -1 })
     .select("testName date status description")
     .lean();

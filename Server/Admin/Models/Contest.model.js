@@ -21,7 +21,7 @@ const testSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["pending", "completed"],
+      enum: ["pending", "completed", "draft", "active"],
       default: "pending", // new contests start as pending
     },
     notificationsSent: {

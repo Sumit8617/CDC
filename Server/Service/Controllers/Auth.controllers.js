@@ -303,7 +303,7 @@ const userDetails = asynchandler(async (req, res) => {
           role: user.role,
           totalContestsGiven,
           bestRank: bestRank || "N/A",
-          totalContestsAvailable : totalContest
+          totalContestsAvailable: totalContest,
         },
       },
       "User fetched"

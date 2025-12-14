@@ -1,33 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../../Components/index";
-
-const questionsData = [
-  { id: 1, question: "What is 2 + 2?", options: ["3", "4", "5", "6"] },
-  {
-    id: 2,
-    question: "Which planet is known as the Red Planet?",
-    options: ["Earth", "Mars", "Jupiter", "Venus"],
-  },
-  {
-    id: 3,
-    question: "Who wrote 'Hamlet'?",
-    options: ["Shakespeare", "Dickens", "Hemingway", "Tolkien"],
-  },
-];
+import useUpcomingContests from "../../Hooks/UpcomingContestHook";
 
 const QuestionCard = ({ question, selectedOption, setSelectedOption }) => (
   <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 w-full border-2 border-gray-200">
     <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
-      {question.question}
+      {question?.questionText}
     </h3>
     <div className="flex flex-col gap-3">
-      {question.options.map((option, idx) => (
+      {question?.options.map((option, idx) => (
         <button
           key={idx}
           type="button"
-          onClick={() => setSelectedOption(question.id, option)}
+          onClick={() => setSelectedOption(question._id, option)}
           className={`flex items-center gap-2 border rounded-lg px-3 sm:px-4 py-2 text-left w-full transition text-sm sm:text-base ${
-            selectedOption[question.id] === option
+            selectedOption[question._id] === option
               ? "bg-blue-100 border-blue-500 text-blue-800"
               : "bg-gray-50 border-gray-300 hover:bg-gray-100"
           }`}
@@ -40,15 +27,28 @@ const QuestionCard = ({ question, selectedOption, setSelectedOption }) => (
 );
 
 const Contest = () => {
+  const { contests, loading, error } = useUpcomingContests();
+  console.log("Upcoming Contests:", contests);
+  const activeContest =
+    contests.find((c) => c?.status === "active") ||
+    contests.find((c) => c?.status === "pending");
+
   const [selectedOption, setSelectedOptionState] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(20 * 60);
+  const [timeLeft, setTimeLeft] = useState(
+    activeContest ? Math.floor(activeContest.remainingTime / 1000) : 0
+  );
   const [finished, setFinished] = useState(false);
+
+  // Update timer when active contest changes
+  useEffect(() => {
+    if (activeContest)
+      setTimeLeft(Math.floor(activeContest.remainingTime / 1000));
+  }, [activeContest]);
 
   // Prevent re-entry after contest ended
   useEffect(() => {
-    const ended = localStorage.getItem("contestEnded");
-    if (ended === "true") {
+    if (localStorage.getItem("contestEnded") === "true") {
       window.location.href = "/contest-ended?reason=already-finished";
     }
   }, []);
@@ -66,7 +66,7 @@ const Contest = () => {
 
   // Countdown Timer
   useEffect(() => {
-    if (finished) return;
+    if (finished || !activeContest) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -78,74 +78,18 @@ const Contest = () => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [finished]);
+  }, [finished, activeContest]);
 
-  // Force fullscreen & auto-end if exited
-  useEffect(() => {
-    const enterFullscreen = async () => {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) await elem.requestFullscreen();
-    };
-    enterFullscreen();
-
-    const handleFsChange = () => {
-      if (!document.fullscreenElement && !finished) {
-        finishContest("User exited fullscreen");
-      }
-    };
-
-    document.addEventListener("fullscreenchange", handleFsChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", handleFsChange);
-  }, [finished]);
-
-  //  Detect tab switch
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && !finished) {
-        finishContest("User switched tab");
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [finished]);
-
-  //  Detect DevTools open
-  useEffect(() => {
-    const detectDevTools = () => {
-      const threshold = 160;
-      if (
-        window.outerWidth - window.innerWidth > threshold ||
-        window.outerHeight - window.innerHeight > threshold
-      ) {
-        finishContest("Developer tools opened");
-      }
-    };
-    const checkInterval = setInterval(detectDevTools, 1000);
-    return () => clearInterval(checkInterval);
-  }, [finished]);
-
-  //  Disable right-click and F12, Ctrl+Shift+I/J/C/U
-  useEffect(() => {
-    const handleContextMenu = (e) => e.preventDefault();
-    const handleKeyDown = (e) => {
-      if (
-        e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
-        (e.ctrlKey && e.key === "U")
-      ) {
-        e.preventDefault();
-        finishContest("Attempted to open DevTools");
-      }
-    };
-    document.addEventListener("contextmenu", handleContextMenu);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("contextmenu", handleContextMenu);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [finished]);
+  // Question navigation
+  const setSelectedOption = (questionId, option) => {
+    setSelectedOptionState((prev) => ({ ...prev, [questionId]: option }));
+  };
+  const handleNext = () =>
+    currentQuestion < activeContest.questions.length - 1 &&
+    setCurrentQuestion(currentQuestion + 1);
+  const handlePrevious = () =>
+    currentQuestion > 0 && setCurrentQuestion(currentQuestion - 1);
+  const handleSubmit = () => finishContest("User submitted manually");
 
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
@@ -155,19 +99,9 @@ const Contest = () => {
       .padStart(2, "0")}`;
   };
 
-  const setSelectedOption = (questionId, option) => {
-    setSelectedOptionState((prev) => ({ ...prev, [questionId]: option }));
-  };
-
-  const handleNext = () =>
-    currentQuestion < questionsData.length - 1 &&
-    setCurrentQuestion(currentQuestion + 1);
-  const handlePrevious = () =>
-    currentQuestion > 0 && setCurrentQuestion(currentQuestion - 1);
-
-  const handleSubmit = () => {
-    finishContest("User submitted manually");
-  };
+  if (loading) return <p>Loading contest...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!activeContest) return <p>No active contest at this time.</p>;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 md:pl-64">
@@ -175,7 +109,7 @@ const Contest = () => {
       <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-40">
         <div className="flex justify-between items-center py-3 sm:py-4 px-3 sm:px-6">
           <h1 className="text-lg sm:text-2xl font-bold text-gray-800 shrink">
-            Contest NO. 1
+            {activeContest.title}
           </h1>
           <div className="bg-gray-100 font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-sm sm:text-base text-red-600 text-center shrink-0">
             Remaining Time {formatTime(timeLeft)}
@@ -189,23 +123,23 @@ const Contest = () => {
           className="flex flex-col justify-center items-center"
           style={{ minHeight: "calc(100vh - 4rem)" }}
         >
-          {/*  Question Dashboard Section */}
+          {/* Question Dashboard */}
           <div className="w-full max-w-3xl flex flex-col items-center gap-4">
             <div className="my-5 flex flex-wrap gap-1.5 sm:gap-2 justify-center">
-              {questionsData.map((q, idx) => (
+              {activeContest.questions.map((q, idx) => (
                 <div
-                  key={q.id}
+                  key={q._id}
                   onClick={() => setCurrentQuestion(idx)}
                   className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full border text-xs sm:text-sm cursor-pointer transition-all duration-200
                     ${
                       currentQuestion === idx
                         ? "bg-blue-500 border-blue-700 text-white"
-                        : selectedOption[q.id]
+                        : selectedOption[q._id]
                           ? "bg-green-500 border-green-700 text-white"
                           : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200"
                     }`}
                 >
-                  {q.id}
+                  {idx + 1}
                 </div>
               ))}
             </div>
@@ -213,7 +147,7 @@ const Contest = () => {
 
           {/* Question Card */}
           <QuestionCard
-            question={questionsData[currentQuestion]}
+            question={activeContest.questions[currentQuestion]}
             selectedOption={selectedOption}
             setSelectedOption={setSelectedOption}
           />
@@ -228,7 +162,7 @@ const Contest = () => {
               Previous
             </Button>
 
-            {currentQuestion === questionsData.length - 1 ? (
+            {currentQuestion === activeContest.questions.length - 1 ? (
               <Button variant="primary" onClick={handleSubmit}>
                 Submit Answers
               </Button>

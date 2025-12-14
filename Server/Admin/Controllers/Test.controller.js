@@ -3,44 +3,171 @@ import { Test } from "../Models/Contest.model.js";
 import { Question } from "../Models/Question.model.js";
 
 const createTest = asynchandler(async (req, res) => {
-  const { testName, description, date, duration, questions } = req.body;
+  const {
+    contestName,
+    description,
+    contestDate,
+    contestTime,
+    duration,
+    questions,
+  } = req.body;
 
   // Basic validation
-  if ([testName, description, duration].some((f) => !f || f.trim() === "")) {
+  if (
+    [contestName, description, duration, contestDate, contestTime].some(
+      (f) => !f || f.toString().trim() === ""
+    )
+  ) {
     throw new APIERR(400, "Please provide all required fields");
-  }
-
-  if (!date) {
-    throw new APIERR(400, "Date is requied");
   }
 
   if (!Array.isArray(questions) || questions.length === 0) {
     throw new APIERR(400, "Please provide at least one question");
   }
 
-  // Step 1: Create each question and associate them with the test
-  const createdQuestions = await Question.insertMany(
-    questions.map((q) => ({
-      ...q,
-      correctOption: parseInt(q.correctOption),
-    }))
+  // Create date directly in IST (Kolkata timezone)
+  const [hours, minutes] = contestTime.split(":").map(Number);
+  const [year, month, day] = contestDate.split("-").map(Number);
+
+  const contestDateIST = new Date(year, month - 1, day, hours, minutes);
+
+  // Compare with current IST time
+  const nowIST = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
   );
 
-  // Step 2: Extract their IDs
+  if (contestDateIST <= nowIST) {
+    throw new APIERR(400, "Contest time must be in the future");
+  }
+
+  // Create questions
+  const createdQuestions = await Question.insertMany(
+    questions.map((q, index) => {
+      if (
+        typeof q.correctOption !== "number" ||
+        q.correctOption < 0 ||
+        q.correctOption > 3
+      ) {
+        throw new APIERR(
+          400,
+          `Invalid correct option for question ${index + 1}`
+        );
+      }
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        throw new APIERR(
+          400,
+          `Question ${index + 1} must have exactly 4 options`
+        );
+      }
+      return {
+        questionText: q.questionText,
+        options: q.options,
+        correctOption: q.correctOption,
+      };
+    })
+  );
+
   const questionIds = createdQuestions.map((q) => q._id);
 
-  // Step 3: Create the test and link the questions
+  // Save contest with IST date
   const newTest = await Test.create({
-    testName,
-    date: new Date(new Date(date).getTime() - 5.5 * 3600000),
+    testName: contestName,
     description,
     duration,
+    date: contestDateIST,
     questions: questionIds,
+    status: "pending",
+    isPublished: true,
   });
 
   return res
     .status(201)
-    .json(new APIRES(201, "Test created successfully", { newTest }));
+    .json(
+      new APIRES(201, "Contest created successfully", { contest: newTest })
+    );
+});
+
+const saveDraftContest = asynchandler(async (req, res) => {
+  const {
+    contestName,
+    description,
+    contestDate,
+    contestTime,
+    duration,
+    questions,
+  } = req.body;
+
+  // Basic Validation
+  if (
+    [contestName, description, duration, contestDate, contestTime].some(
+      (f) => !f || f.toString().trim() === ""
+    )
+  ) {
+    throw new APIERR(400, "Please provide all required fields");
+  }
+
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new APIERR(400, "Please provide at least one question");
+  }
+
+  // Create contest date in IST
+  const [hours, minutes] = contestTime.split(":").map(Number);
+  const [year, month, day] = contestDate.split("-").map(Number);
+
+  const contestDateTimeIST = new Date(year, month - 1, day, hours, minutes);
+
+  if (isNaN(contestDateTimeIST.getTime())) {
+    throw new APIERR(400, "Invalid contest date or time");
+  }
+
+  // Create Questions
+  const createdQuestions = await Question.insertMany(
+    questions.map((q, index) => {
+      if (
+        typeof q.correctOption !== "number" ||
+        q.correctOption < 0 ||
+        q.correctOption > 3
+      ) {
+        throw new APIERR(
+          400,
+          `Invalid correct option for question ${index + 1}`
+        );
+      }
+
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        throw new APIERR(
+          400,
+          `Question ${index + 1} must have exactly 4 options`
+        );
+      }
+
+      return {
+        questionText: q.questionText,
+        options: q.options,
+        correctOption: q.correctOption,
+      };
+    })
+  );
+
+  const questionIds = createdQuestions.map((q) => q._id);
+
+  // Save as draft (status: draft)
+  const draftContest = await Test.create({
+    testName: contestName,
+    description,
+    duration,
+    date: contestDateTimeIST,
+    questions: questionIds,
+    status: "draft",
+    isDraft: true,
+    isPublished: false,
+  });
+
+  return res.status(201).json(
+    new APIRES(201, "Contest saved as draft successfully", {
+      contest: draftContest,
+    })
+  );
 });
 
 const getContest = asynchandler(async (req, res) => {
@@ -81,4 +208,10 @@ const deleteContest = asynchandler(async (req, res) => {
   return res.status(200).json(new APIRES(200, "Contest deleted successfully"));
 });
 
-export { createTest, getContest, updateContest, deleteContest };
+export {
+  createTest,
+  saveDraftContest,
+  getContest,
+  updateContest,
+  deleteContest,
+};

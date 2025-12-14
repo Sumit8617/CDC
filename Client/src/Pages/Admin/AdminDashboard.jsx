@@ -167,8 +167,8 @@ const AdminDashboard = () => {
                 ? "bg-yellow-50 hover:bg-yellow-100"
                 : contest.status === "completed"
                   ? "bg-blue-50 hover:bg-blue-100"
-                  : contest.status === "ongoing"
-                    ? "bg-green-50 hover:bg-green-100"
+                  : contest.status === "active"
+                    ? "bg-green-100 hover:bg-green-200"
                     : ""
             }
           `}

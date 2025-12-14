@@ -3,34 +3,37 @@ import { SubmittedOption } from "../../Admin/Models/SubmitedOption.model.js";
 import { Test } from "../../Admin/Models/Contest.model.js";
 import { Leaderboard } from "../../Admin/Models/Leaderboard.models.js";
 
+// Run cron every minute
 cron.schedule("* * * * *", async () => {
   const now = new Date();
   console.log("Cron running:", now.toISOString());
 
   try {
+    // Fetch contests that are pending
     const contests = await Test.find({ status: "pending" });
 
     for (const contest of contests) {
+      const contestStart = new Date(contest.date); // UTC stored in DB
       const contestEnd = new Date(
-        contest.date.getTime() + contest.duration * 60 * 1000
+        contestStart.getTime() + contest.duration * 60 * 1000
       );
-      const publishTime = new Date(contestEnd.getTime() + 15 * 60 * 1000);
+      const leaderboardPublishTime = new Date(
+        contestEnd.getTime() + 30 * 60 * 1000
+      ); // 30 min after end
 
-      // Skip until ready
-      if (now < publishTime) {
-        const ms = publishTime - now;
-        const minutes = Math.floor(ms / 60000);
-        const seconds = Math.floor((ms % 60000) / 1000);
-
+      // Skip contests that haven't ended yet
+      if (now < leaderboardPublishTime) {
         console.log(
-          `Waiting for publish time for contest ${contest._id}, Time remaining => ${minutes}m ${seconds}s`
+          `Waiting to publish leaderboard for contest ${contest._id}, time remaining: ${Math.floor((leaderboardPublishTime - now) / 60000)}m`
         );
         continue;
       }
 
-      // Leaderboard already exists
-      const existingLb = await Leaderboard.findOne({ contest: contest._id });
-      if (existingLb) {
+      // Skip if leaderboard already exists
+      const existingLeaderboard = await Leaderboard.findOne({
+        contest: contest._id,
+      });
+      if (existingLeaderboard) {
         if (contest.status !== "completed") {
           contest.status = "completed";
           await contest.save();
@@ -38,16 +41,14 @@ cron.schedule("* * * * *", async () => {
         continue;
       }
 
-      // Fetch submissions with correct populate
+      // Fetch submissions with populated correct answers
       const submissions = await SubmittedOption.find({ contest: contest._id })
         .populate("user", "fullName")
         .populate({
           path: "questions.question",
-          model: "Question", // update to your correct model name
+          model: "Question",
           select: "correctOption",
         });
-
-      console.log("Submissions:", submissions.length, submissions);
 
       const leaderboardMap = {};
 
@@ -55,10 +56,7 @@ cron.schedule("* * * * *", async () => {
         if (!sub.user) return;
 
         sub.questions.forEach((q) => {
-          if (!q.question || q.question.correctOption === undefined) {
-            console.log("Missing correctOption for", q);
-            return;
-          }
+          if (!q.question || q.question.correctOption === undefined) return;
 
           const submitted = Number(q.submittedOption);
           const correct = Number(q.question.correctOption);
@@ -81,10 +79,13 @@ cron.schedule("* * * * *", async () => {
       );
 
       if (leaderboardData.length === 0) {
-        console.log(`No leaderboard data for contest ${contest._id}`);
+        console.log(`No valid submissions for contest ${contest._id}`);
+        contest.status = "completed";
+        await contest.save();
         continue;
       }
 
+      // Create leaderboard
       await Leaderboard.create({
         contest: contest._id,
         data: leaderboardData,
@@ -93,6 +94,7 @@ cron.schedule("* * * * *", async () => {
 
       console.log(`✔ Leaderboard published for contest ${contest._id}`);
 
+      // Mark contest as completed
       contest.status = "completed";
       await contest.save();
     }

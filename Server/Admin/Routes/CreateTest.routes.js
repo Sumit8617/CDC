@@ -5,11 +5,13 @@ import {
   getContest,
   updateContest,
   deleteContest,
+  saveDraftContest,
 } from "../Controllers/Test.controller.js";
 
 const adminRouter = Router();
 
 adminRouter.route("/create-contest").post(protectRoute, createTest);
+adminRouter.route("/save-draft-contest").post(protectRoute, saveDraftContest);
 adminRouter.route("/get-contest").get(protectRoute, getContest);
 adminRouter
   .route("/update-contest/:contestId")
