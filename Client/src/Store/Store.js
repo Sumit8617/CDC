@@ -10,6 +10,7 @@ import ManageContestReducer from "../lib/Admin/ManageContestSlice";
 import CreateContestReducer from "../lib/Admin/CreateContestSlice";
 import leaderboardReducer from "../lib/LeaderBoardSlice";
 import upcomingContestReducer from "../lib/UpcomingContestSlice";
+import submitContestReducer from "../lib/SubmitContestSlice";
 
 const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ const store = configureStore({
     createContest: CreateContestReducer,
     leaderboard: leaderboardReducer,
     upcomingContest: upcomingContestReducer,
+    submitContest: submitContestReducer,
   },
 });
 

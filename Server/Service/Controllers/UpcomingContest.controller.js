@@ -3,10 +3,8 @@ import { Test } from "../../Admin/Models/Contest.model.js";
 
 const getUpcomingContests = asynchandler(async (req, res) => {
   try {
-    // Current IST time
-    const nowIST = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-    );
+    // ALWAYS use UTC for calculations
+    const now = new Date();
 
     const contests = await Test.find({
       isPublished: true,
@@ -14,29 +12,28 @@ const getUpcomingContests = asynchandler(async (req, res) => {
     })
       .sort({ date: 1 })
       .populate("questions");
-    console.log("Fetched Contests =>", contests);
 
     const contestsWithDetails = await Promise.all(
       contests.map(async (contest) => {
-        const startTimeIST = new Date(contest.date);
-        const endTimeIST = new Date(
-          startTimeIST.getTime() + contest.duration * 60000
+        const startTime = new Date(contest.date); // UTC
+        const endTime = new Date(
+          startTime.getTime() + contest.duration * 60000
         );
 
-        let status, remainingTime;
+        let status = "pending";
+        let remainingTime = null;
 
-        if (nowIST < startTimeIST) {
-          status = "pending";
-          remainingTime = startTimeIST - nowIST; // time until start
-        } else if (nowIST >= startTimeIST && nowIST <= endTimeIST) {
+        if (now >= startTime && now <= endTime) {
+          // Contest is ACTIVE
           status = "active";
-          remainingTime = endTimeIST - nowIST; // time until end
-        } else {
+          remainingTime = endTime - now;
+        } else if (now > endTime) {
+          // Contest is COMPLETED
           status = "completed";
           remainingTime = 0;
         }
 
-        // Update DB status if changed
+        // Update DB only if status actually changed
         if (contest.status !== status) {
           contest.status = status;
           await contest.save();
@@ -45,13 +42,23 @@ const getUpcomingContests = asynchandler(async (req, res) => {
         return {
           _id: contest._id,
           title: contest.testName,
-          startDate: startTimeIST, // IST
+
+          // Convert to IST ONLY for display
+          startDate: new Date(startTime.getTime() + 5.5 * 60 * 60 * 1000),
           duration: contest.duration,
-          remainingTime,
           status,
+
+          // Show remainingTime ONLY when active
+          remainingTime: status === "active" ? remainingTime : null,
+
+          // Show questions ONLY when active
           questions: status === "active" ? contest.questions : [],
         };
       })
+    );
+    console.log(
+      "Contest Start Date (IST):",
+      contestsWithDetails.map((c) => c.startDate)
     );
 
     return res

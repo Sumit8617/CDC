@@ -14,6 +14,7 @@ import { PageLoaderWrapper } from "./Common/Pageloader";
 import UserProfileCard from "./Profile/UserProfileCard";
 import Modal from "./Common/Modal";
 import UserChangePassword from "./Password/UserPasswordChange";
+import AnimatedDigit from "./Animation/AnimateDigit";
 
 export {
   GeneralNav,
@@ -32,4 +33,5 @@ export {
   UserProfileCard,
   Modal,
   UserChangePassword,
+  AnimatedDigit,
 };
