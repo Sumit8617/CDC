@@ -19,7 +19,7 @@ const ManageContest = () => {
 
   const contests = (contestData || []).map((contest) => ({
     id: contest._id,
-    name: contest.name,
+    name: contest.testName || "No Title Found",
     description: contest.description,
     duration: contest.duration,
     totalQuestions: contest.questions?.length || 0,
@@ -73,86 +73,95 @@ const ManageContest = () => {
       {/* Contest List */}
       {!loading && contests.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {contests.map((contest) => (
-            <Card
-              key={contest.id}
-              className="flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition"
-            >
-              {/* Top: Description on left + Status on right */}
-              <div className="flex justify-between items-start mb-4">
-                {/* Description */}
-                <div className="flex-1 pr-4">
-                  <p className="text-sm text-gray-800 font-medium line-clamp-3">
-                    {contest.description}
-                  </p>
-                </div>
-
-                {/* Status Badge */}
-                <div className="flex-shrink-0">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      contest.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {contest.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Meta Info */}
-              <div className="flex justify-between text-sm text-gray-500 mb-6">
-                <div>
-                  <span className="font-medium text-gray-700">Duration:</span>{" "}
-                  {contest.duration} mins
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Questions:</span>{" "}
-                  {contest.totalQuestions}
-                </div>
-              </div>
-
-              {/* Navigation Buttons: Centered */}
-              <div className="flex justify-center gap-3 mt-auto">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  round="md"
-                  className="flex items-center gap-1"
-                  onClick={() => handleView(contest.id)}
+          {contests.map(
+            (contest) => (
+              console.log(contest),
+              (
+                <Card
+                  key={contest.id}
+                  className="flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition"
                 >
-                  <Eye size={16} />
-                  View
-                </Button>
+                  {/* Top: Description on left + Status on right */}
+                  <div className="flex justify-between items-start mb-4">
+                    {/* Description */}
+                    <div className="flex-1 pr-4">
+                      <p className="text-sm text-gray-800 font-medium line-clamp-3">
+                        {contest.name}
+                      </p>
+                    </div>
 
-                <Button
-                  type="button"
-                  variant="indigo"
-                  size="sm"
-                  round="md"
-                  className="flex items-center gap-1"
-                  onClick={() => handleEdit(contest.id)}
-                >
-                  <Edit size={16} />
-                  Edit
-                </Button>
+                    {/* Status Badge */}
+                    <div className="shrink-0">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          contest.status === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {contest.status}
+                      </span>
+                    </div>
+                  </div>
 
-                <Button
-                  type="button"
-                  variant="danger"
-                  size="sm"
-                  round="md"
-                  className="flex items-center gap-1"
-                  onClick={() => handleDelete(contest.id)}
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </Button>
-              </div>
-            </Card>
-          ))}
+                  {/* Meta Info */}
+                  <div className="flex justify-between text-sm text-gray-500 mb-6">
+                    <div>
+                      <span className="font-medium text-gray-700">
+                        Duration:
+                      </span>{" "}
+                      {contest.duration} mins
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">
+                        Questions:
+                      </span>{" "}
+                      {contest.totalQuestions}
+                    </div>
+                  </div>
+
+                  {/* Navigation Buttons: Centered */}
+                  <div className="flex justify-center gap-11 mt-auto">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      round="md"
+                      className="flex items-center gap-1"
+                      onClick={() => handleView(contest.id)}
+                    >
+                      <Eye size={16} />
+                      View
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="indigo"
+                      size="sm"
+                      round="md"
+                      className="flex items-center gap-1"
+                      onClick={() => handleEdit(contest.id)}
+                    >
+                      <Edit size={16} />
+                      Edit
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      round="md"
+                      className="flex items-center gap-1"
+                      onClick={() => handleDelete(contest.id)}
+                    >
+                      <Trash2 size={16} />
+                      Delete
+                    </Button>
+                  </div>
+                </Card>
+              )
+            )
+          )}
         </div>
       ) : (
         !loading && (

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, Button, Modal, PageLoaderWrapper } from "../../Components/index";
 import { useAdminStats } from "../../Hooks/AdminStatsHook";
 import useSignup from "../../Hooks/AuthHooks";
-import { User, Mail, Shield, Ban, Edit, Trash2 } from "lucide-react";
+import { Mail, Shield, Ban, Edit, Trash2 } from "lucide-react";
 
 const ManageUsers = () => {
   const { userDetails, loading, error, refresh } = useAdminStats();
@@ -40,9 +40,9 @@ const ManageUsers = () => {
       await handleDeleteUser(selectedUser._id);
       setDeleteMessage("User deleted successfully!");
       await refresh();
-      openDeleteModal(false);
+      setModalOpen(false);
     } catch (err) {
-      setDeleteMessage("Failed to delete user. Try again.", err);
+      setDeleteMessage("Failed to delete user. Try again.");
     } finally {
       setDeleteLoading(false);
     }
@@ -83,11 +83,23 @@ const ManageUsers = () => {
             <Card
               key={user._id}
               className="
+                relative
                 p-6 bg-white shadow-sm border border-gray-200 rounded-2xl 
                 hover:shadow-lg hover:border-indigo-200 
                 transition-all duration-300
               "
             >
+              {/* Edit Button - Top Right */}
+              <Button
+                variant="secondary"
+                size="sm"
+                round="md"
+                className="absolute top-4 right-4 flex items-center gap-1"
+                onClick={() => handleEdit(user._id)}
+              >
+                <Edit size={16} />
+              </Button>
+
               {/* Header */}
               <div className="flex items-center justify-start mb-6 gap-5">
                 {/* Profile Picture */}
@@ -114,7 +126,7 @@ const ManageUsers = () => {
 
               {/* User Stats */}
               <div className="text-sm text-gray-700 mb-5 space-y-3">
-                <p className="flex items-center gap-2 ">
+                <p className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600">Role:</span>
                   <span className="font-semibold">{user.role}</span>
@@ -141,16 +153,6 @@ const ManageUsers = () => {
 
               {/* Actions */}
               <div className="flex justify-between pt-3 border-t border-gray-100">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  round="md"
-                  className="flex items-center gap-1"
-                  onClick={() => handleEdit(user._id)}
-                >
-                  <Edit size={16} /> Edit
-                </Button>
-
                 <Button
                   variant={user.status === "Active" ? "danger" : "indigo"}
                   size="sm"
