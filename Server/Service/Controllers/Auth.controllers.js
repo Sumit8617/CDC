@@ -9,7 +9,6 @@ import {
   APIRES,
   sendMail,
 } from "../../Utils/index.utils.js";
-import { cookieOptions } from "../../config/Cookie.config.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -74,8 +73,20 @@ const signup = asynchandler(async (req, res) => {
     createUser._id
   );
 
-  res.cookie("accessToken", accessToken, cookieOptions);
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+    maxAge: 1000 * 60 * 60 * 24,
+  });
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+    maxAge: 1000 * 60 * 60 * 24,
+  });
 
   if (!accessToken) {
     throw new APIERR(502, "Internal Server ERR! While setting the accesstoken");
@@ -130,8 +141,20 @@ const login = asynchandler(async (req, res) => {
     user._id
   );
 
-  res.cookie("accessToken", accessToken, cookieOptions);
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+    maxAge: 1000 * 60 * 60 * 24,
+  });
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+    maxAge: 1000 * 60 * 60 * 24,
+  });
   res.status(200).json(
     new APIRES(
       200,
@@ -202,8 +225,20 @@ const refreshAccessToken = asynchandler(async (req, res) => {
   //  Send cookies
   return res
     .status(200)
-    .cookie("accessToken", accessToken, cookieOptions)
-    .cookie("refreshToken", refreshToken, cookieOptions)
+    .cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+      maxAge: 1000 * 60 * 60 * 24,
+    })
+    .cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+      maxAge: 1000 * 60 * 60 * 24,
+    })
     .json(
       new APIRES(200, { accessToken }, "Access token refreshed successfully")
     );
