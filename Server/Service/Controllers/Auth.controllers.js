@@ -171,17 +171,19 @@ const login = asynchandler(async (req, res) => {
 });
 
 const logout = asynchandler(async (req, res) => {
-  res.cookie("refreshToken", {
+  res.cookie("refreshToken", "", {
     httpOnly: true,
-    secure: true,
-    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
     maxAge: 0,
   });
 
-  res.cookie("accessToken", {
+  res.cookie("accessToken", "", {
     httpOnly: true,
-    secure: true,
-    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
     maxAge: 0,
   });
 

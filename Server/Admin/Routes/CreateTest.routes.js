@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { protectRoute } from "../../Middleware/Auth.middleware.js";
+import { adminOnly } from "../../Middleware/Auth.middleware.js";
 import {
   createTest,
   getContest,
@@ -10,14 +10,12 @@ import {
 
 const adminRouter = Router();
 
-adminRouter.route("/create-contest").post(protectRoute, createTest);
-adminRouter.route("/save-draft-contest").post(protectRoute, saveDraftContest);
-adminRouter.route("/get-contest").get(protectRoute, getContest);
-adminRouter
-  .route("/update-contest/:contestId")
-  .put(protectRoute, updateContest);
+adminRouter.route("/create-contest").post(adminOnly, createTest);
+adminRouter.route("/save-draft-contest").post(adminOnly, saveDraftContest);
+adminRouter.route("/get-contest").get(adminOnly, getContest);
+adminRouter.route("/update-contest/:contestId").put(adminOnly, updateContest);
 adminRouter
   .route("/delete-contest/:contestId")
-  .delete(protectRoute, deleteContest);
+  .delete(adminOnly, deleteContest);
 
 export default adminRouter;
