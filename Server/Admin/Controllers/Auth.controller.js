@@ -188,15 +188,22 @@ const registerAdmin = asynchandler(async (req, res) => {
   if (existedUser) throw new APIERR(400, "User already registered");
 
   // Create the Admin
-  const createdAdmin = await User.create({
-    fullName,
-    email,
-    mobileNumber,
-    rollNumber,
-    role,
-    dob,
-    password,
-  });
+  let createdAdmin;
+  try {
+    createdAdmin = await User.create({
+      fullName,
+      email,
+      mobileNumber,
+      rollNumber,
+      role,
+      dob,
+      password,
+    });
+    console.log("Created Admin:", createdAdmin);
+  } catch (error) {
+    console.log("Error while creating admin:", error);
+    throw new APIERR(500, "Error while creating admin");
+  }
 
   // Generate tokens
   const { accessToken, refreshToken } = generateAccessAndRefreshTokens(
