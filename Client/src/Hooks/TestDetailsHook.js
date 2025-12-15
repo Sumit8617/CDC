@@ -9,8 +9,10 @@ export const useContestDetails = () => {
   const {
     contests = [],
     questions = [],
-    errors,
-    loading,
+    contestsLoading,
+    contestsError,
+    questionsLoading,
+    questionsError,
   } = useSelector((state) => state.contestDetails);
 
   // Fetch all contests
@@ -27,8 +29,10 @@ export const useContestDetails = () => {
   return {
     contests,
     questions,
-    loading,
-    error: errors || null,
+    contestsLoading,
+    contestsError,
+    questionsLoading,
+    questionsError,
     getContests,
     getPreviousQuestions,
   };

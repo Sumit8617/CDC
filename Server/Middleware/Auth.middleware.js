@@ -4,6 +4,9 @@ import { asynchandler } from "../Utils/index.utils.js";
 
 // Protect route middleware
 export const protectRoute = asynchandler(async (req, res, next) => {
+  console.log("Cookies:", req.cookies);
+  console.log("Auth Header:", req.headers.authorization);
+
   try {
     // Extract token from cookie or Authorization header
     const tokenFromCookie = req.cookies?.accessToken;
@@ -52,8 +55,13 @@ export const protectRoute = asynchandler(async (req, res, next) => {
 
 // Admin only middleware
 export const adminOnly = (req, res, next) => {
+  // Allow CORS preflight
+  if (req.method === "OPTIONS") {
+    return next();
+  }
+
   if (!req.user) {
-    console.log("Access denied. req.user is missing:", req);
+    console.log("Access denied. req.user is missing");
     return res.status(403).json({ message: "Access denied - Admins only" });
   }
 

@@ -231,18 +231,10 @@ const registerAdmin = asynchandler(async (req, res) => {
 
 // TODO: Some Bug fix if the user is empty it don't sent No user Found instead sending the status code and get failed
 const getUser = asynchandler(async (req, res) => {
-  // const { userId } = req.params;
-  // if (!userId) {
-  //   throw new APIERR(404, "User ID Not Found");
-  // }
   const totalUsers = await User.countDocuments({ role: "user" });
   const userDetails = await User.find({ role: "user" })
-    .select("-password -refreshToken")
+    .select("-password -refreshToken -mobileNumber")
     .lean();
-
-  if (totalUsers === 0) {
-    return res.status(404).json(new APIRES(404, "No User Found"));
-  }
 
   res
     .status(200)
@@ -252,22 +244,23 @@ const getUser = asynchandler(async (req, res) => {
 });
 
 const getAdmin = asynchandler(async (req, res) => {
-  const totalAdmin = await User.countDocuments({ role: "admin" }).lean();
+  const totalAdmin = await User.countDocuments({ role: "admin" });
   const adminDetails = await User.find({ role: "admin" }).select(
     "-password -refreshToken"
   );
-  if (!totalAdmin || !adminDetails) {
-    throw new APIERR(502, "Internal Server Error");
-  }
-  res
-    .status(200)
-    .json(
-      new APIRES(
-        200,
-        { totalAdmin, adminDetails },
-        "Successfully fetched the Admin Details"
-      )
-    );
+
+  return res.status(200).json(
+    new APIRES(
+      200,
+      {
+        totalAdmin: totalAdmin || 0,
+        adminDetails: adminDetails || [],
+      },
+      totalAdmin === 0
+        ? "No admins found"
+        : "Successfully fetched the admin details"
+    )
+  );
 });
 
 const getContest = asynchandler(async (req, res) => {

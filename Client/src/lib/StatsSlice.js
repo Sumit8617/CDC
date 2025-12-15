@@ -2,35 +2,51 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { Trophy, Users, ShieldUser, FileText } from "lucide-react";
 import axiosClient from "./AxiosInstance";
 
-// API Calls
-
 // Contest Count
 export const fetchContest = createAsyncThunk(
   "stats/fetchContestsOverview",
-  async () => {
-    const res = await axiosClient.get(`/api/v1/admin/auth/get-contest`);
-    return res.data.data;
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.get(`/api/v1/admin/auth/get-contest`);
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
   }
 );
 
 // User Stats
 export const fetchUsers = createAsyncThunk("stats/fetchUsers", async () => {
-  const res = await axiosClient.get(`/api/v1/admin/auth/get-user`);
-  return {
-    totalUsers: res.data.data.totalUsers,
-    userDetails: res.data.data.userDetails,
-  };
+  try {
+    const res = await axiosClient.get(`/api/v1/admin/auth/get-user`);
+    const data = res.data.data;
+    console.log("User Stats Response:", data);
+
+    return {
+      totalUsers: data.totalUsers || 0,
+      userDetails: data.userDetails || [],
+    };
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    throw error;
+  }
 });
 
 // Admin Stats
-export const fetchAdmins = createAsyncThunk("stats/fetchAdmins", async () => {
-  const res = await axiosClient.get(`/api/v1/admin/auth/get-admin`);
-  console.log("Admin Stats Response:", res);
-  return {
-    totalAdmin: res.data.data.totalAdmin,
-    adminDetails: res.data.data.adminDetails,
-  };
-});
+export const fetchAdmins = createAsyncThunk(
+  "stats/fetchAdmins",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.get(`/api/v1/admin/auth/get-admin`);
+      return {
+        totalAdmin: res.data.data.totalAdmin,
+        adminDetails: res.data.data.adminDetails,
+      };
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
 
 // Slice
 
@@ -46,8 +62,18 @@ const adminStatsSlice = createSlice({
     recentContests: [],
     userDetails: [],
     adminDetails: [],
-    loading: false,
-    error: null,
+
+    // Separate loading/error flags
+    loading: {
+      contest: false,
+      users: false,
+      admins: false,
+    },
+    error: {
+      contest: null,
+      users: null,
+      admins: null,
+    },
   },
 
   reducers: {},
@@ -56,45 +82,47 @@ const adminStatsSlice = createSlice({
     builder
       // Contest
       .addCase(fetchContest.pending, (state) => {
-        state.loading = true;
+        state.loading.contest = true;
+        state.error.contest = null;
       })
       .addCase(fetchContest.fulfilled, (state, action) => {
         state.stats[0].value = String(action.payload.totalContest);
         state.recentContests = action.payload.recentContests || [];
-        state.loading = false;
+        state.loading.contest = false;
       })
-
       .addCase(fetchContest.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
+        state.loading.contest = false;
+        state.error.contest = action.payload || action.error.message;
       })
 
       // Users
       .addCase(fetchUsers.pending, (state) => {
-        state.loading = true;
+        state.loading.users = true;
+        state.error.users = null;
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.stats[1].value = String(action.payload.totalUsers);
         state.userDetails = action.payload.userDetails;
-        state.loading = false;
+        state.loading.users = false;
       })
       .addCase(fetchUsers.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
+        state.loading.users = false;
+        state.error.users = action.payload || action.error.message;
       })
 
       // Admins
       .addCase(fetchAdmins.pending, (state) => {
-        state.loading = true;
+        state.loading.admins = true;
+        state.error.admins = null;
       })
       .addCase(fetchAdmins.fulfilled, (state, action) => {
         state.stats[2].value = String(action.payload.totalAdmin);
         state.adminDetails = action.payload.adminDetails;
-        state.loading = false;
+        state.loading.admins = false;
       })
       .addCase(fetchAdmins.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
+        state.loading.admins = false;
+        state.error.admins = action.payload || action.error.message;
       });
   },
 });

@@ -23,10 +23,11 @@ const ChangePassword = lazy(
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [loading, setLoading] = useState(true); // track loading state
 
-  const { contests = [], getContests } = useContestDetails();
+  const { contests = [], contestsLoading, getContests } = useContestDetails();
   const { user, handleFetchUserDetails } = useSignup();
+
+  const [loading, setLoading] = useState(true);
 
   const emptyPerformance = [
     { category: "Reasoning", score: 20 },
@@ -47,14 +48,9 @@ const Profile = () => {
     fetchData();
   }, []);
 
-  // Show loader if user data is not ready or fetching
-  if (loading)
-    return (
-      <div>
-        {" "}
-        <PageLoaderWrapper loading={loading} />{" "}
-      </div>
-    );
+  // Show loader if user data or contests are not ready
+  if (loading || contestsLoading)
+    return <PageLoaderWrapper loading={loading || contestsLoading} />;
 
   // Compute stats after data is fetched
   const totalContestsAvailable =
@@ -105,7 +101,7 @@ const Profile = () => {
         {/* Overview Tab */}
         {activeTab === "overview" && (
           <>
-            <Card className="">
+            <Card>
               <Suspense fallback={<PageLoaderWrapper />}>
                 <UserProfileCard />
               </Suspense>

@@ -39,7 +39,7 @@ const ManageUsers = () => {
     try {
       await handleDeleteUser(selectedUser._id);
       setDeleteMessage("User deleted successfully!");
-      await refresh();
+      await refresh(); // refresh users
       setModalOpen(false);
     } catch (err) {
       setDeleteMessage("Failed to delete user. Try again.");
@@ -66,18 +66,18 @@ const ManageUsers = () => {
         </Button>
       </div>
 
-      {/* Loading */}
-      {loading && <PageLoaderWrapper loading={loading} />}
+      {/* Users Loading */}
+      {loading.users && <PageLoaderWrapper loading={loading.users} />}
 
-      {/* Error */}
-      {error && (
+      {/* Users Error */}
+      {error.users && (
         <Card className="p-8 text-center bg-red-50 border border-red-300 rounded-xl">
-          <p className="text-red-600 font-medium">{error}</p>
+          <p className="text-red-600 font-medium">{error.users}</p>
         </Card>
       )}
 
       {/* User List */}
-      {!loading && !error && userDetails?.length > 0 ? (
+      {!loading.users && !error.users && userDetails?.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {userDetails.map((user) => (
             <Card
@@ -102,24 +102,22 @@ const ManageUsers = () => {
 
               {/* Header */}
               <div className="flex items-center justify-start mb-6 gap-5">
-                {/* Profile Picture */}
                 <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-indigo-200 flex items-center justify-center bg-indigo-100">
                   <img
                     src={user?.profilePic?.url || "/default-avatar.png"}
-                    alt={`${user.fullName} Profile Picture`}
+                    alt={`${user?.fullName} Profile Picture`}
                     className="w-full h-full object-cover"
                   />
                 </div>
 
-                {/* User Info */}
                 <div className="flex flex-col justify-center">
                   <h2 className="text-lg font-semibold text-gray-900">
-                    {user.fullName}
+                    {user?.fullName}
                   </h2>
 
                   <div className="flex items-center gap-1 text-gray-500 text-sm">
                     <Mail className="w-4 h-4 opacity-70" />
-                    <span>{user.email}</span>
+                    <span>{user?.email}</span>
                   </div>
                 </div>
               </div>
@@ -129,7 +127,7 @@ const ManageUsers = () => {
                 <p className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600">Role:</span>
-                  <span className="font-semibold">{user.role}</span>
+                  <span className="font-semibold">{user?.role}</span>
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
@@ -138,14 +136,14 @@ const ManageUsers = () => {
                       Contests Taken
                     </span>
                     <span className="text-base font-semibold">
-                      {user.contestsTaken ?? 0}
+                      {user?.contestsTaken ?? 0}
                     </span>
                   </div>
 
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500">Avg Score</span>
                     <span className="text-base font-semibold">
-                      {user.avgScore ?? 0}%
+                      {user?.avgScore ?? 0}%
                     </span>
                   </div>
                 </div>
@@ -154,14 +152,14 @@ const ManageUsers = () => {
               {/* Actions */}
               <div className="flex justify-between pt-3 border-t border-gray-100">
                 <Button
-                  variant={user.status === "Active" ? "danger" : "indigo"}
+                  variant={user?.status === "Active" ? "danger" : "indigo"}
                   size="sm"
                   round="md"
                   className="flex items-center gap-1"
                   onClick={() => handleBlock(user._id)}
                 >
                   <Ban size={16} />
-                  {user.status === "Active" ? "Block" : "Unblock"}
+                  {user?.status === "Active" ? "Block" : "Unblock"}
                 </Button>
 
                 <Button
@@ -179,8 +177,8 @@ const ManageUsers = () => {
           ))}
         </div>
       ) : (
-        !loading &&
-        !error && (
+        !loading.users &&
+        !error.users && (
           <Card className="p-8 text-center bg-gray-50 border border-gray-200 rounded-xl">
             <h3 className="text-gray-700 font-medium text-lg mb-1">
               No users found
@@ -205,11 +203,7 @@ const ManageUsers = () => {
 
             {deleteMessage && (
               <p
-                className={`${
-                  deleteMessage.includes("Failed")
-                    ? "text-red-600"
-                    : "text-green-600"
-                } font-medium`}
+                className={`${deleteMessage.includes("Failed") ? "text-red-600" : "text-green-600"} font-medium`}
               >
                 {deleteMessage}
               </p>

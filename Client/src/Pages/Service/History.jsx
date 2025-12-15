@@ -8,7 +8,12 @@ const History = () => {
   const contestsPerPage = 6;
 
   // Fetch contests from Redux hook
-  const { contests = [], loading, error, getContests } = useContestDetails();
+  const {
+    contests = [],
+    contestsLoading,
+    contestsError,
+    getContests,
+  } = useContestDetails();
   const navigate = useNavigate();
   const contestList = Array.isArray(contests) ? contests : [];
 
@@ -30,23 +35,18 @@ const History = () => {
     setCurrentPage(pageNumber);
   };
 
-  if (loading)
-    return (
-      <div>
-        {" "}
-        <PageLoaderWrapper loading={loading} />{" "}
-      </div>
-    );
-  if (error)
+  if (contestsLoading) return <PageLoaderWrapper loading={contestsLoading} />;
+
+  if (contestsError)
     return (
       <div className="flex justify-center items-center h-screen md:pl-64">
         <span className="text-white bg-red-500 p-2 rounded-md font-bold text-2xl">
-          <h3>ERROR : {error}</h3>
+          <h3>ERROR : {contestsError}</h3>
         </span>
       </div>
     );
 
-  if (!loading && contestList.length === 0) {
+  if (!contestsLoading && contestList.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 md:pl-64 flex justify-center items-center">
         <div className="bg-white p-6 rounded-lg shadow-md text-center">

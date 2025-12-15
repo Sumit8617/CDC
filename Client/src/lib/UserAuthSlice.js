@@ -94,9 +94,7 @@ export const adminLogin = createAsyncThunk(
   "auth/adminlogin",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(`/api/v1/admin/auth/login`, userData, {
-        withCredentials: true,
-      });
+      const res = await axiosClient.post(`/api/v1/admin/auth/login`, userData);
       return res.data;
     } catch (error) {
       console.error("ERR While Login", error);

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "./AxiosInstance";
 
+// Fetch contests
 export const fetchContestDetails = createAsyncThunk(
   "contest/fetchContestDetails",
   async () => {
@@ -9,6 +10,7 @@ export const fetchContestDetails = createAsyncThunk(
   }
 );
 
+// Fetch previous contest questions
 export const previousContestQuestions = createAsyncThunk(
   "contest/previousContestQuestions",
   async (contestId) => {
@@ -19,42 +21,49 @@ export const previousContestQuestions = createAsyncThunk(
   }
 );
 
-const contestDeatilsSlice = createSlice({
+const contestDetailsSlice = createSlice({
   name: "contestDetails",
   initialState: {
     contests: [],
     questions: [],
-    loading: false,
-    errors: null,
+    contestsLoading: false,
+    contestsError: null,
+    questionsLoading: false,
+    questionsError: null,
   },
 
   extraReducers: (builder) => {
+    // Contests
     builder
       .addCase(fetchContestDetails.pending, (state) => {
-        state.loading = true;
+        state.contestsLoading = true;
+        state.contestsError = null;
       })
       .addCase(fetchContestDetails.fulfilled, (state, action) => {
-        state.loading = false;
+        state.contestsLoading = false;
         state.contests = action.payload;
-        console.log("Contest details fetched =>", action.payload);
       })
       .addCase(fetchContestDetails.rejected, (state, action) => {
-        state.loading = false;
-        state.errors = action.error.message;
-      })
+        state.contestsLoading = false;
+        state.contestsError = action.error.message;
+      });
+
+    // Questions
+    builder
       .addCase(previousContestQuestions.pending, (state) => {
-        state.loading = true;
+        state.questionsLoading = true;
+        state.questionsError = null;
       })
       .addCase(previousContestQuestions.fulfilled, (state, action) => {
+        state.questionsLoading = false;
         state.questions = action.payload.questions || [];
-        state.loading = false;
       })
       .addCase(previousContestQuestions.rejected, (state, action) => {
-        state.loading = false;
-        state.errors =
-          action.error.message || "Unable to fetch contest details.";
+        state.questionsLoading = false;
+        state.questionsError =
+          action.error.message || "Unable to fetch contest questions.";
       });
   },
 });
 
-export default contestDeatilsSlice.reducer;
+export default contestDetailsSlice.reducer;

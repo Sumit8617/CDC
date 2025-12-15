@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
 import { fetchContest, fetchUsers, fetchAdmins } from "../lib/StatsSlice";
 
 export const useAdminStats = () => {
@@ -14,7 +13,7 @@ export const useAdminStats = () => {
     fetchAllStats();
   }, []);
 
-  // Wrap dispatch inside the hook
+  // Dispatch all thunks
   const fetchAllStats = () => {
     dispatch(fetchContest());
     dispatch(fetchUsers());
@@ -26,8 +25,8 @@ export const useAdminStats = () => {
     recentContests,
     userDetails,
     adminDetails,
-    loading,
-    error,
+    loading, // now separate flags: loading.users, loading.contest, loading.admins
+    error, // separate flags: error.users, error.contest, error.admins
     refresh: fetchAllStats,
   };
 };

@@ -11,13 +11,17 @@ const QuestionCard = ({ question, selectedOption, setSelectedOption }) => (
     <div className="flex flex-col gap-3">
       {question.options.map((opt, idx) => {
         let style = "bg-gray-50 border-gray-300 hover:bg-gray-100";
-        if (idx === question.correctOption)
+
+        if (idx === question.correctOption) {
           style = "bg-green-100 border-green-500 text-green-800";
+        }
+
         if (
           selectedOption[question._id] === idx &&
           idx !== question.correctOption
-        )
+        ) {
           style = "bg-red-100 border-red-500 text-red-800";
+        }
 
         return (
           <button
@@ -41,8 +45,8 @@ const PreviousQuestions = () => {
 
   const {
     questions = [],
-    loading,
-    error,
+    questionsLoading,
+    questionsError,
     getPreviousQuestions,
   } = useContestDetails();
 
@@ -64,19 +68,15 @@ const PreviousQuestions = () => {
     if (currentQuestion > 0) setCurrentQuestion(currentQuestion - 1);
   };
 
-  if (loading)
-    return (
-      <div>
-        {" "}
-        <PageLoaderWrapper loading={loading} />{" "}
-      </div>
-    );
-  if (error)
+  if (questionsLoading) return <PageLoaderWrapper loading={questionsLoading} />;
+
+  if (questionsError)
     return (
       <p className="pt-24 px-4 md:pl-64 text-2xl font-bold text-center">
-        <span className="text-red-500">ERROR :</span> {error}
+        <span className="text-red-500">ERROR :</span> {questionsError}
       </p>
     );
+
   if (!questions.length)
     return <p className="pt-24 px-4">No questions found</p>;
 
