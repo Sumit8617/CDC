@@ -50,6 +50,22 @@ const Leaderboard = () => {
     return <PageLoaderWrapper loading={loading} />;
   }
 
+  if (!loading && leaderboard?.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 md:pl-64 flex justify-center items-center">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <Trophy className="mx-auto mb-3 w-10 h-10 text-gray-400" />
+          <h2 className="text-xl font-semibold text-gray-700">
+            Leaderboard Not Available
+          </h2>
+          <p className="text-gray-500 mt-2">
+            The leaderboard will appear once the contest results are published.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 md:pl-64">
       {/* Header */}

@@ -277,7 +277,6 @@ const changeCurrentPassword = asynchandler(async (req, res) => {
 
 const userDetails = asynchandler(async (req, res) => {
   const token = req.cookies?.accessToken;
-  console.log("Incoming Tokens =>", token);
   if (!token) throw new APIERR(401, "No access token");
 
   let decoded;

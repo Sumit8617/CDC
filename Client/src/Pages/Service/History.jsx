@@ -46,6 +46,21 @@ const History = () => {
       </div>
     );
 
+  if (!loading && contestList.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 md:pl-64 flex justify-center items-center">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <h2 className="text-xl font-semibold text-gray-700">
+            No Contest History
+          </h2>
+          <p className="text-gray-500 mt-2">
+            Currently, no completed contests are available.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 md:pl-64">
       {/* Topbar */}

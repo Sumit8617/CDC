@@ -20,9 +20,11 @@ const updateProfile = asynchandler(async (req, res) => {
     }
 
     const profileImage = await uploadOnCloudinary(imageLocalPath);
-    if (!profileImage.url) {
-      throw new APIERR(400, "Error while uploading avatar");
+
+    if (!profileImage || !profileImage.url) {
+      throw new APIERR(400, "Error while uploading profile picture");
     }
+
     user.profilePic = {
       url: profileImage.url,
       publicId: profileImage.public_id,

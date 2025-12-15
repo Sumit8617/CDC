@@ -53,6 +53,8 @@ const adminLogin = asynchandler(async (req, res) => {
       {
         user: existedUser._id,
         role: existedUser.role,
+        accessToken,
+        refreshToken,
       },
       "Successfully logged in "
     )
@@ -271,8 +273,10 @@ const getAdmin = asynchandler(async (req, res) => {
 const getContest = asynchandler(async (req, res) => {
   const totalContest = await Test.countDocuments().lean();
   const recentContests = await Test.find().sort({ createdAt: -1 }).lean();
-  if (!totalContest || !recentContests) {
-    throw new APIERR(502, "Internal Server Error");
+
+  // If no contests exist
+  if (totalContest === 0 || !recentContests || recentContests.length === 0) {
+    return res.status(404).json(new APIRES(404, null, "No Contest Found"));
   }
 
   res

@@ -7,11 +7,6 @@ const fetchContestDetails = asynchandler(async (req, res) => {
     .select("testName date status description")
     .lean();
 
-  if (!contests || contests.length === 0) {
-    throw new APIERR(404, "No contests found");
-  }
-
-  // Map and format contests
   const formattedContests = contests.map((contest) => ({
     contestId: contest._id,
     contestName: contest.testName,
@@ -20,19 +15,18 @@ const fetchContestDetails = asynchandler(async (req, res) => {
     contestDescription: contest.description,
   }));
 
-  if (!formattedContests) {
-    throw new APIERR(404, "No Contest Data Found");
-  }
-
-  res
-    .status(200)
-    .json(
-      new APIRES(
-        200,
-        { formattedContests, totalContest: contests.length },
-        "Successfully fetched all contest details"
-      )
-    );
+  return res.status(200).json(
+    new APIRES(
+      200,
+      {
+        formattedContests,
+        totalContest: formattedContests.length,
+      },
+      formattedContests.length === 0
+        ? "No contests available"
+        : "Successfully fetched contest details"
+    )
+  );
 });
 
 const fetchPreviousQuestions = asynchandler(async (req, res) => {

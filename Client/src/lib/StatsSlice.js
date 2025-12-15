@@ -25,6 +25,7 @@ export const fetchUsers = createAsyncThunk("stats/fetchUsers", async () => {
 // Admin Stats
 export const fetchAdmins = createAsyncThunk("stats/fetchAdmins", async () => {
   const res = await axiosClient.get(`/api/v1/admin/auth/get-admin`);
+  console.log("Admin Stats Response:", res);
   return {
     totalAdmin: res.data.data.totalAdmin,
     adminDetails: res.data.data.adminDetails,

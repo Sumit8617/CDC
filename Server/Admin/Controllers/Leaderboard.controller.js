@@ -4,18 +4,27 @@ import { Leaderboard } from "../Models/Leaderboard.models.js";
 import { Test } from "../Models/Contest.model.js";
 
 const getLeaderboard = asynchandler(async (req, res) => {
-  // Find the most recent completed contest (past date & published)
+  // Find most recent completed contest
   const recentContest = await Test.findOne({
-    date: { $lte: new Date() }, // Contest date is in the past
+    date: { $lte: new Date() },
     isPublished: true,
     status: "completed",
   })
-
-    .sort({ date: -1 }) // Most recent first
+    .sort({ date: -1 })
     .lean();
 
+  // NO CONTEST YET → return empty success
   if (!recentContest) {
-    return res.status(404).json(new APIERR(404, "No completed contest found"));
+    return res.status(200).json(
+      new APIRES(
+        200,
+        {
+          contest: null,
+          leaderboard: [],
+        },
+        "No completed contest available yet"
+      )
+    );
   }
 
   // Find leaderboard for that contest
@@ -23,15 +32,21 @@ const getLeaderboard = asynchandler(async (req, res) => {
     contest: new mongoose.Types.ObjectId(recentContest._id),
   }).lean();
 
-  console.log("Leaderboard fetched for contest:", recentContest._id);
-  console.log("Leaderboard data:", leaderboard);
-
-  if (!leaderboard) {
-    return res
-      .status(404)
-      .json(new APIERR(404, "Leaderboard not found or not published yet"));
+  // LEADERBOARD NOT PUBLISHED YET
+  if (!leaderboard || !Array.isArray(leaderboard.data)) {
+    return res.status(200).json(
+      new APIRES(
+        200,
+        {
+          contest: recentContest,
+          leaderboard: [],
+        },
+        "Leaderboard not published yet"
+      )
+    );
   }
 
+  //  SUCCESS
   return res.status(200).json(
     new APIRES(
       200,

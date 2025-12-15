@@ -263,15 +263,75 @@ const Contest = () => {
   // Render message if no active contest or contest ended
   if (!contestToShow || hasContestEnded) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-        {contestToShow ? (
-          <>
-            <h2 className="text-2xl font-bold mb-4">{contestToShow.title}</h2>
-            <p className="text-gray-500">This contest has ended.</p>
-          </>
-        ) : (
-          <p className="text-gray-500">No contest at this time.</p>
-        )}
+      <div className="min-h-screen ml-64 flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
+          {contestToShow ? (
+            <>
+              {/* Icon */}
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
+                <svg
+                  className="h-7 w-7 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+
+              {/* Content */}
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                {contestToShow.title}
+              </h2>
+              <p className="text-gray-500 mb-6">
+                This contest has ended. Results and leaderboard are available.
+              </p>
+
+              {/* Action */}
+              <button className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition">
+                View Leaderboard
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Icon */}
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                <svg
+                  className="h-7 w-7 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 17v-2a4 4 0 014-4h4"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13 7h.01M12 3a9 9 0 100 18 9 9 0 000-18z"
+                  />
+                </svg>
+              </div>
+
+              {/* Content */}
+              <h2 className="text-xl font-semibold text-gray-700 mb-2">
+                No Active Contest
+              </h2>
+              <p className="text-gray-500">
+                There is no contest available at the moment. Please check back
+                later.
+              </p>
+            </>
+          )}
+        </div>
       </div>
     );
   }
