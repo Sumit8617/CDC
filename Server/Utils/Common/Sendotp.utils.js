@@ -30,7 +30,7 @@ const sendOTP = asynchandler(async (req, res) => {
   res.cookie("OTP", generatedOTP, {
     httpOnly: true,
     secure: true,
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
     path: "/",
     maxAge: expiry * 60 * 1000,
   });

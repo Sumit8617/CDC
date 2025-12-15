@@ -36,14 +36,14 @@ const adminLogin = asynchandler(async (req, res) => {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: true,
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
     maxAge: 5 * 60 * 60 * 1000,
   });
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: true,
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
     maxAge: 5 * 60 * 60 * 1000,
   });
 

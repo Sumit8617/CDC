@@ -20,7 +20,7 @@ const verifyOTP = asynchandler(async (req, res) => {
   res.cookie("isEmailVerified", true, {
     httpOnly: true,
     secure: true,
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
     path: "/",
   });
 
@@ -28,7 +28,7 @@ const verifyOTP = asynchandler(async (req, res) => {
   res.clearCookie("OTP", {
     httpOnly: true,
     secure: true,
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
     path: "/",
   });
 
