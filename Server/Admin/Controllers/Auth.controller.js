@@ -182,6 +182,9 @@ const registerAdmin = asynchandler(async (req, res) => {
 
   const fullName = invite.fullName;
   const role = "admin";
+  console.log("Registering admin with email:", email);
+  console.log("Full Name:", fullName);
+  console.log("Role:", role);
 
   // Check if user already exists
   const existedUser = await User.findOne({ email });
@@ -199,6 +202,7 @@ const registerAdmin = asynchandler(async (req, res) => {
       dob,
       password,
     });
+    createdAdmin.save();
     console.log("Created Admin:", createdAdmin);
   } catch (error) {
     console.log("Error while creating admin:", error);
