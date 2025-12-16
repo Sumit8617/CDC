@@ -4,9 +4,6 @@ import { asynchandler } from "../Utils/index.utils.js";
 
 // Protect route middleware
 export const protectRoute = asynchandler(async (req, res, next) => {
-  console.log("Cookies:", req.cookies);
-  console.log("Auth Header:", req.headers.authorization);
-
   try {
     // Extract token from cookie or Authorization header
     const tokenFromCookie = req.cookies?.accessToken;
@@ -16,7 +13,6 @@ export const protectRoute = asynchandler(async (req, res, next) => {
       : null;
 
     const token = tokenFromCookie || tokenFromHeader;
-    console.log("Extracted Token:", token);
 
     if (!token) {
       return res
@@ -28,7 +24,6 @@ export const protectRoute = asynchandler(async (req, res, next) => {
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-      console.log("Decoded JWT:", decoded);
     } catch (err) {
       console.error("JWT verification failed:", err);
       return res
@@ -40,7 +35,6 @@ export const protectRoute = asynchandler(async (req, res, next) => {
     const user = await User.findById(decoded._id).select(
       "-password -refreshToken"
     );
-    console.log("Authenticated User:", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

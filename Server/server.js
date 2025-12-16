@@ -3,6 +3,7 @@ import { app } from "./app.js";
 import { connectDB } from "./DB/Db.db.js";
 import "./Admin/Controllers/CheckCorrectAnswer.controller.js";
 import "./Cron/QuizNotifier.cron.js";
+import "./Cron/ResetStuckJobs.cron.js";
 
 import { startSubmissionWorker } from "./Admin/Worker/SubmissionWorker.controller.js";
 
@@ -18,7 +19,7 @@ connectDB()
       console.log(`Server is Running on PORT => http://localhost:${PORT}`);
     });
 
-    // 👉 Start your worker AFTER DB + server is running
+    // Start  worker AFTER DB + server is running
     startSubmissionWorker();
   })
   .catch((err) => {

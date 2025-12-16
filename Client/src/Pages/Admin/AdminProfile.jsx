@@ -64,10 +64,9 @@ const AdminProfile = () => {
 
   useEffect(() => {
     handleFetchUserDetails();
-  }, [handleFetchUserDetails]);
+  }, []);
 
-  // Use first admin as example
-  const admin = adminDetails?.[0] || {};
+  const admin = adminDetails || null;
 
   // Dynamic stats
   const quickStats = [
@@ -91,6 +90,8 @@ const AdminProfile = () => {
     },
   ];
 
+  console.log("Loading:", loading, "Error:", error, "Admin:", admin);
+
   return (
     <>
       {/* Page Loader */}
@@ -108,7 +109,7 @@ const AdminProfile = () => {
       )}
 
       {/* Main Profile Content */}
-      {!loading && !error && (
+      {!loading && !error && admin && (
         <div className="min-h-auto flex flex-col gap-6 md:pl-64">
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

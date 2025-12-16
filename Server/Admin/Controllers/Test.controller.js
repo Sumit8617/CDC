@@ -1,4 +1,9 @@
-import { asynchandler, APIERR, APIRES } from "../../Utils/index.utils.js";
+import {
+  asynchandler,
+  APIERR,
+  APIRES,
+  istToUtc,
+} from "../../Utils/index.utils.js";
 import { Test } from "../Models/Contest.model.js";
 import { Question } from "../Models/Question.model.js";
 
@@ -29,14 +34,9 @@ const createTest = asynchandler(async (req, res) => {
   const [hours, minutes] = contestTime.split(":").map(Number);
   const [year, month, day] = contestDate.split("-").map(Number);
 
-  const contestDateIST = new Date(year, month - 1, day, hours, minutes);
+  const contestDateUTC = istToUtc(contestDate, contestTime);
 
-  // Compare with current IST time
-  const nowIST = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-  );
-
-  if (contestDateIST <= nowIST) {
+  if (contestDateUTC <= new Date()) {
     throw new APIERR(400, "Contest time must be in the future");
   }
 
@@ -74,7 +74,7 @@ const createTest = asynchandler(async (req, res) => {
     testName: contestName,
     description,
     duration,
-    date: contestDateIST,
+    date: contestDateUTC,
     questions: questionIds,
     status: "pending",
     isPublished: true,
@@ -110,13 +110,9 @@ const saveDraftContest = asynchandler(async (req, res) => {
     throw new APIERR(400, "Please provide at least one question");
   }
 
-  // Create contest date in IST
-  const [hours, minutes] = contestTime.split(":").map(Number);
-  const [year, month, day] = contestDate.split("-").map(Number);
+  const contestDateUTC = istToUtc(contestDate, contestTime);
 
-  const contestDateTimeIST = new Date(year, month - 1, day, hours, minutes);
-
-  if (isNaN(contestDateTimeIST.getTime())) {
+  if (isNaN(contestDateUTC.getTime())) {
     throw new APIERR(400, "Invalid contest date or time");
   }
 
@@ -156,7 +152,7 @@ const saveDraftContest = asynchandler(async (req, res) => {
     testName: contestName,
     description,
     duration,
-    date: contestDateTimeIST,
+    date: contestDateUTC,
     questions: questionIds,
     status: "draft",
     isDraft: true,
@@ -191,11 +187,19 @@ const getContest = asynchandler(async (req, res) => {
 const updateContest = asynchandler(async (req, res) => {
   const { contestId } = req.params;
   if (!contestId) throw new APIERR(404, "Contest ID is NOT FOUND");
+
+  const { contestDate, contestTime, ...rest } = req.body;
+
+  if (contestDate && contestTime) {
+    rest.date = istToUtc(contestDate, contestTime);
+  }
+
   const updatedContest = await Test.findByIdAndUpdate(
     contestId,
-    { $set: req.body },
+    { $set: rest },
     { new: true }
   );
+
   return res
     .status(200)
     .json(new APIRES(200, "Contest updated successfully", { updatedContest }));

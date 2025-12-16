@@ -96,7 +96,7 @@ const Contest = () => {
     ? contestStart + contestToShow.duration * 60 * 1000
     : 0;
 
-  const INSTRUCTION_BEFORE_MS = 30 * 60 * 1000; // 30 minutes
+  const INSTRUCTION_BEFORE_MS = 5 * 60 * 60 * 1000; // 5 hours
 
   const isContestUpcoming =
     contestToShow &&
@@ -186,9 +186,11 @@ const Contest = () => {
 
   // Render instructions if contest is upcoming
   if (isContestUpcoming) {
-    const minutes = Math.floor(timeLeft / 60);
+    const hours = Math.floor(timeLeft / 3600);
+    const minutes = Math.floor((timeLeft % 3600) / 60);
     const seconds = timeLeft % 60;
 
+    const hourDigits = hours.toString().padStart(2, "0");
     const minuteDigits = minutes.toString().padStart(2, "0");
     const secondDigits = seconds.toString().padStart(2, "0");
 
@@ -208,7 +210,7 @@ const Contest = () => {
           padding="p-6"
           layout="vertical"
         >
-          <div className="mt-4 space-y-6 text-left">
+          <div className="space-y-6 text-left">
             {/* Instructions */}
             <div className="rounded-xl border border-black bg-slate-100 p-4">
               <p className="mb-3 text-lg font-semibold text-red-500 flex justify-center items-center gap-2">
@@ -230,6 +232,12 @@ const Contest = () => {
                   <span className=" flex justify-center items-center ">3.</span>
                   Contest will start automatically at the scheduled time.
                 </li>
+
+                <li className="flex gap-2">
+                  <span className=" flex justify-center items-center ">4.</span>
+                  If after Countdown Time end and the Contest does not start,
+                  please refresh the page.
+                </li>
               </ul>
             </div>
 
@@ -238,6 +246,12 @@ const Contest = () => {
               <p className="text-sm opacity-90 mb-3">Contest starts in</p>
 
               <div className="flex items-center justify-center gap-1 sm:gap-2 font-mono font-bold tracking-wider">
+                {/* Hours */}
+                <AnimatedDigit value={hourDigits[0]} />
+                <AnimatedDigit value={hourDigits[1]} />
+
+                <span className="mx-1 text-3xl sm:text-4xl">:</span>
+
                 {/* Minutes */}
                 <AnimatedDigit value={minuteDigits[0]} />
                 <AnimatedDigit value={minuteDigits[1]} />

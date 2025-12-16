@@ -6,91 +6,71 @@ import { MongoQueue } from "../../Admin/Models/SubmissionQuee.models.js";
 
 const submitContest = asynchandler(async (req, res) => {
   const { questions, contest, user } = req.body;
-  // Validation
+
   if (!contest || !user) {
-    return res
-      .status(400)
-      .json(new APIERR(400, "Contest and user are required"));
+    throw new APIERR(400, "Contest and user are required");
   }
 
-  if (!questions || !Array.isArray(questions) || questions.length === 0) {
-    return res
-      .status(400)
-      .json(new APIERR(400, "Questions array cannot be empty"));
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new APIERR(400, "Questions array cannot be empty");
   }
 
-  // Check contest exists
   const contestDoc = await Test.findById(contest);
   if (!contestDoc) {
-    return res.status(404).json(new APIERR(404, "Contest not found"));
+    throw new APIERR(404, "Contest not found");
   }
 
-  // Extract correct userId
-  const userId = typeof user === "string" ? user : user._id;
-
-  // Ensure participants array exists
-  if (!Array.isArray(contestDoc.participants)) {
-    contestDoc.participants = [];
-  }
-
-  // Add user only once
-  if (!contestDoc.participants.includes(userId)) {
-    contestDoc.participants.push(userId);
-    await contestDoc.save();
-  }
-
-  console.log("User added to participants =>", userId);
-
-  // Verify contest time is valid
-  const contestEnd = new Date(
-    contestDoc.date.getTime() + contestDoc.duration * 60 * 1000
+  const userId = new mongoose.Types.ObjectId(
+    typeof user === "string" ? user : user._id
   );
 
-  if (isNaN(contestEnd)) {
-    return res
-      .status(500)
-      .json(new APIERR(500, "Error calculating contest end time"));
+  // Mark contest active on first submission
+  if (contestDoc.status === "pending") {
+    contestDoc.status = "active";
   }
 
-  // UPSERT SUBMISSION (safe)
-  let submission = await SubmittedOption.findOne({ contest, user: user._id });
-  console.log("Submission Details =>", submission);
+  if (!contestDoc.participants.includes(userId)) {
+    contestDoc.participants.push(userId);
+  }
+
+  await contestDoc.save();
+
   const preparedQuestions = questions.map((q) => ({
-    question: new mongoose.mongo.ObjectId(q.question),
+    question: new mongoose.Types.ObjectId(q.question),
     submittedOption: Number(q.submittedOption),
     checked: false,
   }));
 
-  // If submission exists → update
+  let submission = await SubmittedOption.findOne({
+    contest: contestDoc._id,
+    user: userId,
+  });
+
   if (submission) {
     submission.questions = preparedQuestions;
-    submission.user = user;
   } else {
     submission = new SubmittedOption({
-      contest,
-      user,
+      contest: contestDoc._id,
+      user: userId,
       questions: preparedQuestions,
-      autoDeleteAt: new Date(Date.now() + 5 * 60 * 60 * 1000), // TTL 5 hours
+      autoDeleteAt: new Date(Date.now() + 5 * 60 * 60 * 1000),
     });
   }
 
-  // Save submission FIRST — guaranteed before queue job is created
   await submission.save();
 
-  // PUSH TO QUEUE (Race Safe)
   await MongoQueue.create({
     type: "submission",
     payload: {
       submissionId: submission._id.toString(),
-      contest: contest.toString(),
-      user: user.toString(),
+      contest: contestDoc._id.toString(),
+      user: userId.toString(),
     },
     maxAttempts: 3,
+    attempts: 0,
     status: "pending",
     lockedAt: null,
   });
-
-  console.log("✔ Submission Saved:", submission._id);
 
   return res
     .status(200)
@@ -98,7 +78,7 @@ const submitContest = asynchandler(async (req, res) => {
       new APIRES(
         200,
         { submission, contest: contestDoc },
-        "Successfully Submitted"
+        "Contest submitted successfully"
       )
     );
 });

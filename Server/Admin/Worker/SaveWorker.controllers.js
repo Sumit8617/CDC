@@ -1,44 +1,39 @@
-import { MongoQueue } from "../Models/SubmissionQuee.models.js";
 import { SubmittedOption } from "../Models/SubmitedOption.model.js";
 
 export async function processSubmissionJob(job) {
   try {
-    console.log("\n➡ Processing Job:", job._id);
+    console.log("➡ Processing job:", job._id);
 
-    const { submissionId, contest, user } = job.payload;
+    const { submissionId } = job.payload;
 
-    // Retry-safe submission fetching
     let submission = null;
-    for (let attempt = 0; attempt < 6; attempt++) {
+
+    for (let i = 0; i < 5; i++) {
       submission = await SubmittedOption.findById(submissionId);
       if (submission) break;
-      await new Promise((res) => setTimeout(res, 200)); // wait 200ms
+      await new Promise((r) => setTimeout(r, 200));
     }
 
     if (!submission) {
-      throw new Error("Submission not found after retries!");
+      throw new Error("Submission not found");
     }
-
-    console.log(
-      `✔ Submission Verified for User: ${user} | Contest: ${contest}`
-    );
 
     job.status = "completed";
     job.lockedAt = null;
     await job.save();
-  } catch (err) {
-    console.error("❌ Worker Error:", err.message);
 
+    console.log("✔ Submission verified:", submissionId);
+  } catch (err) {
     job.attempts += 1;
 
     if (job.attempts >= job.maxAttempts) {
       job.status = "failed";
       job.error = err.message;
-      console.log("❌ Job Failed Permanently:", job._id);
+      console.error("❌ Job failed:", job._id);
     } else {
       job.status = "pending";
       job.lockedAt = null;
-      console.log("🔁 Retrying Job:", job._id);
+      console.log("🔁 Retrying job:", job._id);
     }
 
     await job.save();

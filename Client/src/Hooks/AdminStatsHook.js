@@ -25,8 +25,8 @@ export const useAdminStats = () => {
     recentContests,
     userDetails,
     adminDetails,
-    loading, // now separate flags: loading.users, loading.contest, loading.admins
-    error, // separate flags: error.users, error.contest, error.admins
+    loading,
+    error,
     refresh: fetchAllStats,
   };
 };

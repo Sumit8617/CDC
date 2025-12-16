@@ -28,7 +28,7 @@ const AdminDashboard = () => {
 
   if (user.role !== "admin") {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="pl-64 flex items-center justify-center min-h-[50vh]">
         <p className="text-red-500 font-semibold text-lg">
           Access Denied – Admins Only
         </p>
@@ -141,55 +141,65 @@ const AdminDashboard = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-base text-left border-collapse">
+          <table className="w-full border-collapse text-base">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="py-4 px-3 font-medium text-gray-800 text-lg">
+                <th className="py-3 px-3 text-left font-medium text-gray-800 text-lg">
                   Name
                 </th>
-                <th className="py-4 px-3 font-medium text-gray-800 text-lg">
+                <th className="py-3 px-3 text-center font-medium text-gray-800 text-lg">
                   Participants
                 </th>
-                <th className="py-4 px-3 font-medium text-gray-800 text-lg">
+                <th className="py-3 px-3 text-center font-medium text-gray-800 text-lg">
                   Status
+                </th>
+                <th className="py-3 px-3 text-center font-medium text-gray-800 text-lg">
+                  Leaderboard Published?
                 </th>
               </tr>
             </thead>
+
             <tbody>
               {recentContests && recentContests.length > 0 ? (
                 recentContests.slice(0, 7).map((contest) => (
                   <tr
                     key={contest._id}
-                    className={`
-            border-b last:border-none transition-all
+                    className={`border-b last:border-none transition-colors
             ${
               contest.status === "pending"
                 ? "bg-yellow-50 hover:bg-yellow-100"
                 : contest.status === "completed"
                   ? "bg-blue-50 hover:bg-blue-100"
                   : contest.status === "active"
-                    ? "bg-green-100 hover:bg-green-200"
+                    ? "bg-green-50 hover:bg-green-100"
                     : ""
             }
           `}
                   >
-                    <td className="py-2 px-3 text-gray-800 text-md">
+                    {/* Name */}
+                    <td className="py-3 px-3 text-left text-gray-800">
                       {contest.testName}
                     </td>
-                    <td className="py-2 px-3 text-gray-600 text-md">
-                      {contest.participants ? contest.participants.length : 0}
+
+                    {/* Participants */}
+                    <td className="py-3 px-3 text-center text-gray-600">
+                      {contest.participants?.length ?? 0}
                     </td>
-                    <td className="py-4 px-3">
+
+                    {/* Status */}
+                    <td className="py-3 px-3 text-center">
                       <span
-                        className={`text-sm font-bold px-3 py-3 text-center rounded-full ${
-                          contest.status === "pending"
-                            ? "bg-yellow-500 text-white"
-                            : contest.status === "completed"
-                              ? "bg-blue-600 text-white"
-                              : contest.status === "ongoing"
-                                ? "bg-green-500 text-white"
-                                : ""
-                        }`}
+                        className={`inline-flex items-center justify-center px-3 py-1.5 text-sm font-bold rounded-full
+                ${
+                  contest.status === "pending"
+                    ? "bg-yellow-500 text-white"
+                    : contest.status === "completed"
+                      ? "bg-blue-600 text-white"
+                      : contest.status === "draft"
+                        ? "bg-green-500 text-white"
+                        : ""
+                }
+              `}
                       >
                         {contest.status
                           ? contest.status.charAt(0).toUpperCase() +
@@ -197,13 +207,28 @@ const AdminDashboard = () => {
                           : "Pending"}
                       </span>
                     </td>
+
+                    {/* Leaderboard */}
+                    <td className="py-3 px-3 text-center">
+                      <span
+                        className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-sm font-semibold
+                ${
+                  contest.isLeaderboardPublished
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }
+              `}
+                      >
+                        {contest.isLeaderboardPublished ? "Yes" : "No"}
+                      </span>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={3}
-                    className="text-center py-6 text-gray-500 text-lg"
+                    colSpan={4}
+                    className="py-6 text-center text-gray-500 text-lg"
                   >
                     No contests found.
                   </td>

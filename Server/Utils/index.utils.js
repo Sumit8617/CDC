@@ -10,6 +10,7 @@ import {
   verifyPasswordResetOTP,
   sendPasswordResetOTP,
 } from "./Common/forgotPassword.utils.js";
+import { istToUtc } from "./Common/Time.utils.js";
 
 export {
   APIERR,
@@ -22,4 +23,5 @@ export {
   resetPassword,
   verifyPasswordResetOTP,
   sendPasswordResetOTP,
+  istToUtc,
 };
