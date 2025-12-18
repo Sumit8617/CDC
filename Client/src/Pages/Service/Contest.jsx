@@ -37,6 +37,7 @@ const Contest = () => {
   const [showFullscreenModal, setShowFullscreenModal] = useState(false);
   const [contestStarted, setContestStarted] = useState(false);
   const [ignoreFullscreenAlert, setIgnoreFullscreenAlert] = useState(false);
+  const [lastContestEnded, setLastContestEnded] = useState(null);
 
   const navigate = useNavigate();
 
@@ -376,8 +377,11 @@ const Contest = () => {
       )}
 
       {/* CONTEST ENDED CARD */}
-      {(finished || hasContestEnded) && (
+      {(finished ||
+        hasContestEnded ||
+        (!contestToShow && contests.length === 0)) && (
         <div className="min-h-screen ml-64 flex items-center justify-center bg-gray-50 px-4">
+          {console.log("Rendering contest ended card")}
           <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
               <svg
@@ -395,18 +399,16 @@ const Contest = () => {
               </svg>
             </div>
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-              {contestToShow?.title || "Contest"}
+              {contestToShow?.title || lastContestEnded?.title || "Contest"}
             </h2>
             <p className="text-gray-500 mb-6">
-              {finished
+              {finished || hasContestEnded
                 ? "You have successfully submitted the contest. Results will be available soon."
                 : "This contest has ended. Results and leaderboard are available."}
             </p>
             <Button
               className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition"
-              onClick={() => {
-                navigate("/leaderboard");
-              }}
+              onClick={() => navigate("/leaderboard")}
             >
               View Leaderboard
             </Button>
