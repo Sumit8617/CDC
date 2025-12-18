@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { Card, Button, PageLoaderWrapper } from "../../Components/index";
+import {
+  Card,
+  Button,
+  PageLoaderWrapper,
+  AnimatedDigit,
+} from "../../Components/index";
 import { Trophy, Search, Filter } from "lucide-react";
 import useLeaderboard from "../../Hooks/LeaderboardHook";
 
@@ -10,9 +15,38 @@ const Leaderboard = () => {
 
   const { leaderboard, loading, error, getLeaderboard } = useLeaderboard();
 
+  // Countdown state
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  // Set your contest result publish time here
+  const publishDate = new Date("").getTime();
+
   useEffect(() => {
     getLeaderboard();
-  }, [getLeaderboard]);
+
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const diff = Math.max(0, Math.floor((publishDate - now) / 1000));
+      setTimeLeft(diff);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [getLeaderboard, publishDate]);
+
+  // Convert seconds to hh:mm:ss
+  const formatTime = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    return {
+      hrs: hrs.toString().padStart(2, "0"),
+      mins: mins.toString().padStart(2, "0"),
+      secs: secs.toString().padStart(2, "0"),
+    };
+  };
+
+  const { hrs, mins, secs } = formatTime(timeLeft);
 
   const filteredUsers =
     leaderboard?.filter((user) =>
@@ -61,6 +95,21 @@ const Leaderboard = () => {
           <p className="text-gray-500 mt-2">
             The leaderboard will appear once the contest results are published.
           </p>
+
+          {/* Countdown to publish */}
+          <div className="mt-4 flex justify-center items-center gap-2 text-xl font-mono font-bold">
+            <AnimatedDigit value={hrs[0]} />
+            <AnimatedDigit value={hrs[1]} />
+            <span>:</span>
+            <AnimatedDigit value={mins[0]} />
+            <AnimatedDigit value={mins[1]} />
+            <span>:</span>
+            <AnimatedDigit value={secs[0]} />
+            <AnimatedDigit value={secs[1]} />
+          </div>
+          <p className="mt-2 text-gray-500">
+            Time left until leaderboard is published
+          </p>
         </div>
       </div>
     );
@@ -74,18 +123,27 @@ const Leaderboard = () => {
           <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
             Leaderboard
           </h1>
+
+          {/* Optional countdown for active leaderboard */}
+          {/* {timeLeft > 0 && (
+            <div className="flex items-center gap-1 font-mono font-bold text-red-600">
+              <AnimatedDigit value={hrs[0]} />
+              <AnimatedDigit value={hrs[1]} />
+              <span>:</span>
+              <AnimatedDigit value={mins[0]} />
+              <AnimatedDigit value={mins[1]} />
+              <span>:</span>
+              <AnimatedDigit value={secs[0]} />
+              <AnimatedDigit value={secs[1]} />
+            </div>
+          )} */}
         </div>
       </div>
 
       <div className="pt-24 px-4 sm:px-6 md:px-8 space-y-6">
         {/* Tabs */}
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={"outline"}
-            round="full"
-            size="sm"
-            onClick={() => setActiveTab(tab)}
-          >
+          <Button variant={"outline"} round="full" size="sm">
             College Ranking
           </Button>
         </div>

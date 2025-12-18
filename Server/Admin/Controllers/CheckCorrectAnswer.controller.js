@@ -4,8 +4,8 @@ import { Test } from "../../Admin/Models/Contest.model.js";
 import { Leaderboard } from "../../Admin/Models/Leaderboard.models.js";
 import { MongoQueue } from "../../Admin/Models/SubmissionQuee.models.js"; // ✅ Added
 
-// DELAY CONFIG (minutes)
-const LEADERBOARD_DELAY_MINUTES = 2;
+// DELAY CONFIG (minutes) TODO: Update the Delay time for publishing the leaderboard
+const LEADERBOARD_DELAY_MINUTES = 5;
 
 // Run cron every minute
 cron.schedule("* * * * *", async () => {
