@@ -15,6 +15,7 @@ import UserProfileCard from "./Profile/UserProfileCard";
 import Modal from "./Common/Modal";
 import UserChangePassword from "./Password/UserPasswordChange";
 import AnimatedDigit from "./Animation/AnimateDigit";
+import CountdownTimer from "./Common/Timer";
 
 export {
   GeneralNav,
@@ -34,4 +35,5 @@ export {
   Modal,
   UserChangePassword,
   AnimatedDigit,
+  CountdownTimer,
 };

@@ -4,7 +4,6 @@ import { connectDB } from "./DB/Db.db.js";
 import "./Admin/Controllers/CheckCorrectAnswer.controller.js";
 import "./Cron/QuizNotifier.cron.js";
 import "./Cron/ResetStuckJobs.cron.js";
-
 import { startSubmissionWorker } from "./Admin/Worker/SubmissionWorker.controller.js";
 
 const PORT = process.env.PORT || 5000;

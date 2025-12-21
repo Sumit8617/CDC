@@ -202,15 +202,18 @@ const registerAdmin = asynchandler(async (req, res) => {
       dob,
       password,
     });
-    createdAdmin.save();
+
     console.log("Created Admin:", createdAdmin);
   } catch (error) {
     console.log("Error while creating admin:", error);
     throw new APIERR(500, "Error while creating admin");
   }
 
+  // Delete the invite token after successful registration
+  await InviteToken.deleteOne({ _id: invite._id });
+
   // Generate tokens
-  const { accessToken, refreshToken } = generateAccessAndRefreshTokens(
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     createdAdmin._id
   );
 

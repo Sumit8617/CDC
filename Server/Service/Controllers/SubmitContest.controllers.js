@@ -11,7 +11,7 @@ const submitContest = asynchandler(async (req, res) => {
     throw new APIERR(400, "Contest and user are required");
   }
 
-  if (!Array.isArray(questions) || questions.length === 0) {
+  if (!Array.isArray(questions)) {
     throw new APIERR(400, "Questions array cannot be empty");
   }
 

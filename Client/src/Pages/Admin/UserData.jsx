@@ -49,7 +49,7 @@ const ManageUsers = () => {
   };
 
   return (
-    <section className="min-h-screen flex flex-col space-y-8 md:pl-64 pt-4 px-4 md:px-8">
+    <section className="min-h-screen flex flex-col space-y-8 md:pl-64 px-4 md:px-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
