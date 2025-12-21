@@ -26,12 +26,6 @@ const submittedOptionSchema = new mongoose.Schema(
         checked: { type: Boolean, default: false },
       },
     ],
-
-    autoDeleteAt: {
-      type: Date,
-      default: Date.now,
-      expires: 60 * 60 * 5, // 5 hours
-    },
   },
   { timestamps: true }
 );
