@@ -16,7 +16,7 @@ export const fetchLeaderboard = createAsyncThunk(
 
 const initialState = {
   contest: null,
-  leaderboard: null,
+  leaderboard: [],
   loading: false,
   error: null,
 };
@@ -27,7 +27,7 @@ const leaderboardSlice = createSlice({
   reducers: {
     resetLeaderboard: (state) => {
       state.contest = null;
-      state.leaderboard = null;
+      state.leaderboard = [];
       state.loading = false;
       state.error = null;
     },

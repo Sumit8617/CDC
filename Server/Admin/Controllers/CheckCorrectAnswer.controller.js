@@ -15,7 +15,7 @@ cron.schedule("* * * * *", async () => {
   try {
     const contests = await Test.find({
       isPublished: true,
-      status: { $ne: "completed" },
+      status: { $in: ["active", "ended"] },
     });
 
     for (const contest of contests) {
@@ -116,6 +116,7 @@ cron.schedule("* * * * *", async () => {
       });
 
       contest.status = "completed";
+      contest.isPublished = true;
       await contest.save();
 
       console.log(`Leaderboard published for contest ${contest._id}`);

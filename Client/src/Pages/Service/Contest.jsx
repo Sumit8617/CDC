@@ -9,6 +9,7 @@ import useUpcomingContests from "../../Hooks/UpcomingContestHook";
 import useContestSubmission from "../../Hooks/SubmitContestHook";
 import useSignup from "../../Hooks/AuthHooks";
 import { useNavigate } from "react-router-dom";
+import { Info, Clock } from "lucide-react";
 
 // Helper to parse backend IST string as local date
 const parseISTDate = (istString) => {
@@ -365,12 +366,60 @@ const Contest = () => {
       {/* UPCOMING CONTEST */}
       {isContestUpcoming && (
         <div className="min-h-screen flex items-center justify-center pl-64 bg-linear-to-br from-slate-50 to-slate-100">
-          <Card className="max-w-lg w-full bg-white shadow-lg p-6">
-            <div className="space-y-6">
-              <div className="rounded-xl bg-indigo-600 p-6 text-center text-white">
-                <p className="text-sm mb-3">Contest starts in</p>
+          <Card
+            variant="outlined"
+            round="lg"
+            padding="p-6"
+            className="max-w-lg w-full"
+          >
+            <div className="space-y-6 w-full">
+              {/* Countdown Card */}
+              <Card
+                variant="gradient"
+                round="lg"
+                padding="p-6"
+                className="w-full"
+                title="Contest Starts In"
+              >
                 <CountdownTimer targetTime={contestStart} />
-              </div>
+              </Card>
+
+              {/* Guidelines Card */}
+              <Card
+                variant="default"
+                round="lg"
+                padding="p-5"
+                className="w-full"
+                title="Contest Guidelines"
+                icon={<Info />}
+                layout="vertical"
+              >
+                <ul className="space-y-3 text-sm text-gray-600 list-disc list-inside text-left">
+                  <li>
+                    The contest will start automatically once the countdown
+                    ends.
+                  </li>
+                  <li>Ensure a stable internet connection before starting.</li>
+                  <li>Each participant can attempt the contest only once.</li>
+                  <li>
+                    Any form of malpractice or unfair means will lead to
+                    disqualification.
+                  </li>
+                  <li>
+                    Rankings are based on total score. In case of a tie, time
+                    taken will be considered.
+                  </li>
+                  <li>
+                    Results will be published on the leaderboard after
+                    evaluation.
+                  </li>
+                </ul>
+              </Card>
+
+              {/* Footer Note */}
+              <p className="text-xs text-center text-gray-500">
+                Please read all guidelines carefully before the contest begins.
+              </p>
             </div>
           </Card>
         </div>
@@ -382,37 +431,33 @@ const Contest = () => {
         (!contestToShow && contests.length === 0)) && (
         <div className="min-h-screen ml-64 flex items-center justify-center bg-gray-50 px-4">
           {console.log("Rendering contest ended card")}
-          <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
-              <svg
-                className="h-7 w-7 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
+
+          <Card
+            variant="default"
+            round="lg"
+            padding="p-8"
+            className="max-w-md w-full"
+            title={contestToShow?.title || lastContestEnded?.title || "Contest"}
+            icon={
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
+                <Clock className="h-7 w-7 text-indigo-600" />
+              </div>
+            }
+            footer={
+              <Button
+                className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition w-full"
+                onClick={() => navigate("/leaderboard")}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-              {contestToShow?.title || lastContestEnded?.title || "Contest"}
-            </h2>
-            <p className="text-gray-500 mb-6">
+                View Leaderboard
+              </Button>
+            }
+          >
+            <p className="text-gray-500 text-sm">
               {finished || hasContestEnded
                 ? "You have successfully submitted the contest. Results will be available soon."
                 : "This contest has ended. Results and leaderboard are available."}
             </p>
-            <Button
-              className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition"
-              onClick={() => navigate("/leaderboard")}
-            >
-              View Leaderboard
-            </Button>
-          </div>
+          </Card>
         </div>
       )}
 
