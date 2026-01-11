@@ -46,7 +46,7 @@ const HeroSection = () => {
       {/* Badge */}
       <div className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-indigo-200 shadow-sm">
         <Zap className="h-4 w-4" />
-        <span>Join {totalUser - 1}+ students</span>
+        <span>Join {totalUser}+ students</span>
       </div>
 
       {/* Heading */}
@@ -92,7 +92,7 @@ const HeroSection = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 mt-20 text-center w-full max-w-4xl">
         <div>
           <h2 className="text-4xl font-extrabold text-indigo-600">
-            <CountUp end={totalContest - 1} duration={3} />+
+            <CountUp end={totalContest} duration={3} />+
           </h2>
           <p className="text-gray-500 mt-2 text-lg">Contests</p>
         </div>
