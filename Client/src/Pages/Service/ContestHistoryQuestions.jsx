@@ -81,23 +81,29 @@ const PreviousQuestions = () => {
     return <p className="pt-24 px-4">No questions found</p>;
 
   return (
-    <div className="min-h-screen bg-gray-50 md:pl-64 pb-16">
-      {/* Topbar */}
-      <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-50">
-        <div className="flex justify-between items-center py-3 px-6 border-b border-gray-200">
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
-            Previous Contest Questions
-          </h1>
+    <>
+      <title>CDC JGEC | History</title>
+      <meta
+        name="description"
+        content="This is the history page of the previous contests"
+      />
+      <div className="min-h-screen bg-gray-50 md:pl-64 pb-16">
+        {/* Topbar */}
+        <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-50">
+          <div className="flex justify-between items-center py-3 px-6 border-b border-gray-200">
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
+              Previous Contest Questions
+            </h1>
+          </div>
         </div>
-      </div>
 
-      {/* Question navigation dots */}
-      <div className="flex justify-center flex-wrap gap-2 mt-24 px-4">
-        {questions.map((q, idx) => (
-          <div
-            key={q._id}
-            onClick={() => setCurrentQuestion(idx)}
-            className={`w-8 h-8 flex items-center justify-center rounded-full border text-xs cursor-pointer transition-all duration-200
+        {/* Question navigation dots */}
+        <div className="flex justify-center flex-wrap gap-2 mt-24 px-4">
+          {questions.map((q, idx) => (
+            <div
+              key={q._id}
+              onClick={() => setCurrentQuestion(idx)}
+              className={`w-8 h-8 flex items-center justify-center rounded-full border text-xs cursor-pointer transition-all duration-200
               ${
                 currentQuestion === idx
                   ? "bg-blue-500 border-blue-700 text-white"
@@ -105,41 +111,42 @@ const PreviousQuestions = () => {
                     ? "bg-green-500 border-green-700 text-white"
                     : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200"
               }`}
-          >
-            {idx + 1}
+            >
+              {idx + 1}
+            </div>
+          ))}
+        </div>
+
+        {/* Main Question Card */}
+        <div className="pt-6 px-4 sm:px-6 md:px-8 flex flex-col items-center gap-6">
+          {questions[currentQuestion] && (
+            <QuestionCard
+              question={questions[currentQuestion]}
+              selectedOption={selectedOption}
+              setSelectedOption={setSelectedOption}
+            />
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between w-full max-w-3xl gap-2">
+            <Button
+              variant="secondary"
+              onClick={handlePrevious}
+              disabled={currentQuestion === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleNext}
+              disabled={currentQuestion === questions.length - 1}
+            >
+              Next
+            </Button>
           </div>
-        ))}
-      </div>
-
-      {/* Main Question Card */}
-      <div className="pt-6 px-4 sm:px-6 md:px-8 flex flex-col items-center gap-6">
-        {questions[currentQuestion] && (
-          <QuestionCard
-            question={questions[currentQuestion]}
-            selectedOption={selectedOption}
-            setSelectedOption={setSelectedOption}
-          />
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between w-full max-w-3xl gap-2">
-          <Button
-            variant="secondary"
-            onClick={handlePrevious}
-            disabled={currentQuestion === 0}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleNext}
-            disabled={currentQuestion === questions.length - 1}
-          >
-            Next
-          </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

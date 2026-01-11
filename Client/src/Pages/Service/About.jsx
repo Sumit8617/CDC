@@ -16,6 +16,11 @@ import { webTeam } from "../../lib/Data/TeamMembers";
 const About = () => {
   return (
     <>
+      <title>CDC JGEC | About</title>
+      <meta
+        name="description"
+        content="Career & Development Cell JGEC is dedicated to empowering students with opportunities, skill development, and industry exposure."
+      />
       <div className="min-h-screen">
         {/* HERO */}
         <section className="w-full bg-transparent mt-5 py-20 text-black text-center px-6">

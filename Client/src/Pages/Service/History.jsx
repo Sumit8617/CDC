@@ -62,99 +62,106 @@ const History = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 md:pl-64">
-      {/* Topbar */}
-      <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-50">
-        <div className="flex justify-between items-center py-3 sm:py-4 px-4 sm:px-6 border-b border-gray-200">
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
-            Contest History
-          </h1>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="pt-24 px-4 sm:px-6 md:px-8">
-        <h2 className="text-lg sm:text-xl font-semibold mb-6 text-gray-700">
-          Your Past Contests
-        </h2>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {currentContests.map((contest) => (
-            <Card
-              key={contest._id || contest.id}
-              variant="hover"
-              round="lg"
-              className="p-5 flex flex-col justify-between h-full transition-transform"
-              onClick={() => {
-                navigate(`/contest-history/${contest.contestId}`);
-              }}
-            >
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-indigo-600 transition-colors">
-                  {contest.contestName || contest.name}
-                </h3>
-                <p className="text-sm text-gray-500 mb-1">
-                  Date:{" "}
-                  <span className="font-medium">
-                    {contest.contestDate || contest.date}
-                  </span>
-                </p>
-                <p className="text-sm mb-1">
-                  Status:{" "}
-                  <span
-                    className={`font-semibold ${
-                      contest.contestStatus === "completed" ||
-                      contest.status === "Completed"
-                        ? "text-green-600"
-                        : "text-yellow-600"
-                    }`}
-                  >
-                    {contest.contestStatus.toUpperCase() || contest.status}
-                  </span>
-                </p>
-              </div>
-              <div className="mt-3">
-                <p className="text-sm text-gray-500">
-                  Description:{" "}
-                  <span className="font-semibold">
-                    {contest.contestDescription || "No Description Provided"}
-                  </span>
-                </p>
-              </div>
-            </Card>
-          ))}
+    <>
+      <title>CDC JGEC | History</title>
+      <meta
+        name="description"
+        content="This is the history page of the previous contests"
+      />
+      <div className="min-h-screen bg-gray-50 md:pl-64">
+        {/* Topbar */}
+        <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-50">
+          <div className="flex justify-between items-center py-3 sm:py-4 px-4 sm:px-6 border-b border-gray-200">
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
+              Contest History
+            </h1>
+          </div>
         </div>
 
-        {/* Pagination */}
-        <div className="flex justify-center items-center mt-8 space-x-2">
-          <Button
-            variant="outline"
-            disabled={currentPage === 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-          >
-            Previous
-          </Button>
+        {/* Main Content */}
+        <div className="pt-24 px-4 sm:px-6 md:px-8">
+          <h2 className="text-lg sm:text-xl font-semibold mb-6 text-gray-700">
+            Your Past Contests
+          </h2>
 
-          {Array.from({ length: totalPages }, (_, i) => (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {currentContests.map((contest) => (
+              <Card
+                key={contest._id || contest.id}
+                variant="hover"
+                round="lg"
+                className="p-5 flex flex-col justify-between h-full transition-transform"
+                onClick={() => {
+                  navigate(`/contest-history/${contest.contestId}`);
+                }}
+              >
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-indigo-600 transition-colors">
+                    {contest.contestName || contest.name}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-1">
+                    Date:{" "}
+                    <span className="font-medium">
+                      {contest.contestDate || contest.date}
+                    </span>
+                  </p>
+                  <p className="text-sm mb-1">
+                    Status:{" "}
+                    <span
+                      className={`font-semibold ${
+                        contest.contestStatus === "completed" ||
+                        contest.status === "Completed"
+                          ? "text-green-600"
+                          : "text-yellow-600"
+                      }`}
+                    >
+                      {contest.contestStatus.toUpperCase() || contest.status}
+                    </span>
+                  </p>
+                </div>
+                <div className="mt-3">
+                  <p className="text-sm text-gray-500">
+                    Description:{" "}
+                    <span className="font-semibold">
+                      {contest.contestDescription || "No Description Provided"}
+                    </span>
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-center items-center mt-8 space-x-2">
             <Button
-              key={i}
-              variant={currentPage === i + 1 ? "primary" : "outline"}
-              onClick={() => handlePageChange(i + 1)}
+              variant="outline"
+              disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
             >
-              {i + 1}
+              Previous
             </Button>
-          ))}
 
-          <Button
-            variant="outline"
-            disabled={currentPage === totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-          >
-            Next
-          </Button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <Button
+                key={i}
+                variant={currentPage === i + 1 ? "primary" : "outline"}
+                onClick={() => handlePageChange(i + 1)}
+              >
+                {i + 1}
+              </Button>
+            ))}
+
+            <Button
+              variant="outline"
+              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

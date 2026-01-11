@@ -41,6 +41,8 @@ const AdminSettings = () => {
 
   return (
     <>
+      <title>CDC JGEC | Admin Settings</title>
+      <meta name="description" content="This is the admin settings page" />
       {/* Page Loader */}
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70">

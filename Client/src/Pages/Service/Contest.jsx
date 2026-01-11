@@ -344,6 +344,11 @@ const Contest = () => {
 
   return (
     <>
+      <title>CDC JGEC | Contest</title>
+      <meta
+        name="description"
+        content="This is the Contest page of the CDC JGEC"
+      />
       {/* FULLSCREEN MODAL */}
       {showFullscreenModal && (
         <div
