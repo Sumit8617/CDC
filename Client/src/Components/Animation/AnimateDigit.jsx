@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 function AnimatedDigit({ value }) {
   return (
     <div className="relative w-12 h-14 overflow-hidden">
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout">
         <motion.span
           key={value}
           initial={{ y: 20, opacity: 0 }}

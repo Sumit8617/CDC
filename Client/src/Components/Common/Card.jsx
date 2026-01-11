@@ -58,7 +58,7 @@ const Card = ({
         width:
           width.includes("rem") || width.includes("px") ? width : `${width}rem`,
       }}
-      onClick={onClick} // <-- forwards onClick
+      onClick={onClick}
       role={onClick ? "button" : undefined} // accessibility
       tabIndex={onClick ? 0 : undefined} // keyboard focus
       onKeyPress={(e) => {

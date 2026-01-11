@@ -1,4 +1,3 @@
-// src/sections/HowItWorks.jsx
 import React from "react";
 import { Card } from "../index";
 import { BookOpen, Trophy, TrendingUp } from "lucide-react";

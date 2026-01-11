@@ -75,8 +75,8 @@ const Footer = () => {
           </div>
 
           <p className="text-center md:text-right">
-            © {new Date().getFullYear()} {import.meta.env.VITE_APP_NAME}. All
-            rights reserved.
+            &copy; {new Date().getFullYear()} {import.meta.env.VITE_APP_NAME}.
+            All rights reserved.
             <br />
             Maintained and Developed by <strong>CDC WEB TEAM</strong>
           </p>

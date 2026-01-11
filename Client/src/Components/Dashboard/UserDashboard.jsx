@@ -159,7 +159,7 @@ const UserDashboard = () => {
         <div className="min-h-[200px]">
           {activeTab === "Performance Overview" && (
             <div>
-              {/* ====== Performance Trend Section ====== */}
+              {/* Performance Trend Section */}
               <Card className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
                   Performance Trend

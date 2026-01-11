@@ -1,19 +1,14 @@
-// src/lib/ForgotPasswordSlice.js
-
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "./AxiosInstance";
 
-// Thunk: send forgot-password email
+// Send forgot-password email
 export const sendResetEmail = createAsyncThunk(
   "forgotPassword/sendResetEmail",
   async (email, { rejectWithValue }) => {
     try {
-      // change the URL if your backend route is different
       const res = await axiosClient.post("/api/v1/auth/forgot-password", {
         email,
       });
-
-      // assuming backend returns: { success: true, message: "...", ... }
       return res.data;
     } catch (error) {
       const message =
