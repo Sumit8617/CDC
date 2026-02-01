@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const inviteTokenSchema = new mongoose.Schema(
   {
     fullName: {
@@ -19,13 +20,10 @@ const inviteTokenSchema = new mongoose.Schema(
       type: String,
       default: "admin",
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-      expires: 24 * 60 * 60 * 1000,
-    },
   },
   { timestamps: true }
 );
+
+inviteTokenSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
 
 export const InviteToken = mongoose.model("InviteToken", inviteTokenSchema);
