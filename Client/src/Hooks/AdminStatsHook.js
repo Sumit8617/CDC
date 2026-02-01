@@ -8,6 +8,12 @@ export const useAdminStats = () => {
   const { stats, recentContests, userDetails, adminDetails, loading, error } =
     useSelector((state) => state.adminStats);
 
+  // Compute overall loading state - checking if ANY request is still loading
+  const isLoading = loading.contest || loading.users || loading.admins;
+
+  // Compute overall error state - return first error found
+  const overallError = error.contest || error.users || error.admins;
+
   // Fetch all stats on mount
   useEffect(() => {
     fetchAllStats();
@@ -25,8 +31,8 @@ export const useAdminStats = () => {
     recentContests,
     userDetails,
     adminDetails,
-    loading,
-    error,
+    loading: isLoading, // Return computed boolean instead of object
+    error: overallError, // Return first error instead of object
     refresh: fetchAllStats,
   };
 };

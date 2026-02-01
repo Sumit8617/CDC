@@ -15,10 +15,11 @@ import useSignup from "../../Hooks/AuthHooks";
 
 const AdminProfile = () => {
   const navigate = useNavigate();
-  const { adminDetails, stats, recentContests, userDetails, loading, error } =
+  const { stats, recentContests, userDetails, loading, error } =
     useAdminStats();
 
-  const { handleFetchUserDetails, handleUpdateProfile } = useSignup();
+  const { user, handleFetchUserDetails, handleUpdateProfile, loadingUser } =
+    useSignup();
   const [isBioModalOpen, setIsBioModalOpen] = useState(false);
   const [modalBioInput, setModalBioInput] = useState("");
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -66,7 +67,10 @@ const AdminProfile = () => {
     handleFetchUserDetails();
   }, []);
 
-  const admin = adminDetails || null;
+  const admin = user || null;
+
+  // Combine loading states
+  const isPageLoading = loading || loadingUser;
 
   // Dynamic stats
   const quickStats = [
@@ -90,7 +94,7 @@ const AdminProfile = () => {
     },
   ];
 
-  console.log("Loading:", loading, "Error:", error, "Admin:", admin);
+  console.log("Loading:", isPageLoading, "Error:", error);
 
   return (
     <>
@@ -98,21 +102,21 @@ const AdminProfile = () => {
       <meta name="description" content="This is the admin profile page" />
 
       {/* Page Loader */}
-      {loading && (
+      {isPageLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70">
-          <PageLoaderWrapper loading={loading} />
+          <PageLoaderWrapper loading={isPageLoading} />
         </div>
       )}
 
       {/* Error */}
-      {!loading && error && (
+      {!isPageLoading && error && (
         <Card className="p-8 text-center bg-red-50 border border-red-300 rounded-xl">
           <p className="text-red-600 font-medium">{error}</p>
         </Card>
       )}
 
       {/* Main Profile Content */}
-      {!loading && !error && admin && (
+      {!isPageLoading && !error && admin && (
         <div className="min-h-auto flex flex-col gap-6 md:pl-64">
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -136,7 +140,7 @@ const AdminProfile = () => {
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
                 {/* Profile Picture */}
                 <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-md flex items-center justify-center bg-gray-100">
-                  {admin.profilePic ? (
+                  {admin.profilePic?.url ? (
                     <img
                       src={admin?.profilePic?.url}
                       alt="User Profile"
@@ -216,7 +220,7 @@ const AdminProfile = () => {
                 size="sm"
                 className="mt-4 sm:mt-0 flex items-center gap-2 hover:cursor-pointer"
                 onClick={() => {
-                  setModalBioInput(admin.bio);
+                  setModalBioInput(admin.bio || "");
                   setIsBioModalOpen(true);
                 }}
               >
@@ -227,7 +231,7 @@ const AdminProfile = () => {
             <hr className="my-6 border-gray-200" />
 
             <p className="text-gray-700 text-center sm:text-left">
-              {admin.bio}
+              {admin.bio || "No bio added yet"}
             </p>
           </Card>
 
