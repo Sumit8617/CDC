@@ -34,7 +34,7 @@ const Card = ({
     hover:
       "bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01]",
     gradient:
-      "bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg hover:shadow-xl hover:brightness-105",
+      "bg-linear-to-br from-indigo-500 to-purple-500 text-white shadow-lg hover:shadow-xl hover:brightness-105",
   };
 
   const rounds = {
