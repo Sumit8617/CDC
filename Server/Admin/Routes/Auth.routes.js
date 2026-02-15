@@ -16,7 +16,7 @@ const adminAuthRoute = Router();
 adminAuthRoute.route("/login").post(adminLogin);
 adminAuthRoute.route("/invite").post(protectRoute, adminOnly, adminInvite);
 adminAuthRoute.route("/verify").get(verifyAdminInvite);
-adminAuthRoute.route("/register").post(protectRoute, adminOnly, registerAdmin);
+adminAuthRoute.route("/register").post(registerAdmin);
 adminAuthRoute
   .route("/delete-user/:userId")
   .delete(protectRoute, adminOnly, deleteUser);

@@ -14,6 +14,7 @@
   "dependencies": {
     "@arcjet/node": "^1.0.0-beta.14",
     "@emailjs/nodejs": "^5.0.2",
+    "@mediapipe/tasks-vision": "^0.10.32",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.64.1",
     "cloudinary": "^2.8.0",
