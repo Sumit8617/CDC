@@ -13,15 +13,18 @@ import { adminOnly, protectRoute } from "../../Middleware/Auth.middleware.js";
 
 const adminAuthRoute = Router();
 
-adminAuthRoute.route("/login").post(adminLogin);
-adminAuthRoute.route("/invite").post(protectRoute, adminOnly, adminInvite);
-adminAuthRoute.route("/verify").get(verifyAdminInvite);
-adminAuthRoute.route("/register").post(registerAdmin);
-adminAuthRoute
-  .route("/delete-user/:userId")
-  .delete(protectRoute, adminOnly, deleteUser);
-adminAuthRoute.route("/get-user").get(protectRoute, adminOnly, getUser);
-adminAuthRoute.route("/get-admin").get(protectRoute, adminOnly, getAdmin);
-adminAuthRoute.route("/get-contest").get(protectRoute, adminOnly, getContest);
+adminAuthRoute.post("/login", adminLogin);
+adminAuthRoute.post("/invite", protectRoute, adminOnly, adminInvite);
+adminAuthRoute.get("/verify", verifyAdminInvite);
+adminAuthRoute.post("/register", registerAdmin);
+adminAuthRoute.delete(
+  "/delete-user/:userId",
+  protectRoute,
+  adminOnly,
+  deleteUser
+);
+adminAuthRoute.get("/get-user", protectRoute, adminOnly, getUser);
+adminAuthRoute.get("/get-admin", protectRoute, adminOnly, getAdmin);
+adminAuthRoute.get("/get-contest", protectRoute, adminOnly, getContest);
 
 export { adminAuthRoute };

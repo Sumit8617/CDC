@@ -1,9 +1,13 @@
-import { asynchandler, APIERR, APIRES } from "../../Utils/index.utils.js";
+import {
+  asynchandler,
+  APIERR,
+  APIRES,
+  sendMail,
+} from "../../Utils/index.utils.js";
 import { User } from "../../Service/Models/User.models.js";
 import { Test } from "../Models/Contest.model.js";
 import { generateAccessAndRefreshTokens } from "../../Service/Controllers/Auth.controllers.js";
 import { InviteToken } from "../Models/InviteTokenSchema.model.js";
-import { AdminMail } from "../../Utils/Mail/AdminMail.utils.js";
 import crypto from "crypto-js";
 
 const adminLogin = asynchandler(async (req, res) => {
@@ -89,22 +93,79 @@ const adminInvite = asynchandler(async (req, res) => {
     role: "admin",
   });
   console.log(savedToken);
+
   // Create the Invite link for the User
   const inviteLink = `${process.env.FRONTEND_URL}/admin/register?token=${encodeURIComponent(
     token
   )}`;
 
-  // Sent the mail to the user
-  const templateId = process.env.ADMIN_INVITE_EMAIL_TEMPLATE;
-  const templateData = {
-    name: fullName,
-    email,
-    invite_link: inviteLink,
-    expiry_hours: 24,
-    support_email: "sm2733@it.jgec.ac.in",
-  };
+  // Admin invite email HTML
+  const adminInviteHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;">
+      <div style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+        <!-- Header -->
+        <div style="background-color: orange; padding: 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 26px;">${process.env.APP_NAME}</h1>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 30px;">
+          <h2 style="color: #333333; font-size: 22px;">Hello, ${fullName}!</h2>
+          <p style="color: #555555; font-size: 15px; line-height: 1.7;">
+            You have been invited to join <strong>${process.env.APP_NAME}</strong> as an 
+            <strong>Admin</strong>. Click the button below to complete your registration.
+          </p>
+
+          <!-- Invite Details Box -->
+          <div style="background-color: #f9f9f9; border-left: 4px solid orange; border-radius: 6px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 6px 0; color: #444; font-size: 14px;"><strong>Name:</strong> ${fullName}</p>
+            <p style="margin: 6px 0; color: #444; font-size: 14px;"><strong>Email:</strong> ${email}</p>
+            <p style="margin: 6px 0; color: #444; font-size: 14px;"><strong>Role:</strong> Admin</p>
+            <p style="margin: 6px 0; color: #444; font-size: 14px;"><strong>Expires In:</strong> 24 hours</p>
+          </div>
+
+          <!-- CTA Button -->
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${inviteLink}"
+              style="background-color: orange; color: #ffffff; padding: 14px 32px;
+                     text-decoration: none; border-radius: 6px; font-size: 15px; font-weight: bold;">
+              Accept Invitation
+            </a>
+          </div>
+
+          <p style="color: #555555; font-size: 15px; line-height: 1.7;">
+            If the button doesn't work, copy and paste the link below into your browser:
+          </p>
+          <p style="word-break: break-all; color: orange; font-size: 13px;">
+            ${inviteLink}
+          </p>
+
+          <p style="color: #555555; font-size: 15px; line-height: 1.7;">
+            If you did not expect this invitation, please contact us at  
+            <a href="mailto:${process.env.SUPPORT_EMAIL}" style="color: orange; text-decoration: none;">
+              ${process.env.SMTP_FROM_EMAIL}
+            </a>.
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f0f0f0; padding: 20px; text-align: center;">
+          <p style="color: #999999; font-size: 12px; margin: 0;">
+            © ${new Date().getFullYear()} ${process.env.APP_NAME}. All rights reserved.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  `;
+
   try {
-    AdminMail(templateId, templateData);
+    await sendMail(
+      email,
+      `You're invited to join ${process.env.APP_NAME} as Admin`,
+      adminInviteHtml
+    );
     console.log("Successfully Sent the Mail");
   } catch (error) {
     console.log("ERROR While Sending the admin invite mail", error);

@@ -40,20 +40,16 @@ const signup = asynchandler(async (req, res) => {
     throw new APIERR(400, "Password length must be 6");
   }
 
-  //   Find that if the user already exist or not
   const existeduser = await User.findOne({ mobileNumber });
   if (existeduser) {
     throw new APIERR(400, "User already exist. Please login instead of Signup");
   }
-
-  // Ensure that the OTP is verified
 
   const isVerified = req.cookies?.isEmailVerified;
   if (!isVerified) {
     throw new APIERR(400, "Please verify your email");
   }
 
-  // Create user
   const createUser = await User.create({
     fullName,
     email,
@@ -68,53 +64,96 @@ const signup = asynchandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  // Set the Access Token
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     createUser._id
   );
 
-  res.cookie("accessToken", accessToken, {
+  const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" ? true : false,
+    secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     path: "/",
     maxAge: 1000 * 60 * 60 * 24,
-  });
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production" ? true : false,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
-    maxAge: 1000 * 60 * 60 * 24,
-  });
+  };
+
+  res.cookie("accessToken", accessToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   if (!accessToken) {
     throw new APIERR(502, "Internal Server ERR! While setting the accesstoken");
   }
 
-  // Send welcome message to the user after successfull signup
-  const templateId = process.env.EMAILJS_WELCOME_MESSAGE_TEMPLATE_ID;
+  // Welcome email HTML
+  const welcomeHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;">
+      <div style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        
+        <!-- Header -->
+        <div style="background-color: ${process.env.BRAND_COLOR}; padding: 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 26px;">${process.env.APP_NAME}</h1>
+        </div>
 
-  const templateData = {
-    name: fullName,
-    email,
-    appLink: ``,
-    supportLink: ``,
-    currentYear: new Date().getFullYear(),
-  };
+        <!-- Body -->
+        <div style="padding: 30px;">
+          <h2 style="color: #333333; font-size: 22px;">Welcome, ${fullName}! 🎉</h2>
+          <p style="color: #555555; font-size: 15px; line-height: 1.7;">
+            We're thrilled to have you on board. Your account has been successfully created.
+            Here's a quick summary of your account details:
+          </p>
+
+          <!-- Account Details Box -->
+          <div style="background-color: #f9f9f9; border-left: 4px solid ${process.env.BRAND_COLOR}; border-radius: 6px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 6px 0; color: #444; font-size: 14px;"><strong>Name:</strong> ${fullName}</p>
+            <p style="margin: 6px 0; color: #444; font-size: 14px;"><strong>Email:</strong> ${email}</p>
+            <p style="margin: 6px 0; color: #444; font-size: 14px;"><strong>Role:</strong> ${role}</p>
+            <p style="margin: 6px 0; color: #444; font-size: 14px;"><strong>Roll Number:</strong> ${rollNumber}</p>
+          </div>
+
+          <p style="color: #555555; font-size: 15px; line-height: 1.7;">
+            You can now log in and explore everything ${process.env.APP_NAME} has to offer.
+          </p>
+
+          <!-- CTA Button -->
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.APP_URL}" 
+              style="background-color: ${process.env.BRAND_COLOR}; color: #ffffff; padding: 14px 32px;
+                     text-decoration: none; border-radius: 6px; font-size: 15px; font-weight: bold;">
+              Go to Dashboard
+            </a>
+          </div>
+
+          <p style="color: #555555; font-size: 15px; line-height: 1.7;">
+            If you have any questions, feel free to reach out to our 
+            <a href="${process.env.SUPPORT_URL}" style="color: ${process.env.BRAND_COLOR}; text-decoration: none;">support team</a>.
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f0f0f0; padding: 20px; text-align: center;">
+          <p style="color: #999999; font-size: 12px; margin: 0;">
+            © ${new Date().getFullYear()} ${process.env.APP_NAME}. All rights reserved.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  `;
 
   try {
-    await sendMail(templateId, templateData);
-    console.log("Email Sent");
+    await sendMail(
+      email,
+      `Welcome to ${process.env.APP_NAME}, ${fullName}!`,
+      welcomeHtml
+    );
+    console.log("Welcome email sent");
   } catch (error) {
-    console.error("ERR While Sending the Welcome Message mail", error);
+    console.error("ERR while sending welcome email:", error);
   }
 
-  // Final Response
   res
     .status(200)
     .json(
-      new APIRES(200, { user: createdUser }, "Successfully Create the User")
+      new APIRES(200, { user: createdUser }, "Successfully Created the User")
     );
 });
 
