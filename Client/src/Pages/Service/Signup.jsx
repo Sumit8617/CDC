@@ -30,8 +30,8 @@ const Signup = () => {
 
   const {
     handleSignup,
-    handleSendOtp,
-    handleVerifyOtp,
+    // handleSendOtp,
+    // handleVerifyOtp,
     loading,
     error,
     otpSent,
@@ -40,22 +40,22 @@ const Signup = () => {
 
   const password = watch("password");
 
-  const onSendOtp = async () => {
-    const { email, fullName } = methods.getValues();
-    if (!email || !fullName) {
-      return alert("Please enter Full Name and Email first");
-    }
-    await handleSendOtp({ email, fullName });
-  };
+  // const onSendOtp = async () => {
+  //   const { email, fullName } = methods.getValues();
+  //   if (!email || !fullName) {
+  //     return alert("Please enter Full Name and Email first");
+  //   }
+  //   await handleSendOtp({ email, fullName });
+  // };
 
-  const onVerifyOtp = async () => {
-    const otp = methods.getValues("otp");
-    if (!otp) return alert("Enter OTP first");
-    await handleVerifyOtp(otp);
-  };
+  // const onVerifyOtp = async () => {
+  //   const otp = methods.getValues("otp");
+  //   if (!otp) return alert("Enter OTP first");
+  //   await handleVerifyOtp(otp);
+  // };
 
   const onSubmit = async (data) => {
-    if (!otpVerified) return alert("Verify OTP first");
+    // if (!otpVerified) return alert("Verify OTP first");
     await handleSignup(data);
     reset();
     navigate("/");
@@ -115,7 +115,7 @@ const Signup = () => {
                     rules={{ required: "Email is required" }}
                   />
 
-                  {!otpSent && (
+                  {/* {!otpSent && (
                     <div className="flex items-center mt-3">
                       <Button
                         type="button"
@@ -128,7 +128,7 @@ const Signup = () => {
                         Send OTP
                       </Button>
                     </div>
-                  )}
+                  )} */}
                 </div>
                 {/* OTP Verification Section */}
                 {otpSent && (
@@ -147,7 +147,7 @@ const Signup = () => {
                         variant="outline"
                         size="sm"
                         round="md"
-                        onClick={onVerifyOtp}
+                        // onClick={onVerifyOtp}
                         disabled={otpVerified}
                         className="h-[38px] whitespace-nowrap"
                       >
