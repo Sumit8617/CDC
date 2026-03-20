@@ -1,12 +1,14 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import Layout from "./Layout/Layout";
+import MaintenancePage from "./Pages/Maintainance";
 const App = () => {
   return (
     <>
-      <Layout>
+      {/* <Layout>
         <Outlet />
-      </Layout>
+      </Layout> */}
+      <MaintenancePage />
     </>
   );
 };

@@ -6,9 +6,12 @@ export const sendResetEmail = createAsyncThunk(
   "forgotPassword/sendResetEmail",
   async (email, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post("/api/v1/auth/forgot-password", {
-        email,
-      });
+      const res = await axiosClient.post(
+        "/api/v1/auth/forgot-password/send-otp",
+        {
+          email,
+        }
+      );
       return res.data;
     } catch (error) {
       const message =
