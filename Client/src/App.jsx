@@ -5,10 +5,10 @@ import MaintenancePage from "./Pages/Maintainance";
 const App = () => {
   return (
     <>
-      {/* <Layout>
+      <Layout>
         <Outlet />
-      </Layout> */}
-      <MaintenancePage />
+      </Layout>
+      {/* <MaintenancePage /> */}
     </>
   );
 };

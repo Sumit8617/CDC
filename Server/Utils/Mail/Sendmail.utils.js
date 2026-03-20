@@ -1,33 +1,25 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { APIERR, APIRES } from "../index.utils.js";
 
-// Create reusable transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT || 587,
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  family: 4,
-});
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Function to send email using Nodemailer
+// Function to send email
 export const sendMail = async (to, subject, html) => {
   if (!to || !subject || !html) {
     throw new APIERR(400, "Recipient, subject or html is missing");
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`,
+    const response = await resend.emails.send({
+      from: `${process.env.SMTP_FROM_NAME} <${process.env.SMTP_FROM_EMAIL}>`,
       to,
       subject,
       html,
     });
 
-    console.log("Email sent successfully:", info.messageId);
+    console.log("Email sent successfully:", response);
+
     return new APIRES(200, "Successfully sent the mail");
   } catch (error) {
     console.error("Failed to send email:", error);

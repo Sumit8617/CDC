@@ -45,7 +45,7 @@ const signup = asynchandler(async (req, res) => {
     throw new APIERR(400, "User already exist. Please login instead of Signup");
   }
 
-  const isVerified = true;
+  const isVerified = req.cookies?.isEmailVerified;
   if (!isVerified) {
     throw new APIERR(400, "Please verify your email");
   }
