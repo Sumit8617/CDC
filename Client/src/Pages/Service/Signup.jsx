@@ -109,9 +109,9 @@ const Signup = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
                   <Input
                     name="email"
-                    label="Email"
+                    label="College Email"
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder="Enter your college mail only (ex: sm2733@it.jgec.ac.in)"
                     rules={{ required: "Email is required" }}
                   />
 
