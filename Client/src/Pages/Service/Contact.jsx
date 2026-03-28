@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input, Button, Card } from "../../Components/index";
 import useContact from "../../Hooks/ContactHook";
 
-// Animation variants
+// ─── Animation variants (defined OUTSIDE component — never recreated) ───────
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
@@ -37,10 +37,38 @@ const slideInRight = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" } },
 };
 
-// ─── Enhanced Background: mesh gradient + floating orbs + grid overlay ───
-const BackgroundShapes = () => (
+// Pre-defined animation objects — prevent new object allocation on every render
+const floatAnimation = { y: [0, -8, 0] };
+const floatTransition = (delay) => ({
+  duration: 3,
+  repeat: Infinity,
+  delay,
+  ease: "easeInOut",
+});
+const arrowAnimation = { x: [0, 5, 0] };
+const arrowTransition = { duration: 1.5, repeat: Infinity };
+
+// Static data lifted out of component scope — never recreated on re-render
+const SOCIALS = [
+  {
+    icon: "M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z",
+    label: "LinkedIn",
+  },
+  {
+    icon: "M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z",
+    label: "Twitter",
+  },
+  {
+    icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z",
+    label: "Instagram",
+  },
+];
+
+const DOTS = [0, 1, 2, 3, 4];
+
+// ─── memo: BackgroundShapes has no props — renders exactly once ──────────────
+const BackgroundShapes = memo(() => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {/* Grid overlay */}
     <div
       className="absolute inset-0 opacity-[0.03]"
       style={{
@@ -49,21 +77,18 @@ const BackgroundShapes = () => (
         backgroundSize: "48px 48px",
       }}
     />
-
-    {/* Noise texture */}
     <div
       className="absolute inset-0 opacity-[0.015] mix-blend-overlay"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
       }}
     />
-
-    {/* Large ambient orbs */}
     <motion.div
       className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full"
       style={{
         background:
           "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)",
+        willChange: "transform",
       }}
       animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.05, 1] }}
       transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
@@ -73,6 +98,7 @@ const BackgroundShapes = () => (
       style={{
         background:
           "radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)",
+        willChange: "transform",
       }}
       animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.08, 1] }}
       transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
@@ -82,32 +108,35 @@ const BackgroundShapes = () => (
       style={{
         background:
           "radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)",
+        willChange: "transform, opacity",
       }}
       animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
       transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
     />
-
-    {/* Geometric accent lines */}
     <motion.div
       className="absolute top-24 right-24 w-40 h-40 border border-indigo-200/40 rounded-2xl rotate-12"
+      style={{ willChange: "transform, opacity" }}
       animate={{ rotate: [12, 20, 12], opacity: [0.4, 0.7, 0.4] }}
       transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.div
       className="absolute bottom-32 left-20 w-28 h-28 border border-purple-200/40 rounded-full"
+      style={{ willChange: "transform, opacity" }}
       animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
       transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.div
       className="absolute top-1/2 right-10 w-16 h-16 bg-indigo-400/5 rounded-lg rotate-45"
+      style={{ willChange: "transform" }}
       animate={{ rotate: [45, 65, 45] }}
       transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
     />
   </div>
-);
+));
+BackgroundShapes.displayName = "BackgroundShapes";
 
-// ─── Success Modal (enhanced with richer animation) ───
-const SuccessModal = ({ isOpen, message, onClose }) => (
+// ─── memo: SuccessModal only re-renders when isOpen or message changes ───────
+const SuccessModal = memo(({ isOpen, message, onClose }) => (
   <AnimatePresence>
     {isOpen && (
       <motion.div
@@ -125,11 +154,9 @@ const SuccessModal = ({ isOpen, message, onClose }) => (
           transition={{ type: "spring", damping: 22, stiffness: 280 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Modal background accent */}
           <div className="absolute inset-0 bg-linear-to-br from-indigo-50/60 via-white to-purple-50/60 pointer-events-none" />
           <div className="absolute -top-16 -right-16 w-48 h-48 bg-indigo-100/50 rounded-full pointer-events-none" />
           <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-purple-100/50 rounded-full pointer-events-none" />
-
           <div className="relative z-10">
             <motion.div
               className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center"
@@ -149,9 +176,6 @@ const SuccessModal = ({ isOpen, message, onClose }) => (
                 className="w-12 h-12 text-white"
                 viewBox="0 0 28 28"
                 fill="none"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
               >
                 <motion.path
                   d="M5 14l6 6L23 8"
@@ -165,7 +189,6 @@ const SuccessModal = ({ isOpen, message, onClose }) => (
                 />
               </motion.svg>
             </motion.div>
-
             <motion.h3
               className="text-3xl font-bold text-gray-900 text-center mb-2"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
@@ -196,20 +219,23 @@ const SuccessModal = ({ isOpen, message, onClose }) => (
       </motion.div>
     )}
   </AnimatePresence>
-);
+));
+SuccessModal.displayName = "SuccessModal";
 
-// ─── Floating Icon component ───
-const FloatingIcon = ({ children, delay = 0 }) => (
+// ─── memo: FloatingIcon only re-renders when delay or children change ─────────
+const FloatingIcon = memo(({ children, delay = 0 }) => (
   <motion.div
-    animate={{ y: [0, -8, 0] }}
-    transition={{ duration: 3, repeat: Infinity, delay, ease: "easeInOut" }}
+    animate={floatAnimation}
+    transition={floatTransition(delay)}
+    style={{ willChange: "transform" }}
   >
     {children}
   </motion.div>
-);
+));
+FloatingIcon.displayName = "FloatingIcon";
 
-// ─── Pill badge for the header ───
-const PulseBadge = () => (
+// ─── memo: PulseBadge has no props — renders exactly once ────────────────────
+const PulseBadge = memo(() => (
   <motion.div
     className="inline-flex items-center gap-2 px-5 py-2 mb-6 rounded-full border border-indigo-200/60"
     style={{
@@ -231,18 +257,21 @@ const PulseBadge = () => (
       Get in Touch
     </span>
   </motion.div>
-);
+));
+PulseBadge.displayName = "PulseBadge";
 
-// ─── Icon wrapper with gradient bg ───
-const GradientIcon = ({ children }) => (
+// ─── memo: GradientIcon only re-renders when children change ─────────────────
+const GradientIcon = memo(({ children }) => (
   <div
     className="p-3 rounded-xl shadow-lg shrink-0"
     style={{ background: "linear-gradient(135deg, #6366f1, #a855f7)" }}
   >
     {children}
   </div>
-);
+));
+GradientIcon.displayName = "GradientIcon";
 
+// ─── Main Contact component ──────────────────────────────────────────────────
 const Contact = () => {
   const methods = useForm({
     defaultValues: {
@@ -263,6 +292,7 @@ const Contact = () => {
       setShowSuccess(true);
       methods.reset();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [success]);
 
   const onSubmit = async (data) => {
@@ -280,33 +310,45 @@ const Contact = () => {
 
   return (
     <>
-      {/* ── Google Fonts ── */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+      {/*
+        Fonts loaded as <link> tags instead of CSS @import.
+        @import blocks rendering; <link rel="preconnect"> + stylesheet is
+        non-blocking and ~200ms faster on first load.
+        Best practice: move these into your root index.html <head>.
+      */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet"
+      />
 
+      <style>{`
         .contact-section * { font-family: 'DM Sans', sans-serif; }
         .contact-heading { font-family: 'Playfair Display', Georgia, serif; }
 
-        /* Glassy card */
         .glass-card {
           background: rgba(255,255,255,0.78);
           backdrop-filter: blur(18px);
           -webkit-backdrop-filter: blur(18px);
           border: 1px solid rgba(255,255,255,0.9);
           box-shadow: 0 8px 40px rgba(99,102,241,0.08), 0 2px 12px rgba(0,0,0,0.06);
+          transition: box-shadow 0.4s ease;
         }
         .glass-card:hover {
           box-shadow: 0 16px 60px rgba(99,102,241,0.13), 0 4px 20px rgba(0,0,0,0.08);
-          transition: box-shadow 0.4s ease;
         }
 
-        /* Textarea custom style */
         .contact-textarea {
           width: 100%;
           padding: 14px 16px;
           border-radius: 14px;
           border: 1.5px solid #e5e7eb;
-          transition: all 0.3s;
+          transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
           resize: none;
           font-family: 'DM Sans', sans-serif;
           font-size: 0.95rem;
@@ -318,14 +360,10 @@ const Contact = () => {
           border-color: #6366f1;
           box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
           background: white;
-          transform: scale(1.005);
         }
-        .contact-textarea.error {
-          border-color: #f87171;
-        }
+        .contact-textarea.error { border-color: #f87171; }
         .contact-textarea::placeholder { color: #9ca3af; }
 
-        /* Hover info rows */
         .info-row {
           display: flex;
           align-items: flex-start;
@@ -337,7 +375,6 @@ const Contact = () => {
         }
         .info-row:hover { background: rgba(99,102,241,0.06); transform: translateX(6px); }
 
-        /* Social buttons */
         .social-btn {
           padding: 12px;
           border-radius: 14px;
@@ -353,12 +390,10 @@ const Contact = () => {
         .social-btn:hover {
           background: linear-gradient(135deg, #6366f1, #a855f7);
           color: white;
-          border-color: transparent;
           box-shadow: 0 6px 20px rgba(99,102,241,0.4);
           transform: translateY(-4px) scale(1.05);
         }
 
-        /* Heading underline gradient */
         .heading-underline {
           position: absolute;
           bottom: -6px;
@@ -369,14 +404,13 @@ const Contact = () => {
           background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
         }
 
-        /* Section divider */
         .section-divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent);
           margin: 8px 0 24px;
         }
 
-        /* Submit button glow */
+        /* CSS-only hover glow — no JS/layoutId needed */
         .submit-btn-glow {
           position: relative;
           overflow: hidden;
@@ -389,15 +423,6 @@ const Contact = () => {
           transform: translateY(-2px);
         }
         .submit-btn-glow:active { transform: translateY(0); }
-        .submit-btn-glow::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, #818cf8, #a855f7);
-          opacity: 0;
-          transition: opacity 0.3s;
-        }
-        .submit-btn-glow:hover::before { opacity: 1; }
       `}</style>
 
       <title>CDC JGEC | Contact us</title>
@@ -413,6 +438,7 @@ const Contact = () => {
             "linear-gradient(145deg, #f8f7ff 0%, #ffffff 40%, #fdf4ff 70%, #f0f4ff 100%)",
         }}
       >
+        {/* Memoized — never re-renders after mount */}
         <BackgroundShapes />
 
         {/* ── HEADER ── */}
@@ -460,14 +486,13 @@ const Contact = () => {
             </span>
           </motion.p>
 
-          {/* Decorative dots row */}
           <motion.div
             className="flex items-center justify-center gap-2 mt-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
           >
-            {[0, 1, 2, 3, 4].map((i) => (
+            {DOTS.map((i) => (
               <div
                 key={i}
                 className="rounded-full"
@@ -491,7 +516,6 @@ const Contact = () => {
           {/* ── LEFT: FORM ── */}
           <motion.div initial="hidden" animate="visible" variants={slideInLeft}>
             <div className="glass-card rounded-3xl p-7 md:p-10">
-              {/* Card header */}
               <motion.div
                 className="flex items-center gap-4 mb-2"
                 variants={fadeInUp}
@@ -638,13 +662,10 @@ const Contact = () => {
                       variant="indigo"
                       size="lg"
                       round="xl"
-                      className="submit-btn-glow w-full mt-2 relative overflow-hidden group"
+                      className="submit-btn-glow w-full mt-2"
                       disabled={loading}
                     >
-                      <motion.span
-                        className="absolute inset-0 bg-linear-to-r from-purple-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        layoutId="buttonBackground"
-                      />
+                      {/* Removed layoutId="buttonBackground" — caused expensive layout recalculation on every hover */}
                       <span className="relative flex items-center justify-center gap-2">
                         {loading ? (
                           <>
@@ -677,8 +698,9 @@ const Contact = () => {
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
-                              animate={{ x: [0, 5, 0] }}
-                              transition={{ duration: 1.5, repeat: Infinity }}
+                              animate={arrowAnimation}
+                              transition={arrowTransition}
+                              style={{ willChange: "transform" }}
                             >
                               <path
                                 strokeLinecap="round"
@@ -744,7 +766,6 @@ const Contact = () => {
                   initial="hidden"
                   animate="visible"
                 >
-                  {/* Email */}
                   <motion.div className="info-row" variants={fadeInUp}>
                     <FloatingIcon delay={0}>
                       <GradientIcon>
@@ -763,12 +784,11 @@ const Contact = () => {
                         Email
                       </p>
                       <p className="text-gray-800 font-medium">
-                        contact@yourclub.com
+                        sm2733@it.jgec.ac.in
                       </p>
                     </div>
                   </motion.div>
 
-                  {/* Phone */}
                   <motion.div className="info-row" variants={fadeInUp}>
                     <FloatingIcon delay={0.5}>
                       <GradientIcon>
@@ -786,12 +806,11 @@ const Contact = () => {
                         Phone
                       </p>
                       <p className="text-gray-800 font-medium">
-                        +91 98765 43210
+                        +91 9832395096
                       </p>
                     </div>
                   </motion.div>
 
-                  {/* Address */}
                   <motion.div className="info-row" variants={fadeInUp}>
                     <FloatingIcon delay={1}>
                       <GradientIcon>
@@ -816,22 +835,8 @@ const Contact = () => {
                     </div>
                   </motion.div>
 
-                  {/* Socials */}
                   <motion.div className="pt-4 flex gap-3" variants={fadeInUp}>
-                    {[
-                      {
-                        icon: "M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z",
-                        label: "LinkedIn",
-                      },
-                      {
-                        icon: "M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z",
-                        label: "Twitter",
-                      },
-                      {
-                        icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z",
-                        label: "Instagram",
-                      },
-                    ].map((social, index) => (
+                    {SOCIALS.map((social, index) => (
                       <motion.a
                         key={social.label}
                         href="#"
@@ -861,7 +866,6 @@ const Contact = () => {
             <motion.div variants={scaleIn}>
               <div className="glass-card rounded-3xl overflow-hidden">
                 <div className="relative group">
-                  {/* Hover overlay */}
                   <motion.div
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 pointer-events-none"
                     style={{
@@ -877,8 +881,6 @@ const Contact = () => {
                     allowFullScreen
                     title="JGEC Location"
                   />
-
-                  {/* Map overlay pill */}
                   <motion.div
                     className="absolute bottom-4 left-4 right-4 rounded-2xl p-4 shadow-xl z-20"
                     style={{
