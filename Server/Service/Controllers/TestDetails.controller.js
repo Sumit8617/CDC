@@ -1,5 +1,6 @@
 import { asynchandler, APIERR, APIRES } from "../../Utils/index.utils.js";
 import { Test } from "../../Admin/Models/Contest.model.js";
+import { Question } from "../../Admin/Models/Question.model.js"; // Ensure model is registered
 
 const fetchContestDetails = asynchandler(async (req, res) => {
   const contests = await Test.find({ status: "completed" })

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import axiosClient from "../lib/AxiosInstance";
 
 const useUserDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -11,9 +11,7 @@ const useUserDashboard = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const res = await axios.get("/api/v1/user/dashboard/stats", {
-        withCredentials: true,
-      });
+      const res = await axiosClient.get("/api/v1/user/dashboard/stats");
       setStats(res.data.data);
     } catch (err) {
       console.error("Failed to fetch stats:", err);
@@ -23,9 +21,7 @@ const useUserDashboard = () => {
 
   const fetchPerformance = useCallback(async () => {
     try {
-      const res = await axios.get("/api/v1/user/dashboard/performance", {
-        withCredentials: true,
-      });
+      const res = await axiosClient.get("/api/v1/user/dashboard/performance");
       setPerformanceData(res.data.data);
     } catch (err) {
       console.error("Failed to fetch performance:", err);
@@ -35,9 +31,7 @@ const useUserDashboard = () => {
 
   const fetchUpcomingContests = useCallback(async () => {
     try {
-      const res = await axios.get("/api/v1/user/dashboard/upcoming-contests", {
-        withCredentials: true,
-      });
+      const res = await axiosClient.get("/api/v1/user/dashboard/upcoming-contests");
       setUpcomingContests(res.data.data);
     } catch (err) {
       console.error("Failed to fetch upcoming contests:", err);
@@ -47,9 +41,7 @@ const useUserDashboard = () => {
 
   const fetchRecentHistory = useCallback(async () => {
     try {
-      const res = await axios.get("/api/v1/user/dashboard/recent-history", {
-        withCredentials: true,
-      });
+      const res = await axiosClient.get("/api/v1/user/dashboard/recent-history");
       setRecentHistory(res.data.data);
     } catch (err) {
       console.error("Failed to fetch recent history:", err);

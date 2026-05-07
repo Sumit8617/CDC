@@ -15,7 +15,7 @@ cron.schedule("* * * * *", async () => {
   try {
     const contests = await Test.find({
       isPublished: true,
-      status: "active",
+      status: { $in: ["active", "pending"] },
     });
 
     for (const contest of contests) {
@@ -23,8 +23,11 @@ cron.schedule("* * * * *", async () => {
         contest.date.getTime() + contest.duration * 60 * 1000
       );
 
-      // Contest still running
       if (now < contestEnd) {
+        if (contest.status !== "active") {
+          contest.status = "active";
+          await contest.save();
+        }
         console.log(
           `⏳ Contest ${contest._id} running. Ends in ${Math.ceil(
             (contestEnd - now) / 60000
@@ -33,7 +36,6 @@ cron.schedule("* * * * *", async () => {
         continue;
       }
 
-      // Delay window before publishing leaderboard
       const leaderboardPublishTime = new Date(
         contestEnd.getTime() + LEADERBOARD_DELAY_MINUTES * 60 * 1000
       );
@@ -47,7 +49,6 @@ cron.schedule("* * * * *", async () => {
         continue;
       }
 
-      // Check if any submission jobs are pending or processing
       const pendingJobs = await MongoQueue.countDocuments({
         "payload.contest": contest._id.toString(),
         status: { $in: ["pending", "processing"] },
@@ -60,23 +61,32 @@ cron.schedule("* * * * *", async () => {
         continue;
       }
 
-      // Leaderboard already created
       const existingLeaderboard = await Leaderboard.findOne({
         contest: contest._id,
       });
 
       if (existingLeaderboard) {
-        contest.status = "completed";
-        await contest.save();
+        if (contest.status !== "completed") {
+          contest.status = "completed";
+          await contest.save();
+        }
         console.log(`✔ Contest ${contest._id} already completed`);
         continue;
       }
 
-      // Fetch submissions
       const submissions = await SubmittedOption.find({
         contest: contest._id,
+        score: { $gt: 0 }, // Only include processed submissions with scores
       })
         .populate("user", "fullName");
+
+      // Check if there are valid submissions before creating leaderboard
+      if (submissions.length === 0) {
+        console.log(`⚠ No submissions with scores for contest ${contest._id}`);
+        contest.status = "completed";
+        await contest.save();
+        continue;
+      }
 
       const leaderboardMap = {};
 
@@ -103,7 +113,6 @@ cron.schedule("* * * * *", async () => {
       });
 
       contest.status = "completed";
-      contest.isPublished = true;
       await contest.save();
 
       console.log(`Leaderboard published for contest ${contest._id}`);

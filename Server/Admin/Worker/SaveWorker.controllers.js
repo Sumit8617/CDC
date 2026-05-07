@@ -1,5 +1,7 @@
 import { SubmittedOption } from "../Models/SubmitedOption.model.js";
 import { Question } from "../Models/Question.model.js";
+import Result from "../../Service/Models/Result.models.js";
+import { Test } from "../Models/Contest.model.js";
 
 export async function processSubmissionJob(job) {
   try {
@@ -56,6 +58,27 @@ export async function processSubmissionJob(job) {
     submission.questions = checkedQuestions;
     submission.score = score;
     await submission.save();
+
+    // Also save to Result model for user dashboard stats
+    const contest = await Test.findById(submission.contest);
+    if (contest) {
+      await Result.findOneAndUpdate(
+        { userId: submission.user, quizId: contest._id },
+        {
+          userId: submission.user,
+          quizId: contest._id,
+          answers: submission.questions.map((q, idx) => ({
+            questionIndex: idx,
+            selectedOption: q.submittedOption,
+          })),
+          totalQuestions: contest.questions.length,
+          score: score,
+          timeTaken: 0,
+          submittedAt: new Date(),
+        },
+        { upsert: true, new: true }
+      );
+    }
 
     job.status = "completed";
     job.lockedAt = null;

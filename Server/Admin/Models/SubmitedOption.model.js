@@ -32,10 +32,10 @@ const submittedOptionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Make sure the TTL index is registered
+// TTL index - 24 hours (increased to allow leaderboard processing)
 submittedOptionSchema.index(
   { autoDeleteAt: 1 },
-  { expireAfterSeconds: 60 * 60 * 5 }
+  { expireAfterSeconds: 60 * 60 * 24 }
 );
 
 export const SubmittedOption = mongoose.model(

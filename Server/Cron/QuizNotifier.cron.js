@@ -10,8 +10,10 @@ cron.schedule("0 0 * * *", async () => {
   const targetDate = new Date(today);
   targetDate.setDate(targetDate.getDate() + 2);
 
-  const start = new Date(targetDate.setHours(0, 0, 0, 0));
-  const end = new Date(targetDate.setHours(23, 59, 59, 999));
+  const start = new Date(targetDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(targetDate);
+  end.setHours(23, 59, 59, 999);
 
   const upcomingQuizConstest = await Test.find({
     date: { $gte: start, $lte: end },
