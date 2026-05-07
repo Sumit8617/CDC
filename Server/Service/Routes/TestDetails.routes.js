@@ -4,8 +4,9 @@ import {
   fetchPreviousQuestions,
 } from "../Controllers/TestDetails.controller.js";
 import { getUpcomingContests } from "../Controllers/UpcomingContest.controller.js";
+import { checkUserSubmission } from "../Controllers/CheckSubmission.controller.js";
 import { protectRoute } from "../../Middleware/Auth.middleware.js";
-// TODO: Add the protectRoute middleware when authentication is set up
+
 const contestDetailsRouter = Router();
 
 contestDetailsRouter.route("/contest-details").get(fetchContestDetails);
@@ -15,5 +16,8 @@ contestDetailsRouter
 contestDetailsRouter
   .route("/upcoming-contests")
   .get(protectRoute, getUpcomingContests);
+contestDetailsRouter
+  .route("/check-submission/:contestId")
+  .get(protectRoute, checkUserSubmission);
 
 export default contestDetailsRouter;

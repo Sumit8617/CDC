@@ -1,24 +1,32 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { APIERR, APIRES } from "../index.utils.js";
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Create transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST, // e.g. smtp.gmail.com
+  port: process.env.SMTP_PORT, // 587 or 465
+  secure: process.env.SMTP_PORT == 465, // true for 465
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
-// Function to send email
+// Send mail function
 export const sendMail = async (to, subject, html) => {
   if (!to || !subject || !html) {
     throw new APIERR(400, "Recipient, subject or html is missing");
   }
 
   try {
-    const response = await resend.emails.send({
+    const info = await transporter.sendMail({
       from: `${process.env.SMTP_FROM_NAME} <${process.env.SMTP_FROM_EMAIL}>`,
       to,
       subject,
       html,
     });
 
-    console.log("Email sent successfully:", response);
+    console.log("Email sent:", info.messageId);
 
     return new APIRES(200, "Successfully sent the mail");
   } catch (error) {

@@ -1,4 +1,5 @@
 import { SubmittedOption } from "../Models/SubmitedOption.model.js";
+import { Question } from "../Models/Question.model.js";
 
 export async function processSubmissionJob(job) {
   try {
@@ -18,11 +19,49 @@ export async function processSubmissionJob(job) {
       throw new Error("Submission not found");
     }
 
+    // Fetch all question IDs from the submission
+    const questionIds = submission.questions.map((q) => q.question);
+
+    // Bulk fetch correct options from Question model
+    const questions = await Question.find({
+      _id: { $in: questionIds },
+    }).select("_id correctOption");
+
+    const correctOptionMap = {};
+    questions.forEach((q) => {
+      correctOptionMap[q._id.toString()] = q.correctOption;
+    });
+
+    // Check each answer and mark correct/incorrect
+    let score = 0;
+    const checkedQuestions = submission.questions.map((q) => {
+      const questionIdStr = q.question.toString();
+      const correctOption = correctOptionMap[questionIdStr];
+      const isCorrect =
+        correctOption !== undefined &&
+        Number(q.submittedOption) === Number(correctOption);
+
+      if (isCorrect) {
+        score += 5;
+      }
+
+      return {
+        ...q.toObject(),
+        checked: true,
+        isCorrect,
+      };
+    });
+
+    // Update submission with checked questions and score
+    submission.questions = checkedQuestions;
+    submission.score = score;
+    await submission.save();
+
     job.status = "completed";
     job.lockedAt = null;
     await job.save();
 
-    console.log("✔ Submission verified:", submissionId);
+    console.log(`✔ Submission checked: ${submissionId}, score: ${score}`);
   } catch (err) {
     job.attempts += 1;
 

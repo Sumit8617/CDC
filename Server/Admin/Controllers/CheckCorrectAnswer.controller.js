@@ -15,7 +15,7 @@ cron.schedule("* * * * *", async () => {
   try {
     const contests = await Test.find({
       isPublished: true,
-      status: { $in: ["active", "ended"] },
+      status: "active",
     });
 
     for (const contest of contests) {
@@ -76,33 +76,20 @@ cron.schedule("* * * * *", async () => {
       const submissions = await SubmittedOption.find({
         contest: contest._id,
       })
-        .populate("user", "fullName")
-        .populate({
-          path: "questions.question",
-          model: "Question",
-          select: "correctOption",
-        });
+        .populate("user", "fullName");
 
       const leaderboardMap = {};
 
       submissions.forEach((sub) => {
         if (!sub.user) return;
 
-        sub.questions.forEach((q) => {
-          if (!q.question) return;
-
-          if (!leaderboardMap[sub.user._id]) {
-            leaderboardMap[sub.user._id] = {
-              user: sub.user._id,
-              fullName: sub.user.fullName || "Unknown",
-              score: 0,
-            };
-          }
-
-          if (Number(q.submittedOption) === Number(q.question.correctOption)) {
-            leaderboardMap[sub.user._id].score += 5;
-          }
-        });
+        if (!leaderboardMap[sub.user._id]) {
+          leaderboardMap[sub.user._id] = {
+            user: sub.user._id,
+            fullName: sub.user.fullName || "Unknown",
+            score: sub.score || 0,
+          };
+        }
       });
 
       const leaderboardData = Object.values(leaderboardMap).sort(

@@ -6,6 +6,7 @@ import {
 } from "../../Utils/index.utils.js";
 import { User } from "../../Service/Models/User.models.js";
 import { Test } from "../Models/Contest.model.js";
+import { Leaderboard } from "../Models/Leaderboard.models.js";
 import { generateAccessAndRefreshTokens } from "../../Service/Controllers/Auth.controllers.js";
 import { InviteToken } from "../Models/InviteTokenSchema.model.js";
 import crypto from "crypto-js";
@@ -347,12 +348,27 @@ const getContest = asynchandler(async (req, res) => {
     return res.status(404).json(new APIRES(404, null, "No Contest Found"));
   }
 
+  // Check which contests have their leaderboards published
+  const leaderboardDocs = await Leaderboard.find({
+    publishedAt: { $ne: null },
+  }).lean();
+
+  const publishedContestIds = new Set(
+    leaderboardDocs.map((lb) => lb.contest.toString())
+  );
+
+  // Add isLeaderboardPublished to each contest
+  const contestsWithLeaderboard = recentContests.map((contest) => ({
+    ...contest,
+    isLeaderboardPublished: publishedContestIds.has(contest._id.toString()),
+  }));
+
   res
     .status(200)
     .json(
       new APIRES(
         200,
-        { totalContest, recentContests },
+        { totalContest, recentContests: contestsWithLeaderboard },
         "Successfully fetched the total contest"
       )
     );

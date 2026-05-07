@@ -24,8 +24,10 @@ const submittedOptionSchema = new mongoose.Schema(
           required: true,
         },
         checked: { type: Boolean, default: false },
+        isCorrect: { type: Boolean, default: false },
       },
     ],
+    score: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

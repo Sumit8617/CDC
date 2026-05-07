@@ -1,4 +1,25 @@
 import { asynchandler, APIERR, APIRES, sendMail } from "../index.utils.js";
+import { User } from "../../Service/Models/User.models.js";
+
+// Parse allowed domains from .env safely (mirrors the same logic in user.model.js)
+let allowedDomains = [];
+try {
+  allowedDomains = JSON.parse(process.env.COLLEGE_EMAIL_DOMAINS || "[]");
+  if (!Array.isArray(allowedDomains)) allowedDomains = [];
+} catch (err) {
+  console.error("Invalid COLLEGE_EMAIL_DOMAINS format in .env");
+  allowedDomains = [];
+}
+
+const isAllowedDomain = (email) => {
+  if (!allowedDomains.length) return true; // no restriction configured → allow all
+
+  const pattern = `^[a-zA-Z0-9._%+-]+@(${allowedDomains
+    .map((d) => d.replace(/^[^@]*@/, "").replace(/\./g, "\\."))
+    .join("|")})$`;
+
+  return new RegExp(pattern).test(email);
+};
 
 const sendOTP = asynchandler(async (req, res) => {
   const { fullName, email } = req.body;
@@ -8,6 +29,24 @@ const sendOTP = asynchandler(async (req, res) => {
     throw new APIERR(400, "Please provide the required fields");
   }
 
+  // ── 1. Domain validation ─────────────────────────────────────────────────
+  if (!isAllowedDomain(email)) {
+    throw new APIERR(
+      400,
+      `Only official college emails are accepted (${allowedDomains.join(", ")})`
+    );
+  }
+
+  // ── 2. User existence check ──────────────────────────────────────────────
+  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  if (existingUser) {
+    throw new APIERR(
+      409,
+      "An account with this email already exists. Please log in instead."
+    );
+  }
+
+  // ── Everything below is UNCHANGED ────────────────────────────────────────
   const generatedOTP = Math.floor(1000 + Math.random() * 9000);
 
   const expiry = process.env.OTP_EXPIRY;
