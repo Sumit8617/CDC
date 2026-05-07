@@ -4,7 +4,7 @@ export const webTeam = [
     role: "Web Team",
     image: "/Team/My Picture3.jpg",
     description:
-      "Project Lead | MERN Stack Developer | Upcoming Intern at QuantamHash Corporation",
+      "Project Lead | MERN Stack Developer | Intern at QuantamHash Corporation",
     socials: {
       linkedin: "https://www.linkedin.com/in/subhas-mondal-bubai6033",
       email: "mailto:sm2733@it.jgec.ac.in",
@@ -19,7 +19,7 @@ export const webTeam = [
     name: "Sumit Prasad Gupta",
     role: "Web Team",
     image: "/Team/SumitWebTeam.jpeg",
-    description: "MERN Stack Developer",
+    description: "MERN Stack Developer | Compitive Programmer",
     socials: {
       linkedin: "https://www.linkedin.com/in/sumitprasadgupta",
       email: "mailto:sp2717@it.jgec.ac.in",
@@ -33,7 +33,7 @@ export const webTeam = [
     name: "Pritam Mohanta",
     role: "Web Team",
     image: "/Team/PritamWebTeam.jpeg",
-    description: "ICPC Regionalist, Compitive Programmer",
+    description: "ICPC Regionalist| Compitive Programmer | Intern at GFG",
     socials: {
       linkedin: "https://www.linkedin.com/in/pritam-mohanta",
       email: "mailto:pm2721@it.jgec.ac.in",

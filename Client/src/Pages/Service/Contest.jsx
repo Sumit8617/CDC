@@ -8,6 +8,7 @@ import {
 import useUpcomingContests from "../../Hooks/UpcomingContestHook";
 import useContestSubmission from "../../Hooks/SubmitContestHook";
 import useSignup from "../../Hooks/AuthHooks";
+import useCheckSubmission from "../../Hooks/CheckSubmissionHook";
 import { useNavigate } from "react-router-dom";
 import { Info, Clock, AlertTriangle, Camera } from "lucide-react";
 
@@ -23,10 +24,13 @@ const parseISTDate = (istString) => {
 const MAX_FACE_VIOLATIONS = 3;
 
 const Contest = () => {
-  const { contests, loading, error } = useUpcomingContests();
+  const { contests, loading, error, refreshContests } = useUpcomingContests();
   const { submit, loading: submitting } = useContestSubmission();
   const { user, handleFetchUserDetails, loadingUser } = useSignup();
   const navigate = useNavigate();
+
+  const [contestIdToCheck, setContestIdToCheck] = useState(null);
+  const { hasSubmitted: userHasSubmitted, loading: checkingSubmission, checkSubmission } = useCheckSubmission(contestIdToCheck);
 
   const [selectedOption, setSelectedOption] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -36,7 +40,8 @@ const Contest = () => {
   const [contestAlreadySubmitted, setContestAlreadySubmitted] = useState(false);
   const [showFullscreenModal, setShowFullscreenModal] = useState(false);
   const [contestStarted, setContestStarted] = useState(false);
-
+  const [frozenContest, setFrozenContest] = useState(null);
+  const frozenContestRef = useRef(null);
   const [faceDetectorReady, setFaceDetectorReady] = useState(false);
   const [faceWarning, setFaceWarning] = useState(null);
   const [faceViolationCount, setFaceViolationCount] = useState(0);
@@ -51,13 +56,12 @@ const Contest = () => {
   const canvasRef = useRef(null);
   const escWarningTimerRef = useRef(null);
 
-  // Stable mirror refs — lets useCallback deps remain stable
   const finishedRef = useRef(false);
   const selectedOptionRef = useRef({});
   const contestToShowRef = useRef(null);
   const userRef = useRef(null);
-  // ignoreFullscreenRef: true = entering FS (ignore the change event), false = guard active
   const ignoreFullscreenRef = useRef(true);
+  const contestDataRef = useRef(null);
 
   useEffect(() => {
     finishedRef.current = finished;
@@ -82,13 +86,19 @@ const Contest = () => {
 
   const contestToShow = activeContest || upcomingContest;
   contestToShowRef.current = contestToShow;
+  if (contestToShow) {
+    contestDataRef.current = contestToShow;
+  }
 
   const contestStart = contestToShow
     ? parseISTDate(contestToShow.startDate).getTime()
     : 0;
   const contestEnd = contestToShow
     ? contestStart + contestToShow.duration * 60 * 1000
-    : 0;
+    : frozenContest
+      ? parseISTDate(frozenContest.startDate).getTime() +
+        frozenContest.duration * 60 * 1000
+      : 0;
 
   const INSTRUCTION_BEFORE_MS = 5 * 60 * 60 * 1000;
 
@@ -106,6 +116,22 @@ const Contest = () => {
   const hasContestEnded =
     !contestStarted && !!contestToShow && currentTime > contestEnd;
 
+  // Refresh contests periodically to get updated status and questions
+  useEffect(() => {
+    if (isContestUpcoming || isContestOngoing) {
+      const interval = setInterval(() => {
+        refreshContests();
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isContestUpcoming, isContestOngoing, refreshContests]);
+
+  useEffect(() => {
+    if (contestToShow?._id && !userHasSubmitted) {
+      setContestIdToCheck(contestToShow._id);
+    }
+  }, [contestToShow?._id, userHasSubmitted]);
+
   // ── Camera stop ───────────────────────────────────────────────────────────
   const stopFaceDetection = useCallback(() => {
     if (faceIntervalRef.current) {
@@ -121,12 +147,10 @@ const Contest = () => {
     }
   }, []);
 
-  // Stop camera whenever finished becomes true (covers every code path)
   useEffect(() => {
     if (finished) stopFaceDetection();
   }, [finished, stopFaceDetection]);
 
-  // Cleanup on unmount
   useEffect(() => () => stopFaceDetection(), [stopFaceDetection]);
 
   // ── finishContest ─────────────────────────────────────────────────────────
@@ -145,7 +169,11 @@ const Contest = () => {
         escWarningTimerRef.current = null;
       }
 
-      const contest = contestToShowRef.current;
+      const contest =
+        frozenContestRef.current || // most reliable
+        contestDataRef.current ||
+        contestToShowRef.current;
+
       if (contest) {
         localStorage.setItem(
           "contestEnded",
@@ -286,7 +314,6 @@ const Contest = () => {
     }
   }, []);
 
-  // currentTime ticks every second — used only for contest timing checks
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(t);
@@ -296,15 +323,10 @@ const Contest = () => {
     if (!user) handleFetchUserDetails();
   }, [user, handleFetchUserDetails]);
 
-  // ── Countdown timer — FIXED ───────────────────────────────────────────────
-  // Key fix: deps are [contestStarted, contestEnd, finishContest] ONLY.
-  // Previously isContestOngoing was in deps — since it recalculates every
-  // second (due to currentTime), the effect would teardown+restart its
-  // interval every second, making the timer tick only once per restart.
+  // ── Countdown timer ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!contestStarted || contestEnd === 0) return;
 
-    // Set immediately so display isn't blank for the first second
     setTimeLeft(Math.max(0, Math.floor((contestEnd - Date.now()) / 1000)));
 
     const interval = setInterval(() => {
@@ -319,7 +341,7 @@ const Contest = () => {
     return () => clearInterval(interval);
   }, [contestStarted, contestEnd, finishContest]);
 
-  // Upcoming countdown — separate, simpler effect
+  // Upcoming countdown
   useEffect(() => {
     if (!isContestUpcoming || contestStart === 0) return;
     setTimeLeft(Math.max(0, Math.floor((contestStart - Date.now()) / 1000)));
@@ -329,8 +351,6 @@ const Contest = () => {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isContestUpcoming, contestStart]);
-  // Note: isContestUpcoming is intentionally in deps here — it only flips
-  // once (upcoming → ongoing) so it won't cause repeated restarts.
 
   // Check already submitted from localStorage
   useEffect(() => {
@@ -438,26 +458,59 @@ const Contest = () => {
   // ── Enter fullscreen & start ──────────────────────────────────────────────
   const handleStartContest = async () => {
     if (contestAlreadySubmitted || finished) return;
-    // Set BEFORE requestFullscreen so the entering fullscreenchange event is ignored
+    if (userHasSubmitted) return;
+
+    const contestSnapshot = contestToShow || contestDataRef.current;
+    if (!contestSnapshot) return;
+
+    if (!contestSnapshot.questions || contestSnapshot.questions.length === 0) {
+      await refreshContests();
+      const updatedContest = contests.find(c => c._id === contestSnapshot._id);
+      if (updatedContest?.questions?.length > 0) {
+        contestSnapshot.questions = updatedContest.questions;
+      }
+    }
+
+    console.log("Contest snapshot:", JSON.stringify(contestSnapshot, null, 2));
+    console.log("Questions:", contestSnapshot?.questions);
+    console.log("First question:", contestSnapshot?.questions?.[0]);
+
+    // Check if questions exist before starting
+    if (!contestSnapshot.questions || contestSnapshot.questions.length === 0) {
+      alert("Questions not loaded yet. Please wait and try again.");
+      return;
+    }
+
+    // ✅ Set ref synchronously BEFORE any await or setState
+    contestDataRef.current = contestSnapshot;
+    frozenContestRef.current = contestSnapshot; // synchronous
+    setFrozenContest(contestSnapshot); // triggers re-render
+
+    // Wait for state to update before entering fullscreen
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    setContestStarted(true);
+    setShowFullscreenModal(false);
+
     ignoreFullscreenRef.current = true;
     try {
       await document.documentElement.requestFullscreen();
     } catch {
       alert("Please allow fullscreen to start the contest.");
+      ignoreFullscreenRef.current = false;
       return;
     }
-    setContestStarted(true);
-    setShowFullscreenModal(false);
-    // Re-enable exit guard after entry event has settled
     setTimeout(() => {
       ignoreFullscreenRef.current = false;
     }, 300);
   };
 
   const handleNext = () => {
-    if (contestToShow && currentQuestion < contestToShow.questions.length - 1)
+    const contest = frozenContest || frozenContestRef.current;
+    if (contest && currentQuestion < contest.questions.length - 1)
       setCurrentQuestion((p) => p + 1);
   };
+
   const handlePrevious = () => {
     if (currentQuestion > 0) setCurrentQuestion((p) => p - 1);
   };
@@ -495,7 +548,7 @@ const Contest = () => {
     </div>
   );
 
-  if (loading || submitting || loadingUser)
+  if (loading || submitting || loadingUser || checkingSubmission)
     return <PageLoaderWrapper loading={loading} />;
   if (error) return <p>Error: {error}</p>;
 
@@ -507,14 +560,9 @@ const Contest = () => {
         content="This is the Contest page of the CDC JGEC"
       />
 
-      {/*
-        <canvas> and <video> are UNCONDITIONALLY rendered — outside every
-        conditional block. React never unmounts them so the stream never drops.
-        Visibility is toggled with CSS only (visibility/opacity).
-      */}
       <canvas ref={canvasRef} style={{ display: "none" }} aria-hidden="true" />
 
-      {/* ── Camera preview — always in DOM ────────────────────────────────── */}
+      {/* ── Camera preview ────────────────────────────────────────────────── */}
       <div
         className="fixed z-50 transition-all duration-300"
         style={{
@@ -526,7 +574,6 @@ const Contest = () => {
             : { top: 80, right: 16 }),
         }}
       >
-        {/* Minimised dot */}
         <button
           onClick={() => setCameraMinimized(false)}
           title="Expand camera"
@@ -538,7 +585,6 @@ const Contest = () => {
           <Camera className="w-5 h-5 text-white" />
         </button>
 
-        {/* Full card */}
         <div
           style={{
             display: cameraMinimized ? "none" : "block",
@@ -551,7 +597,6 @@ const Contest = () => {
             background: "#000",
           }}
         >
-          {/* Status bar */}
           <div
             className={`flex items-center justify-between px-2.5 py-1.5 text-white text-xs font-medium ${
               faceWarning ? "bg-red-600" : "bg-green-600"
@@ -572,11 +617,6 @@ const Contest = () => {
             </button>
           </div>
 
-          {/*
-            Video is ALWAYS rendered here — outer visibility/opacity controls
-            whether it's seen. Never conditionally mounted.
-            margin top/bottom added for breathing room inside the card.
-          */}
           <video
             ref={videoRef}
             className="w-full block"
@@ -592,7 +632,6 @@ const Contest = () => {
             autoPlay
           />
 
-          {/* Warning footer */}
           {faceWarning && (
             <div className="bg-red-600 text-white text-xs px-2 py-1 text-center">
               <AlertTriangle className="w-3 h-3 inline mr-0.5" />
@@ -661,7 +700,6 @@ const Contest = () => {
       )}
 
       {/* ── Submitted / ended card ────────────────────────────────────────── */}
-      {/* Once contestStarted=true only finished triggers this — never block questions */}
       {(finished ||
         hasContestEnded ||
         (!contestStarted &&
@@ -674,7 +712,7 @@ const Contest = () => {
             round="lg"
             padding="p-8"
             className="max-w-md w-full"
-            title={contestToShow?.title || "Contest"}
+            title={frozenContest?.title || contestToShow?.title || "Contest"}
             icon={
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100">
                 <Clock className="h-7 w-7 text-indigo-600" />
@@ -698,48 +736,67 @@ const Contest = () => {
         </div>
       )}
 
-      {/* ── Fullscreen modal ─────────────────────────────────────────────── */}
+      {/* ── Fullscreen modal ──────────────────────────────────────────────── */}
       {showFullscreenModal && !finished && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 text-center space-y-5 shadow-2xl">
-            <div className="mx-auto h-14 w-14 rounded-full bg-indigo-100 flex items-center justify-center">
-              <svg
-                className="w-7 h-7 text-indigo-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m0 8v2a2 2 0 01-2 2h-2"
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">
-              Fullscreen Required
-            </h2>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              You must stay in fullscreen for the entire contest. Exiting will
-              auto-submit your answers. Your camera is used for live proctoring.
-            </p>
-            <ul className="text-xs text-left text-gray-500 space-y-1.5 bg-gray-50 rounded-lg p-3">
-              <li>📷 Stay visible in the camera at all times</li>
-              <li>👤 Only one face should be visible</li>
-              <li>🔲 Do not exit fullscreen</li>
-              <li>
-                ⚠️ {MAX_FACE_VIOLATIONS} violations trigger auto-submission
-              </li>
-            </ul>
-            <Button className="w-full" onClick={handleStartContest}>
-              Enter Fullscreen &amp; Start Contest
-            </Button>
+            {userHasSubmitted ? (
+              <>
+                <div className="mx-auto h-14 w-14 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-7 h-7 text-red-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Already Submitted
+                </h2>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  You have already submitted this contest. You cannot attempt it again.
+                </p>
+                <Button className="w-full" onClick={() => navigate("/leaderboard")}>
+                  View Leaderboard
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto h-14 w-14 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <svg
+                    className="w-7 h-7 text-indigo-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m0 8v2a2 2 0 01-2 2h-2"
+                    />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Fullscreen Required
+                </h2>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  You must stay in fullscreen for the entire contest. Exiting will
+                  auto-submit your answers. Your camera is used for live proctoring.
+                </p>
+                <ul className="text-xs text-left text-gray-500 space-y-1.5 bg-gray-50 rounded-lg p-3">
+                  <li>📷 Stay visible in the camera at all times</li>
+                  <li>👤 Only one face should be visible</li>
+                  <li>🔲 Do not exit fullscreen</li>
+                  <li>
+                    ⚠️ {MAX_FACE_VIOLATIONS} violations trigger auto-submission
+                  </li>
+                </ul>
+                <Button className="w-full" onClick={handleStartContest}>
+                  Enter Fullscreen &amp; Start Contest
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}
 
-      {/* ── Upcoming contest ─────────────────────────────────────────────── */}
+      {/* ── Upcoming contest ──────────────────────────────────────────────── */}
       {isContestUpcoming && !finished && (
         <div className="min-h-screen flex items-center justify-center pl-64 bg-linear-to-br from-slate-50 to-slate-100">
           <Card
@@ -794,90 +851,99 @@ const Contest = () => {
         </div>
       )}
 
-      {/* ── Active contest ───────────────────────────────────────────────── */}
-      {contestToShow && contestStarted && !finished && (
-        <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 md:pl-64">
-          {/* Topbar */}
-          <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-40">
-            <div className="flex justify-between items-center py-3 sm:py-4 px-3 sm:px-6">
-              <h1 className="text-lg sm:text-2xl font-bold text-gray-800 truncate max-w-xs">
-                {contestToShow.title}
-              </h1>
-              <div className="flex items-center gap-3">
-                {faceDetectorReady && (
-                  <div
-                    className={`hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${faceWarning ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
-                  >
-                    <span
-                      className={`w-2 h-2 rounded-full ${faceWarning ? "bg-red-500 animate-pulse" : "bg-green-500"}`}
-                    />
-                    {faceWarning ? "Face Issue" : "Proctoring Active"}
+      {/* ── Active contest ────────────────────────────────────────────────── */}
+      {contestStarted &&
+        !finished &&
+        (frozenContest || frozenContestRef.current) &&
+        (() => {
+          const contest = frozenContest || frozenContestRef.current; // ✅ never undefined
+          return (
+            <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 md:pl-64">
+              {/* Topbar */}
+              <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-40">
+                <div className="flex justify-between items-center py-3 sm:py-4 px-3 sm:px-6">
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-800 truncate max-w-xs">
+                    {contest.title}
+                  </h1>
+                  <div className="flex items-center gap-3">
+                    {faceDetectorReady && (
+                      <div
+                        className={`hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${faceWarning ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full ${faceWarning ? "bg-red-500 animate-pulse" : "bg-green-500"}`}
+                        />
+                        {faceWarning ? "Face Issue" : "Proctoring Active"}
+                      </div>
+                    )}
+                    <div className="bg-gray-100 font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-sm sm:text-base text-red-600 shrink-0 tabular-nums">
+                      {formatTime(timeLeft)}
+                    </div>
                   </div>
-                )}
-                <div className="bg-gray-100 font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-sm sm:text-base text-red-600 shrink-0 tabular-nums">
-                  {formatTime(timeLeft)}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="sm:px-6 px-3">
-            <div
-              className="flex flex-col justify-center items-center"
-              style={{ minHeight: "calc(100vh - 4rem)" }}
-            >
-              <div className="w-full max-w-3xl mt-20">
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center mb-4">
-                  {contestToShow.questions.map((q, idx) => (
-                    <button
-                      key={q._id}
-                      onClick={() => setCurrentQuestion(idx)}
-                      className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full border text-xs sm:text-sm transition-all duration-200 ${
-                        currentQuestion === idx
-                          ? "bg-blue-500 border-blue-700 text-white"
-                          : selectedOption[q._id] !== undefined
-                            ? "bg-green-500 border-green-700 text-white"
-                            : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200"
-                      }`}
-                    >
-                      {idx + 1}
-                    </button>
-                  ))}
                 </div>
               </div>
 
-              <QuestionCard
-                question={contestToShow.questions[currentQuestion]}
-              />
-
-              <div className="mt-4 sm:mt-6 flex justify-between w-full gap-2 sm:gap-0 max-w-3xl mb-8">
-                <Button
-                  variant="secondary"
-                  onClick={handlePrevious}
-                  disabled={currentQuestion === 0}
+              <div className="sm:px-6 px-3">
+                <div
+                  className="flex flex-col justify-center items-center"
+                  style={{ minHeight: "calc(100vh - 4rem)" }}
                 >
-                  Previous
-                </Button>
-                {currentQuestion === contestToShow.questions.length - 1 ? (
-                  <Button
-                    variant="primary"
-                    onClick={handleSubmit}
-                    disabled={contestAlreadySubmitted}
-                  >
-                    Submit Answers
-                  </Button>
-                ) : (
-                  <Button variant="primary" onClick={handleNext}>
-                    Next
-                  </Button>
-                )}
+                  <div className="w-full max-w-3xl mt-20">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center mb-4">
+                      {contest.questions.map((q, idx) => (
+                        <button
+                          key={q._id}
+                          onClick={() => setCurrentQuestion(idx)}
+                          className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full border text-xs sm:text-sm transition-all duration-200 ${
+                            currentQuestion === idx
+                              ? "bg-blue-500 border-blue-700 text-white"
+                              : selectedOption[q._id] !== undefined
+                                ? "bg-green-500 border-green-700 text-white"
+                                : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200"
+                          }`}
+                        >
+                          {idx + 1}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ✅ Guard question access so it's never undefined */}
+                  {contest.questions[currentQuestion] && (
+                    <QuestionCard
+                      question={contest.questions[currentQuestion]}
+                    />
+                  )}
+
+                  <div className="mt-4 sm:mt-6 flex justify-between w-full gap-2 sm:gap-0 max-w-3xl mb-8">
+                    <Button
+                      variant="secondary"
+                      onClick={handlePrevious}
+                      disabled={currentQuestion === 0}
+                    >
+                      Previous
+                    </Button>
+                    {currentQuestion === contest.questions.length - 1 ? (
+                      <Button
+                        variant="primary"
+                        onClick={handleSubmit}
+                        disabled={contestAlreadySubmitted}
+                      >
+                        Submit Answers
+                      </Button>
+                    ) : (
+                      <Button variant="primary" onClick={handleNext}>
+                        Next
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          );
+        })()}
 
-      {/* ── Waiting room ─────────────────────────────────────────────────── */}
+      {/* ── Waiting room ──────────────────────────────────────────────────── */}
       {contestToShow &&
         !hasContestEnded &&
         !isContestUpcoming &&
@@ -887,10 +953,25 @@ const Contest = () => {
         !finished && (
           <div className="min-h-screen flex items-center justify-center pl-64 bg-linear-to-br from-slate-50 to-slate-100">
             <div className="text-center space-y-4">
-              <p className="text-gray-600 text-sm">Contest is live.</p>
-              <Button onClick={() => setShowFullscreenModal(true)}>
-                Enter Contest
-              </Button>
+              {checkingSubmission || loading ? (
+                <PageLoaderWrapper loading={true} />
+              ) : userHasSubmitted ? (
+                <Card variant="default" round="lg" padding="p-6" className="max-w-md">
+                  <p className="text-gray-600 text-sm mb-4">
+                    You have already submitted this contest.
+                  </p>
+                  <Button onClick={() => navigate("/leaderboard")}>
+                    View Leaderboard
+                  </Button>
+                </Card>
+              ) : (
+                <>
+                  <p className="text-gray-600 text-sm">Contest is live.</p>
+                  <Button onClick={() => setShowFullscreenModal(true)}>
+                    Enter Contest
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}

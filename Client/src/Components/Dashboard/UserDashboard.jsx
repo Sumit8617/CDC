@@ -11,9 +11,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import useSignup from "../../Hooks/AuthHooks";
+import useUserDashboard from "../../Hooks/UserDashboardHook";
 
 const UserDashboard = () => {
   const { user, loadingUser, handleFetchUserDetails } = useSignup();
+  const { stats, performanceData, upcomingContests, recentHistory, loading: dashboardLoading } = useUserDashboard();
 
   useEffect(() => {
     handleFetchUserDetails();
@@ -21,28 +23,28 @@ const UserDashboard = () => {
 
   const [activeTab, setActiveTab] = useState("Performance Overview");
 
-  const stats = [
+  const statsData = [
     {
       label: "Total Contest",
-      value: user?.totalContestsGiven || 0,
+      value: stats?.totalContests ?? user?.totalContestsGiven ?? 0,
       icon: <Award className="w-6 h-6 text-blue-600" />,
       bg: "bg-blue-50",
     },
     {
       label: "Current Streak",
-      value: "7 Days",
+      value: stats?.currentStreak ? `${stats.currentStreak} Days` : "0 Days",
       icon: <Flame className="w-6 h-6 text-orange-500" />,
       bg: "bg-orange-50",
     },
     {
       label: "Best Rank",
-      value: "#12",
+      value: stats?.bestRank || "#--",
       icon: <Target className="w-6 h-6 text-purple-600" />,
       bg: "bg-purple-50",
     },
     {
       label: "Avg. Score",
-      value: "82%",
+      value: stats?.avgScore ? `${stats.avgScore}%` : "0%",
       icon: <TrendingUp className="w-6 h-6 text-green-600" />,
       bg: "bg-green-50",
     },
@@ -50,27 +52,18 @@ const UserDashboard = () => {
 
   const tabs = ["Performance Overview", "Upcoming Contests", "Recent History"];
 
-  // Mock Performance Data
-  const performanceData = [
-    { week: "Week 1", score: 45, percentile: 65 },
+  const defaultPerformanceData = [
+    { week: "Week 1", score: 0, percentile: 0 },
     { week: "Week 2", score: 0, percentile: 0 },
-    { week: "Week 3", score: 100, percentile: 75 },
-    { week: "Week 4", score: 80, percentile: 80 },
-    { week: "Week 5", score: 78, percentile: 85 },
-    { week: "Week 6", score: 85, percentile: 90 },
-    { week: "Week 7", score: 25, percentile: 90 },
-    { week: "Week 8", score: 25, percentile: 90 },
-    { week: "Week 9", score: 25, percentile: 90 },
-    { week: "Week 10", score: 50, percentile: 90 },
-    { week: "Week 11", score: 45, percentile: 90 },
-    { week: "Week 12", score: 75, percentile: 90 },
-    { week: "Week 13", score: 5, percentile: 90 },
-    { week: "Week 14", score: 85, percentile: 90 },
-    { week: "Week 15", score: 55, percentile: 90 },
-    { week: "Week 16", score: 95, percentile: 90 },
+    { week: "Week 3", score: 0, percentile: 0 },
+    { week: "Week 4", score: 0, percentile: 0 },
+    { week: "Week 5", score: 0, percentile: 0 },
+    { week: "Week 6", score: 0, percentile: 0 },
   ];
 
-  if (loadingUser)
+  const chartData = performanceData && performanceData.length > 0 ? performanceData : defaultPerformanceData;
+
+  if (loadingUser || dashboardLoading)
     return (
       <div>
         {" "}
@@ -102,7 +95,7 @@ const UserDashboard = () => {
 
         {/* Stats Grid */}
         <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-8 sm:mb-10">
-          {stats.map((stat) => (
+          {statsData.map((stat) => (
             <Card
               key={stat.label}
               padding="p-3 sm:p-6"
@@ -168,7 +161,7 @@ const UserDashboard = () => {
                 <div className="h-64 sm:h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
-                      data={performanceData}
+                      data={chartData}
                       margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
                     >
                       <defs>
@@ -244,15 +237,55 @@ const UserDashboard = () => {
           )}
 
           {activeTab === "Upcoming Contests" && (
-            <p className="text-gray-700 text-base sm:text-lg">
-              Upcoming contests and registration details will appear here.
-            </p>
+            <Card className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
+              {upcomingContests && upcomingContests.length > 0 ? (
+                <div className="space-y-4">
+                  {upcomingContests.map((contest) => (
+                    <div key={contest._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{contest.testName}</h4>
+                        <p className="text-sm text-gray-500">{contest.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900">
+                          {new Date(contest.date).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-gray-500">{contest.duration} mins</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">No upcoming contests</p>
+              )}
+            </Card>
           )}
 
           {activeTab === "Recent History" && (
-            <p className="text-gray-700 text-base sm:text-lg">
-              Your recent participation history and results will appear here.
-            </p>
+            <Card className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
+              {recentHistory && recentHistory.length > 0 ? (
+                <div className="space-y-4">
+                  {recentHistory.map((history) => (
+                    <div key={history._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{history.contestName}</h4>
+                        <p className="text-sm text-gray-500">
+                          {new Date(history.submittedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-gray-900">
+                          {history.score}/{history.totalQuestions}
+                        </p>
+                        <p className="text-sm text-green-600">{history.percentage}%</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">No recent history</p>
+              )}
+            </Card>
           )}
         </div>
       </div>

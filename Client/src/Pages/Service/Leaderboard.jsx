@@ -8,6 +8,16 @@ import {
 } from "../../Components/index";
 import { Trophy, Search, Filter } from "lucide-react";
 import useLeaderboard from "../../Hooks/LeaderboardHook";
+import useUpcomingContests from "../../Hooks/UpcomingContestHook";
+
+const parseISTDate = (istString) => {
+  const [datePart, timePart] = istString.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hours, minutes, seconds] = timePart
+    .split(":")
+    .map((v) => Number(v.replace("Z", "")));
+  return new Date(year, month - 1, day, hours, minutes, seconds);
+};
 
 const Leaderboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,33 +25,79 @@ const Leaderboard = () => {
 
   const { leaderboard, loading, error, getLeaderboard, contest } =
     useLeaderboard();
+  const { contests } = useUpcomingContests();
 
   // Countdown state
   const [timeLeft, setTimeLeft] = useState(0);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [contestEndTime, setContestEndTime] = useState(0); // Persisted for countdown after contest ends
 
-  // Set your contest result publish time here
-  const publishDate = contest?.publishDate
-    ? new Date(contest.publishDate).getTime()
+  // Find if there's a live contest
+  const activeContest = contests.find((c) => {
+    const start = parseISTDate(c.startDate).getTime();
+    const end = start + c.duration * 60 * 1000;
+    return currentTime >= start && currentTime <= end;
+  });
+
+  // Also find the most recent contest that has ended (for leaderboard countdown)
+  // This persists the end time even after the contest window passes
+  const endedContest = contests.find((c) => {
+    if (activeContest && c._id === activeContest._id) return false; // skip if same as active
+    const start = parseISTDate(c.startDate).getTime();
+    const end = start + c.duration * 60 * 1000;
+    return currentTime > end; // ended
+  });
+
+  // Compute the contest end time: prefer active contest, fallback to most recent ended contest
+  const contestToUse = activeContest || endedContest;
+  const computedContestEndTime = contestToUse
+    ? parseISTDate(contestToUse.startDate).getTime() + contestToUse.duration * 60 * 1000
+    : 0;
+
+  // Persist contest end time when we have a valid contest
+  useEffect(() => {
+    if (computedContestEndTime > 0) {
+      setContestEndTime(computedContestEndTime);
+    }
+  }, [computedContestEndTime]);
+
+  // Calculate leaderboard publish time: contest end + 5 min delay
+  const LEADERBOARD_DELAY_SECONDS = 5 * 60;
+
+  // Determine the target time for the countdown
+  // If there's a live contest running, countdown shows time until contest ends
+  // Otherwise, countdown shows time until leaderboard is published
+  // Leaderboard is published at: contestEnd + 5 min delay
+  const hasContestEnded = contestEndTime > 0 && currentTime > contestEndTime;
+  const leaderboardPublishTime = contestEndTime > 0
+    ? contestEndTime + LEADERBOARD_DELAY_SECONDS * 1000
     : 0;
 
   useEffect(() => {
     getLeaderboard();
   }, [getLeaderboard]);
 
-  console.log("CONTEST DATA:", contest);
-  console.log("LeADERBOARD DATA:", leaderboard);
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
-    if (!publishDate) return;
+    // Start timer if there's a target time to count down to
+    if (!leaderboardPublishTime && !contestEndTime) return;
 
     const timer = setInterval(() => {
       const now = Date.now();
-      const diff = Math.max(0, Math.floor((publishDate - now) / 1000));
+      // Show countdown to contest end if contest is live
+      // Show countdown to leaderboard publish if contest has ended
+      const diff = activeContest
+        ? Math.max(0, Math.floor((contestEndTime - now) / 1000))
+        : Math.max(0, Math.floor((leaderboardPublishTime - now) / 1000));
       setTimeLeft(diff);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [publishDate]);
+  }, [leaderboardPublishTime, activeContest, contestEndTime]);
 
   // Convert seconds to hh:mm:ss
   const formatTime = (seconds) => {
@@ -98,6 +154,36 @@ const Leaderboard = () => {
     return <PageLoaderWrapper loading={loading} />;
   }
 
+  if (!loading && activeContest && !contest) {
+    return (
+      <div className="min-h-screen bg-gray-50 md:pl-64 flex justify-center items-center">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <Trophy className="mx-auto mb-3 w-10 h-10 text-gray-400" />
+          <h2 className="text-xl font-semibold text-gray-700">
+            Contest in Progress
+          </h2>
+          <p className="text-gray-500 mt-2">
+            The leaderboard will be available once the contest ends.
+          </p>
+
+          <div className="mt-4 flex justify-center items-center gap-2 text-xl font-mono font-bold">
+            <AnimatedDigit value={hrs[0]} />
+            <AnimatedDigit value={hrs[1]} />
+            <span>:</span>
+            <AnimatedDigit value={mins[0]} />
+            <AnimatedDigit value={mins[1]} />
+            <span>:</span>
+            <AnimatedDigit value={secs[0]} />
+            <AnimatedDigit value={secs[1]} />
+          </div>
+          <p className="mt-2 text-gray-500">
+            Time left until contest ends
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!loading && !contest) {
     return (
       <div className="min-h-screen bg-gray-50 md:pl-64 flex justify-center items-center">
@@ -110,20 +196,23 @@ const Leaderboard = () => {
             The leaderboard will appear once the contest results are published.
           </p>
 
-          {/* Countdown to publish */}
-          <div className="mt-4 flex justify-center items-center gap-2 text-xl font-mono font-bold">
-            <AnimatedDigit value={hrs[0]} />
-            <AnimatedDigit value={hrs[1]} />
-            <span>:</span>
-            <AnimatedDigit value={mins[0]} />
-            <AnimatedDigit value={mins[1]} />
-            <span>:</span>
-            <AnimatedDigit value={secs[0]} />
-            <AnimatedDigit value={secs[1]} />
-          </div>
-          <p className="mt-2 text-gray-500">
-            Time left until leaderboard is published
-          </p>
+          {timeLeft > 0 && (
+            <div className="mt-4 flex justify-center items-center gap-2 text-xl font-mono font-bold">
+              <AnimatedDigit value={hrs[0]} />
+              <AnimatedDigit value={hrs[1]} />
+              <span>:</span>
+              <AnimatedDigit value={mins[0]} />
+              <AnimatedDigit value={mins[1]} />
+              <span>:</span>
+              <AnimatedDigit value={secs[0]} />
+              <AnimatedDigit value={secs[1]} />
+            </div>
+          )}
+          {timeLeft > 0 && (
+            <p className="mt-2 text-gray-500">
+              Time left until leaderboard is published
+            </p>
+          )}
         </div>
       </div>
     );
@@ -141,11 +230,18 @@ const Leaderboard = () => {
         {/* Header */}
         <div className="fixed top-0 left-0 md:left-64 right-0 bg-white shadow-md z-50">
           <div className="flex justify-between items-center py-3 sm:py-4 px-4 sm:px-6 border-b border-gray-200">
-            <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
-              Leaderboard
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
+                {activeContest ? "Contest Live" : "Leaderboard"}
+              </h1>
+              {activeContest && (
+                <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
+                  Ends in
+                </span>
+              )}
+            </div>
 
-            {/* Optional countdown for active leaderboard */}
+            {/* Countdown for active contest or publish countdown */}
             {timeLeft > 0 && (
               <div className="flex items-center gap-1 font-mono font-bold text-red-600">
                 <AnimatedDigit value={hrs[0]} />
@@ -168,7 +264,6 @@ const Leaderboard = () => {
               College Ranking
             </Button>
           </div>
-          {console.log("LEADERBOARD DATA:", leaderboard)}
 
           {/* Search + Filter */}
           <FormProvider {...methods}>
@@ -212,24 +307,32 @@ const Leaderboard = () => {
                   </tr>
                 </thead>
                 <tbody className="py-5">
-                  {filteredUsers.map((user, index) => (
-                    <tr
-                      key={user._id || index}
-                      className="border-b hover:bg-gray-50 transition-all duration-200"
-                    >
-                      <td className="px-4 py-3 text-left">
-                        {getRankBadge(index + 1)}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-800 text-center">
-                        {user.fullName}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="bg-indigo-600 text-white font-semibold text-xs px-3 py-1 rounded-full">
-                          {user.score}
-                        </span>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="px-4 py-8 text-center text-gray-500">
+                        No leaderboard data available. Contest may not have participants yet.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredUsers.map((user, index) => (
+                      <tr
+                        key={user._id || index}
+                        className="border-b hover:bg-gray-50 transition-all duration-200"
+                      >
+                        <td className="px-4 py-3 text-left">
+                          {getRankBadge(index + 1)}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-800 text-center">
+                          {user.fullName}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="bg-indigo-600 text-white font-semibold text-xs px-3 py-1 rounded-full">
+                            {user.score}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             )}

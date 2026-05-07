@@ -12,20 +12,15 @@ const useUpcomingContests = () => {
     (state) => state.upcomingContest
   );
 
-  // Fetch contests on mount
   useEffect(() => {
     dispatch(fetchUpcomingContests());
-
-    return () => {
-      dispatch(resetUpcomingContests());
-    };
   }, [dispatch]);
 
   return {
     contests,
     loading,
     error,
-    refreshContests: () => dispatch(fetchUpcomingContests()), // manual refresh
+    refreshContests: () => dispatch(fetchUpcomingContests()),
   };
 };
 

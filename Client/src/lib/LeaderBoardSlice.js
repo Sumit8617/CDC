@@ -17,7 +17,7 @@ export const fetchLeaderboard = createAsyncThunk(
 const initialState = {
   contest: null,
   leaderboard: [],
-  loading: false,
+  loading: true,
   error: null,
 };
 
