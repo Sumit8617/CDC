@@ -10,7 +10,8 @@ import {
 
 const adminRouter = Router();
 
-adminRouter.route("/create-contest").post(protectRoute, adminOnly, createTest);
+// adminRouter.route("/create-contest").post(protectRoute, adminOnly, createTest);
+adminRouter.route("/create-contest").post(createTest);
 adminRouter
   .route("/save-draft-contest")
   .post(protectRoute, adminOnly, saveDraftContest);

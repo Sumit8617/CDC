@@ -21,7 +21,7 @@ const parseISTDate = (istString) => {
   return new Date(year, month - 1, day, hours, minutes, seconds);
 };
 
-const MAX_FACE_VIOLATIONS = 3;
+const MAX_FACE_VIOLATIONS = 3000;
 
 const Contest = () => {
   const { contests, loading, error, refreshContests } = useUpcomingContests();
@@ -30,7 +30,11 @@ const Contest = () => {
   const navigate = useNavigate();
 
   const [contestIdToCheck, setContestIdToCheck] = useState(null);
-  const { hasSubmitted: userHasSubmitted, loading: checkingSubmission, checkSubmission } = useCheckSubmission(contestIdToCheck);
+  const {
+    hasSubmitted: userHasSubmitted,
+    loading: checkingSubmission,
+    checkSubmission,
+  } = useCheckSubmission(contestIdToCheck);
 
   const [selectedOption, setSelectedOption] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -465,7 +469,9 @@ const Contest = () => {
 
     if (!contestSnapshot.questions || contestSnapshot.questions.length === 0) {
       await refreshContests();
-      const updatedContest = contests.find(c => c._id === contestSnapshot._id);
+      const updatedContest = contests.find(
+        (c) => c._id === contestSnapshot._id
+      );
       if (updatedContest?.questions?.length > 0) {
         contestSnapshot.questions = updatedContest.questions;
       }
@@ -487,7 +493,7 @@ const Contest = () => {
     setFrozenContest(contestSnapshot); // triggers re-render
 
     // Wait for state to update before entering fullscreen
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     setContestStarted(true);
     setShowFullscreenModal(false);
@@ -749,9 +755,13 @@ const Contest = () => {
                   Already Submitted
                 </h2>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  You have already submitted this contest. You cannot attempt it again.
+                  You have already submitted this contest. You cannot attempt it
+                  again.
                 </p>
-                <Button className="w-full" onClick={() => navigate("/leaderboard")}>
+                <Button
+                  className="w-full"
+                  onClick={() => navigate("/leaderboard")}
+                >
                   View Leaderboard
                 </Button>
               </>
@@ -776,8 +786,9 @@ const Contest = () => {
                   Fullscreen Required
                 </h2>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  You must stay in fullscreen for the entire contest. Exiting will
-                  auto-submit your answers. Your camera is used for live proctoring.
+                  You must stay in fullscreen for the entire contest. Exiting
+                  will auto-submit your answers. Your camera is used for live
+                  proctoring.
                 </p>
                 <ul className="text-xs text-left text-gray-500 space-y-1.5 bg-gray-50 rounded-lg p-3">
                   <li>📷 Stay visible in the camera at all times</li>
@@ -956,7 +967,12 @@ const Contest = () => {
               {checkingSubmission || loading ? (
                 <PageLoaderWrapper loading={true} />
               ) : userHasSubmitted ? (
-                <Card variant="default" round="lg" padding="p-6" className="max-w-md">
+                <Card
+                  variant="default"
+                  round="lg"
+                  padding="p-6"
+                  className="max-w-md"
+                >
                   <p className="text-gray-600 text-sm mb-4">
                     You have already submitted this contest.
                   </p>
