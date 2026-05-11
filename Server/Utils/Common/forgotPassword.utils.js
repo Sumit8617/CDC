@@ -1,5 +1,5 @@
 import { User } from "../../Service/Models/User.models.js";
-import { asynchandler, APIERR } from "../index.utils.js";
+import { asynchandler, APIERR, sendMail } from "../index.utils.js";
 
 export const sendPasswordResetOTP = asynchandler(async (req, res) => {
   const { email } = req.body;
