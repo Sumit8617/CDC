@@ -24,7 +24,9 @@ export const shuffleArray = (array) => {
  * @returns {Array} - Shuffled questions with position mapping
  */
 export const shuffleQuestionsForUser = (questions, userId = null) => {
-  if (!questions || questions.length === 0) return [];
+  if (!questions || questions.length === 0) {
+    return { questions: [], positionMap: {}, originalCount: 0 };
+  }
 
   // Create a seed from userId for consistent per-user shuffle
   let seededRandom;
@@ -70,10 +72,23 @@ export const shuffleQuestionsForUser = (questions, userId = null) => {
  * @returns {Array} - Questions with shuffled options
  */
 export const shuffleOptionsForUser = (questions, userId = null) => {
-  if (!questions || questions.length === 0) return [];
+  if (!questions || questions.length === 0) {
+    return [];
+  }
 
-  // Same seed for consistent option shuffle per user
-  let seed = userId ? userId.hashCode() : Math.random() * 1000;
+  // Create a seed from userId for consistent option shuffle per user
+  let seed;
+  if (userId) {
+    // Simple hash function for userId
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+      hash = hash & hash;
+    }
+    seed = Math.abs(hash);
+  } else {
+    seed = Math.random() * 1000;
+  }
 
   const seededRandom = () => {
     seed = (seed * 9301 + 49297) % 233280;
@@ -109,7 +124,7 @@ export const shuffleOptionsForUser = (questions, userId = null) => {
  */
 export const shuffleForUser = (questions, userId) => {
   // First shuffle questions
-  const { questions: shuffledQuestions, positionMap } = shuffleQuestionsForUser(questions, userId);
+  const { questions: shuffledQuestions, positionMap, originalCount } = shuffleQuestionsForUser(questions, userId);
 
   // Then shuffle options within each question
   const shuffledWithOptions = shuffleOptionsForUser(shuffledQuestions, userId);
@@ -117,6 +132,7 @@ export const shuffleForUser = (questions, userId) => {
   return {
     questions: shuffledWithOptions,
     positionMap,
+    originalCount: originalCount || shuffledQuestions.length,
     userId,
     shuffledAt: new Date().toISOString()
   };

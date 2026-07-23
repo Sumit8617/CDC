@@ -12,6 +12,7 @@ import useSignup from "../../Hooks/AuthHooks";
 import useCheckSubmission from "../../Hooks/CheckSubmissionHook";
 import { useNavigate } from "react-router-dom";
 import { Info, Clock, AlertTriangle, Camera } from "lucide-react";
+import axiosClient from "../../lib/AxiosInstance";
 
 const parseISTDate = (istString) => {
   const [datePart, timePart] = istString.split("T");
@@ -473,15 +474,9 @@ const Contest = () => {
 
     setQuestionsLoading(true);
     try {
-      const response = await fetch(
-        `/api/v1/user/shuffled-questions/${contestId}`,
-        {
-          credentials: "include",
-        }
-      );
-      const result = await response.json();
+      const response = await axiosClient.get(`/api/v1/user/shuffled-questions/${contestId}`);
       setQuestionsLoading(false);
-      return result.data;
+      return response.data.data;
     } catch (err) {
       console.error("Error fetching shuffled questions:", err);
       setQuestionsLoading(false);
