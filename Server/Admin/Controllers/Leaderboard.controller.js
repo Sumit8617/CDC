@@ -46,6 +46,7 @@ const getLeaderboard = asynchandler(async (req, res) => {
             user: r.userId._id,
             fullName: r.userId.fullName || "Unknown",
             score: r.score || 0, // Raw score in points
+            totalQuestions: r.totalQuestions || 0,
             percentage, // Score as percentage
           };
         }
@@ -65,12 +66,15 @@ const getLeaderboard = asynchandler(async (req, res) => {
     const maxScore = contest.questions.length * 5;
     const leaderboardData = (leaderboard?.data || []).map((entry) => ({
       ...entry,
+      totalQuestions: contest.questions.length,
+      maxScore: maxScore,
       percentage: maxScore > 0 ? Math.round((entry.score / maxScore) * 100) : 0,
     }));
 
     return {
       contest,
       leaderboard: leaderboardData,
+      maxScore,
     };
   };
 
@@ -134,10 +138,12 @@ const getContestLeaderboard = asynchandler(async (req, res) => {
     const maxScore = contest.questions.length * 5;
     const leaderboardData = (leaderboard?.data || []).map((entry) => ({
       ...entry,
+      totalQuestions: contest.questions.length,
+      maxScore: maxScore,
       percentage: maxScore > 0 ? Math.round((entry.score / maxScore) * 100) : 0,
     }));
 
-    return { contest, leaderboard: leaderboardData };
+    return { contest, leaderboard: leaderboardData, maxScore };
   };
 
   const data = await cachedFetch(cacheKey, fetchSpecificLeaderboard, CACHE_TTL.LEADERBOARD);

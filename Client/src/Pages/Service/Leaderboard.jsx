@@ -327,7 +327,7 @@ const Leaderboard = () => {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="bg-indigo-600 text-white font-semibold text-xs px-3 py-1 rounded-full">
-                            {user.percentage !== undefined ? `${user.percentage}%` : user.score}
+                            {user.score} {user.totalQuestions ? `/ ${user.totalQuestions * 5}` : "pts"}
                           </span>
                         </td>
                       </tr>

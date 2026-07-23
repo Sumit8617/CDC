@@ -1,8 +1,9 @@
 import cron from "node-cron";
+import mongoose from "mongoose";
 import { SubmittedOption } from "../../Admin/Models/SubmitedOption.model.js";
 import { Test } from "../../Admin/Models/Contest.model.js";
 import { Leaderboard } from "../../Admin/Models/Leaderboard.models.js";
-import { MongoQueue } from "../../Admin/Models/SubmissionQuee.models.js"; //  Added
+import { MongoQueue } from "../../Admin/Models/SubmissionQuee.models.js";
 
 // DELAY CONFIG (minutes) TODO: Update the Delay time for publishing the leaderboard
 const LEADERBOARD_DELAY_MINUTES = 5;
@@ -15,7 +16,7 @@ cron.schedule("* * * * *", async () => {
   try {
     const contests = await Test.find({
       isPublished: true,
-      status: { $in: ["active", "pending"] },
+      status: { $in: ["active", "pending", "completed"] },
     });
 
     for (const contest of contests) {
@@ -80,42 +81,56 @@ cron.schedule("* * * * *", async () => {
       })
         .populate("user", "fullName");
 
-      // Check if there are valid submissions before creating leaderboard
-      if (submissions.length === 0) {
-        console.log(`⚠ No submissions with scores for contest ${contest._id}`);
-        contest.status = "completed";
-        await contest.save();
-        continue;
-      }
-
+      // Build leaderboard data even if empty - this ensures leaderboard is "published"
       const leaderboardMap = {};
 
-      submissions.forEach((sub) => {
-        if (!sub.user) return;
+      // Get total questions from contest
+      const totalQuestions = contest.questions ? contest.questions.length : 0;
 
-        if (!leaderboardMap[sub.user._id]) {
-          leaderboardMap[sub.user._id] = {
-            user: sub.user._id,
-            fullName: sub.user.fullName || "Unknown",
-            score: sub.score || 0,
-          };
-        }
-      });
+      if (submissions.length > 0) {
+        submissions.forEach((sub) => {
+          if (!sub.user) return;
+
+          const userId = sub.user._id instanceof mongoose.Types.ObjectId
+            ? sub.user._id
+            : new mongoose.Types.ObjectId(sub.user._id);
+
+          if (!leaderboardMap[userId.toString()]) {
+            leaderboardMap[userId.toString()] = {
+              user: userId,
+              fullName: sub.user.fullName || "Unknown",
+              score: 0,
+              totalQuestions: totalQuestions,
+            };
+          }
+          // Accumulate scores from all submissions
+          leaderboardMap[userId.toString()].score += sub.score || 0;
+        });
+      }
 
       const leaderboardData = Object.values(leaderboardMap).sort(
         (a, b) => b.score - a.score
       );
 
-      await Leaderboard.create({
-        contest: contest._id,
-        data: leaderboardData,
-        publishedAt: now,
-      });
+      console.log(`Saving leaderboard for contest ${contest._id}:`, JSON.stringify(leaderboardData.slice(0, 2)));
+
+      // Always create leaderboard document to mark it as published
+      const leaderboardEntry = await Leaderboard.findOneAndUpdate(
+        { contest: contest._id },
+        {
+          contest: contest._id,
+          data: leaderboardData,
+          publishedAt: now,
+        },
+        { upsert: true, new: true }
+      );
+
+      console.log(`Leaderboard saved successfully:`, leaderboardEntry._id);
 
       contest.status = "completed";
       await contest.save();
 
-      console.log(`Leaderboard published for contest ${contest._id}`);
+      console.log(`Leaderboard published for contest ${contest._id} with ${leaderboardData.length} participants`);
     }
   } catch (err) {
     console.error("Cron error:", err);

@@ -17,6 +17,7 @@ const leaderboardSchema = new mongoose.Schema(
         },
         fullName: { type: String, required: true },
         score: { type: Number, required: true },
+        totalQuestions: { type: Number, default: 0 },
       },
     ],
     publishedAt: { type: Date, default: null }, // Will be set when leaderboard is published
