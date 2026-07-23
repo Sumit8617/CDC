@@ -1,6 +1,7 @@
 import { asynchandler, APIERR, APIRES } from "../../Utils/index.utils.js";
 import { Test } from "../../Admin/Models/Contest.model.js";
 import { Question } from "../../Admin/Models/Question.model.js";
+import { Block } from "../../Admin/Models/BlockSchema.models.js";
 import { cachedFetch, cacheDelete, invalidateCache, CACHE_KEYS, CACHE_TTL, cacheSet, cacheGet } from "../../Utils/RedisCache.utils.js";
 import { shuffleForUser } from "../../Utils/QuestionShuffle.utils.js";
 
@@ -101,6 +102,12 @@ const getShuffledQuestions = asynchandler(async (req, res) => {
 
   if (!userId) {
     throw new APIERR(401, "User authentication required");
+  }
+
+  // Check if user is blocked
+  const isBlocked = await Block.findOne({ blocked: userId });
+  if (isBlocked) {
+    throw new APIERR(403, "You are blocked from attempting contests");
   }
 
   // Check if user already has shuffled questions cached

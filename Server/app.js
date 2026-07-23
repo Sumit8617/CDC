@@ -11,6 +11,7 @@ import contestDetailsRouter from "./Service/Routes/TestDetails.routes.js";
 import viewersRouter from "./Service/Routes/Statistic.routes.js";
 import contactRouter from "./Service/Routes/Contact.routes.js";
 import userDashboardRouter from "./Service/Routes/UserDashboard.routes.js";
+import userRouter from "./Admin/Routes/User.routes.js";
 import "./Admin/Controllers/CheckCorrectAnswer.controller.js";
 import { checkRedisHealth, getCacheStats } from "./Utils/RedisHealth.utils.js";
 
@@ -136,6 +137,7 @@ app.use("/api/v1/user/dashboard", userDashboardRouter);
 console.log("📌 /api/v1/admin");
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/admin/auth", adminAuthRoute);
+app.use("/api/v1/admin", userRouter);
 
 // Viewer routes
 console.log("📌 /api/v1/viewer");

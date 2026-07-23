@@ -83,22 +83,30 @@ const CreateContest = () => {
   };
 
   // Handle publish
-  const handlePublish = (data) => {
+  const handlePublish = async (data) => {
     const payload = formatContestData(data);
-    createContest(payload);
-    if (!error) {
+    try {
+      await createContest(payload).unwrap();
+      alert("Contest published successfully!");
       reset();
       setCurrentPage(1);
+    } catch (err) {
+      console.error("Publish failed:", err);
+      // Error is handled by Redux state
     }
   };
 
   // Handle save draft
-  const handleSaveDraft = (data) => {
+  const handleSaveDraft = async (data) => {
     const payload = formatContestData(data);
-    saveDraftContest(payload);
-    if (!error) {
+    try {
+      await saveDraftContest(payload).unwrap();
+      alert("Contest saved as draft successfully!");
       reset();
       setCurrentPage(1);
+    } catch (err) {
+      console.error("Save draft failed:", err);
+      // Error is handled by Redux state
     }
   };
 
@@ -379,13 +387,22 @@ const CreateContest = () => {
           </Card>
 
           {/* API feedback */}
-          {loading && <p>Processing contest...</p>}
-          {error && <p className="text-red-500">{error}</p>}
+          {loading && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+              <p className="text-blue-700 font-medium">Processing contest...</p>
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600 font-medium">Error: {error}</p>
+            </div>
+          )}
           {success && (
-            <p className="text-green-500">
-              Contest {success === "draft" ? "saved as draft" : "published"}{" "}
-              successfully!
-            </p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-green-700 font-medium">
+                ✓ Contest {(success === "draft" || draftContest) ? "saved as draft" : "published"} successfully!
+              </p>
+            </div>
           )}
         </form>
 

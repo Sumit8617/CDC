@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { asynchandler, APIERR, APIRES } from "../../Utils/index.utils.js";
 import { SubmittedOption } from "../../Admin/Models/SubmitedOption.model.js";
 import { Test } from "../../Admin/Models/Contest.model.js";
+import { Block } from "../../Admin/Models/BlockSchema.models.js";
 import { MongoQueue } from "../../Admin/Models/SubmissionQuee.models.js";
 import { cacheGet, cacheDelete } from "../../Utils/RedisCache.utils.js";
 
@@ -24,6 +25,12 @@ const submitContest = asynchandler(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(
     typeof user === "string" ? user : user._id
   );
+
+  // Check if user is blocked before allowing submission
+  const isBlocked = await Block.findOne({ blocked: userId });
+  if (isBlocked) {
+    throw new APIERR(403, "You are blocked from attempting contests");
+  }
 
   // Mark contest active on first submission
   if (contestDoc.status === "pending") {

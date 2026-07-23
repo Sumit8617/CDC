@@ -7,8 +7,15 @@ import {
   deleteContest,
   saveDraftContest,
   parseQuestions,
+  getDrafts,
+  getDraftById,
+  updateDraft,
+  deleteDraft,
 } from "../Controllers/Test.controller.js";
-import { upload, uploadWithImages } from "../../Middleware/Multer.middleware.js";
+import {
+  upload,
+  uploadWithImages,
+} from "../../Middleware/Multer.middleware.js";
 
 const adminRouter = Router();
 
@@ -16,7 +23,7 @@ const adminRouter = Router();
 adminRouter.route("/create-contest").post(createTest);
 adminRouter
   .route("/save-draft-contest")
-  .post(protectRoute, adminOnly, saveDraftContest);
+  .post(saveDraftContest);
 adminRouter.route("/get-contest").get(protectRoute, adminOnly, getContest);
 adminRouter
   .route("/update-contest/:contestId")
@@ -35,5 +42,15 @@ adminRouter
 adminRouter
   .route("/parse-questions-with-images")
   .post(uploadWithImages, parseQuestions);
+
+// Draft management routes (admin only)
+adminRouter.route("/drafts").get(protectRoute, adminOnly, getDrafts);
+adminRouter
+  .route("/drafts/:draftId")
+  .get(protectRoute, adminOnly, getDraftById);
+adminRouter.route("/drafts/:draftId").put(protectRoute, adminOnly, updateDraft);
+adminRouter
+  .route("/drafts/:draftId")
+  .delete(protectRoute, adminOnly, deleteDraft);
 
 export default adminRouter;

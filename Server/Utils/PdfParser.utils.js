@@ -2,10 +2,10 @@ import fs from "fs";
 import path from "path";
 import mammoth from "mammoth";
 import { uploadOnCloudinary } from "../config/cloudinary.config.js";
+import { PDFParse } from "pdf-parse";
+import { fromPath } from "pdf2pic";
 
-/**
- * Extract images from a Word document using mammoth
- */
+//Extract images from a Word document using mammoth
 const extractImagesFromWord = async (buffer) => {
   try {
     const result = await mammoth.extractRawText({ buffer });
@@ -40,6 +40,113 @@ const extractImagesFromWord = async (buffer) => {
 };
 
 /**
+ * Extract text and images from a PDF file
+ * Uses pdf2pic with proper error handling
+ */
+const extractFromPdf = async (filePath) => {
+  let parser;
+  try {
+    const dataBuffer = fs.readFileSync(filePath);
+
+    parser = new PDFParse({ data: dataBuffer });
+    const result = await parser.getText();
+
+    // Extract images from PDF using pdf2pic (convert PDF pages to images)
+    const images = [];
+
+    try {
+      // Ensure temp directory exists
+      const tempDir = "./public/temp";
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+
+      const pdf2pic = fromPath(filePath, {
+        density: 150,
+        saveFilename: "temp_pdf_image",
+        savePath: tempDir,
+        format: "png",
+        width: 1200,
+        height: 1800,
+      });
+
+      // Get total pages - pdf2pic returns a function with a pageCount property
+      // Use identify to get page count
+      let pageCount = 1;
+      try {
+        const pageInfo = await pdf2pic.identify(filePath, "%p ");
+        if (pageInfo) {
+          const pages = pageInfo
+            .trim()
+            .split(" ")
+            .map((p) => parseInt(p, 10))
+            .filter((p) => !isNaN(p));
+          pageCount = pages.length > 0 ? Math.max(...pages) : 1;
+        }
+      } catch (e) {
+        console.log("Could not get page count, defaulting to 1:", e.message);
+      }
+
+      // Try to convert each page to image
+      for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+        try {
+          // Use the converter function with base64 response
+          const converter = pdf2pic(pageNum, { responseType: "base64" });
+          const pageResult = await converter;
+
+          if (
+            pageResult &&
+            pageResult.base64 &&
+            pageResult.base64.length > 100
+          ) {
+            // Only add if we have meaningful base64 content
+            images.push({
+              url: `data:image/png;base64,${pageResult.base64}`,
+              type: "image/png",
+              pageNumber: pageNum,
+            });
+          }
+        } catch (e) {
+          console.log(`Error extracting page ${pageNum}:`, e.message);
+        }
+      }
+
+      // Clean up temp files
+      try {
+        if (fs.existsSync(tempDir)) {
+          fs.readdirSync(tempDir).forEach((file) => {
+            if (file.startsWith("temp_pdf_image")) {
+              fs.unlinkSync(`${tempDir}/${file}`);
+            }
+          });
+        }
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    } catch (imgError) {
+      console.log("Could not extract images from PDF:", imgError.message);
+    }
+
+    console.log("PDF extracted images:", images.length);
+
+    return {
+      text: result.text,
+      images: images,
+      totalPages: result.numpages || result.pages?.length || 1,
+    };
+  } catch (error) {
+    console.error("Error extracting from PDF:", error);
+    return { text: "", images: [], totalPages: 0 };
+  } finally {
+    if (parser && typeof parser.destroy === "function") {
+      try {
+        await parser.destroy();
+      } catch (e) {}
+    }
+  }
+};
+
+/**
  * Extract text from Word document
  */
 const extractFromWord = async (filePath) => {
@@ -61,11 +168,6 @@ const extractFromWord = async (filePath) => {
  * C) Berlin
  * D) Madrid
  * Answer: B
- *
- * Image mapping: Images are mapped to questions based on:
- * 1. [Image] marker in the question text
- * 2. Question number matching (if images have question number metadata)
- * 3. Sequential order as fallback
  */
 const parseQuestionsFromText = async (text, images = []) => {
   const questions = [];
@@ -76,6 +178,7 @@ const parseQuestionsFromText = async (text, images = []) => {
   }
 
   // Join all text and use a better regex to extract questions
+  // Pattern to match: number. question text + options + answer
   const fullText = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 
   // Split by numbered questions (1., 2., etc.) but keep the number
@@ -86,112 +189,23 @@ const parseQuestionsFromText = async (text, images = []) => {
     (b) => b.trim().length > 10 && /\d+\.\s/.test(b)
   );
 
+  // Images are typically at the end of the document, so assign them to the last N questions
+  // where N = number of images
   const totalImages = images.length;
   const totalQuestions = questionBlocks.length;
 
-  console.log(`Total questions: ${totalQuestions}, Total images: ${totalImages}`);
+  // Calculate which question index should get the first image
+  const firstImageQuestionIndex = Math.max(0, totalQuestions - totalImages);
 
-  // FIRST: Analyze each question block to find [Image] markers
-  // This builds a map of which question numbers have [Image] markers
-  const questionImageMarkers = {};
-  const questionsWithImageMarkers = [];
+  console.log(
+    `Total questions: ${totalQuestions}, Total images: ${totalImages}, First image at index: ${firstImageQuestionIndex}`
+  );
 
-  for (let i = 0; i < questionBlocks.length; i++) {
-    const block = questionBlocks[i];
-
-    // Extract question number from the block
-    const numMatch = block.match(/^(\d+)\.\s/);
-    if (numMatch) {
-      const questionNum = parseInt(numMatch[1], 10);
-
-      // Check if this question has an [Image] marker
-      if (block.toLowerCase().includes('[image]')) {
-        questionImageMarkers[questionNum] = i; // Map question number to block index
-        questionsWithImageMarkers.push({ questionNum, blockIndex: i });
-      }
-    }
-  }
-
-  console.log("Questions with [Image] markers:", questionsWithImageMarkers);
-
-  // Build image mapping based on:
-  // 1. If images have question number in filename (e.g., "q11.jpg", "question_11.jpg", "11.jpg"), map to that specific question
-  // 2. If questions have [Image] markers, map images to those specific question numbers
-  // 3. Otherwise, map sequentially
-
-  const questionImageMap = new Array(totalQuestions).fill(null);
-
-  // First, try to match images by question number in filename
-  const imageByQuestionNum = {};
-
-  for (let imgIdx = 0; imgIdx < images.length; imgIdx++) {
-    const img = images[imgIdx];
-    if (!img || !img.url) continue;
-
-    // Try to extract question number from filename
-    // Supported patterns: q11.jpg, question_11.jpg, 11.jpg, image_11.png, etc.
-    const fileName = img.originalName || '';
-    const questionNumMatch = fileName.match(/(?:^|[\s_-])(\d+)(?:[\s_-]|$|\.)/i);
-
-    if (questionNumMatch) {
-      const questionNum = parseInt(questionNumMatch[1], 10);
-      if (questionNum > 0 && questionNum <= totalQuestions) {
-        // Convert 1-based question number to 0-based index
-        const blockIndex = questionNum - 1;
-        imageByQuestionNum[questionNum] = { blockIndex, url: img.url };
-        console.log(`Found image for question ${questionNum} from filename: ${fileName}`);
-      }
-    }
-  }
-
-  // Apply filename-based mapping first (highest priority)
-  for (const [questionNum, mapping] of Object.entries(imageByQuestionNum)) {
-    if (mapping.blockIndex >= 0 && mapping.blockIndex < totalQuestions) {
-      questionImageMap[mapping.blockIndex] = mapping.url;
-      console.log(`Mapped image to question ${questionNum} (from filename)`);
-    }
-  }
-
-  // If we have filename-based mappings, use those
-  // Otherwise fall back to [Image] marker or sequential
-  const mappedCount = questionImageMap.filter(Boolean).length;
-
-  if (mappedCount > 0) {
-    console.log(`Used filename-based mapping for ${mappedCount} images`);
-  } else if (questionsWithImageMarkers.length > 0) {
-    // Map images to questions that have [Image] markers
-    for (let i = 0; i < questionsWithImageMarkers.length; i++) {
-      const { blockIndex } = questionsWithImageMarkers[i];
-      if (images[i] && images[i].url) {
-        questionImageMap[blockIndex] = images[i].url;
-        console.log(`Mapped image ${i + 1} to question ${blockIndex + 1} (has [Image] marker)`);
-      }
-    }
-
-    // For questions without [Image] markers, assign remaining images sequentially
-    let imageIndex = questionsWithImageMarkers.length;
-    for (let i = 0; i < totalQuestions && imageIndex < totalImages; i++) {
-      if (questionImageMap[i] === null && images[imageIndex] && images[imageIndex].url) {
-        questionImageMap[i] = images[imageIndex].url;
-        console.log(`Mapped image ${imageIndex + 1} to question ${i + 1} (sequential)`);
-        imageIndex++;
-      }
-    }
-  } else {
-    // No [Image] markers or filename mappings found - assign images sequentially
-    for (let i = 0; i < Math.min(totalImages, totalQuestions); i++) {
-      if (images[i] && images[i].url) {
-        questionImageMap[i] = images[i].url;
-      }
-    }
-  }
-
-  // Now parse each question block
   for (let blockIndex = 0; blockIndex < questionBlocks.length; blockIndex++) {
     const block = questionBlocks[blockIndex];
     if (!block.trim()) continue;
 
-    // Match question number and content
+    // Match question number and content (optional number)
     const questionMatch = block.match(/(?:(\d+)\.?\s*)?([\s\S]*?)$/);
     if (!questionMatch) continue;
 
@@ -205,6 +219,7 @@ const parseQuestionsFromText = async (text, images = []) => {
     let correctOption = -1;
 
     // Match options with various formats: A) A. A - etc. also support a) a.
+    // Works with or without newlines between options
     let optionPattern =
       /([A-Da-d])[\.\)]\s*(.+?)(?=[A-Da-d][\.\)]|Correct|Answer|$)/gi;
     let optionMatches = [...questionContent.matchAll(optionPattern)];
@@ -257,9 +272,10 @@ const parseQuestionsFromText = async (text, images = []) => {
     }
 
     // Extract question text (everything before options)
+    // Try multiple patterns including single-line format
     const splitPatterns = [
-      /\n[A-Da-d][\.\)]/i,
-      /\s+[A-Da-d][\.\)]\s+/g,
+      /\n[A-Da-d][\.\)]/i, // Newline + A. B. etc.
+      /\s+[A-Da-d][\.\)]\s+/g, // Space + A. B. etc. (single line format)
       /\nOption/i,
       /\n[a-d]\)/,
       /\nA\./i,
@@ -275,7 +291,8 @@ const parseQuestionsFromText = async (text, images = []) => {
       }
     }
 
-    // Also try to remove options from questionText
+    // Also try to remove options from questionText if still contains them
+    // by finding the first option letter (works for both newline and single-line formats)
     const firstOptionMatch = questionText.match(/([A-D])[\.\)]\s+/i);
     if (firstOptionMatch) {
       const index = questionText.indexOf(firstOptionMatch[0]);
@@ -284,17 +301,18 @@ const parseQuestionsFromText = async (text, images = []) => {
       }
     }
 
-    // Check for [Image] marker in question and remove it, but DON'T assign image here
-    // Image assignment is done via the pre-calculated map
+    // Check for image reference in question (supports both [Image] and [image] markers)
     let questionImage = null;
     const imageRefMatch = questionText.match(/\[Image\](.*)/i);
     if (imageRefMatch) {
       questionText = imageRefMatch[1].trim();
-      // Use the pre-calculated image map for this question
-      questionImage = questionImageMap[blockIndex];
-    } else {
-      // No [Image] marker - still check if this question should have an image from the map
-      questionImage = questionImageMap[blockIndex];
+    }
+
+    // Auto-assign images to questions based on position (images at end of document)
+    // This works even without [Image] marker
+    const imageArrayIndex = blockIndex - firstImageQuestionIndex;
+    if (imageArrayIndex >= 0 && imageArrayIndex < images.length) {
+      questionImage = images[imageArrayIndex].url;
     }
 
     // Only add if we have at least 2 options
@@ -313,42 +331,32 @@ const parseQuestionsFromText = async (text, images = []) => {
   }
 
   console.log("Parsed questions:", questions.length);
-  // Log which questions have images
-  questions.forEach((q, i) => {
-    if (q.questionImage) {
-      console.log(`Question ${i + 1} has image: ${q.questionImage.substring(0, 50)}...`);
-    }
-  });
-
   return questions;
 };
 
 /**
- * Main function to parse Word file and extract questions
- * @param {string} filePath - Path to the Word file
- * @param {Array} uploadedImages - Optional array of images uploaded along with the file
+ * Main function to parse PDF/Word file and extract questions
  */
-const parseQuestionFile = async (filePath, uploadedImages = []) => {
+const parseQuestionFile = async (filePath) => {
   try {
     const ext = path.extname(filePath).toLowerCase();
     let extractedText = "";
     let images = [];
     let totalPages = 1;
 
-    if (ext === ".docx" || ext === ".doc") {
+    if (ext === ".pdf") {
+      const result = await extractFromPdf(filePath);
+      extractedText = result.text;
+      images = result.images;
+      totalPages = result.totalPages || 1;
+    } else if (ext === ".docx" || ext === ".doc") {
       const result = await extractFromWord(filePath);
       extractedText = result.text;
       images = result.images;
     } else {
       throw new Error(
-        "Unsupported file format. Only Word files (.docx, .doc) are supported."
+        "Unsupported file format. Please upload PDF or Word files."
       );
-    }
-
-    // If user uploaded images along with the file, use those
-    if (uploadedImages && uploadedImages.length > 0) {
-      console.log("Using uploaded images:", uploadedImages.length);
-      images = uploadedImages;
     }
 
     // Clean up the extracted text
@@ -397,6 +405,7 @@ const uploadBase64Image = async (base64String, folder = "questions") => {
 export {
   parseQuestionFile,
   uploadBase64Image,
+  extractFromPdf,
   extractFromWord,
   parseQuestionsFromText,
 };

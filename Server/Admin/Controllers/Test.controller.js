@@ -293,6 +293,132 @@ const parseQuestions = asynchandler(async (req, res) => {
   );
 });
 
+// Get all drafts
+const getDrafts = asynchandler(async (req, res) => {
+  const drafts = await Test.find({ isDraft: true })
+    .select("testName description date duration createdAt")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const draftsWithCount = await Promise.all(
+    drafts.map(async (draft) => {
+      const questionCount = await Question.countDocuments({ _id: { $in: draft.questions } });
+      return { ...draft, questionCount };
+    })
+  );
+
+  return res.status(200).json(
+    new APIRES(200, { drafts: draftsWithCount, total: draftsWithCount.length }, "Drafts fetched successfully")
+  );
+});
+
+// Get single draft by ID
+const getDraftById = asynchandler(async (req, res) => {
+  const { draftId } = req.params;
+  if (!draftId) throw new APIERR(400, "Draft ID is required");
+
+  const draft = await Test.findOne({ _id: draftId, isDraft: true })
+    .populate("questions")
+    .lean();
+
+  if (!draft) throw new APIERR(404, "Draft contest not found");
+
+  return res.status(200).json(
+    new APIRES(200, { contest: draft }, "Draft fetched successfully")
+  );
+});
+
+// Update draft contest
+const updateDraft = asynchandler(async (req, res) => {
+  const { draftId } = req.params;
+  if (!draftId) throw new APIERR(400, "Draft ID is required");
+
+  const { testName, description, contestDate, contestTime, duration, questions } = req.body;
+
+  // Validate required fields
+  if ([testName, description, duration].some(f => !f || f.toString().trim() === "")) {
+    throw new APIERR(400, "Please provide all required fields");
+  }
+
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new APIERR(400, "Please provide at least one question");
+  }
+
+  const existingDraft = await Test.findOne({ _id: draftId, isDraft: true });
+  if (!existingDraft) throw new APIERR(404, "Draft contest not found");
+
+  // Update contest metadata
+  let updateData = { testName, description, duration };
+
+  if (contestDate && contestTime) {
+    updateData.date = istToUtc(contestDate, contestTime);
+  }
+
+  // Delete old questions
+  if (existingDraft.questions && existingDraft.questions.length > 0) {
+    await Question.deleteMany({ _id: { $in: existingDraft.questions } });
+  }
+
+  // Create new questions
+  const createdQuestions = await Question.insertMany(
+    questions.map((q) => {
+      if (typeof q.correctOption !== "number" || q.correctOption < 0 || q.correctOption > 3) {
+        throw new APIERR(400, `Invalid correct option for question`);
+      }
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        throw new APIERR(400, "Each question must have exactly 4 options");
+      }
+      return {
+        questionText: q.questionText,
+        options: q.options,
+        correctOption: q.correctOption,
+        questionImage: q.questionImage || null,
+      };
+    })
+  );
+
+  updateData.questions = createdQuestions.map((q) => q._id);
+
+  const updatedDraft = await Test.findByIdAndUpdate(
+    draftId,
+    { $set: updateData },
+    { new: true }
+  ).populate("questions");
+
+  // Invalidate caches
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.TEST_DETAILS}*`);
+
+  return res.status(200).json(
+    new APIRES(200, { contest: updatedDraft }, "Draft updated successfully")
+  );
+});
+
+// Delete draft contest
+const deleteDraft = asynchandler(async (req, res) => {
+  const { draftId } = req.params;
+  if (!draftId) throw new APIERR(400, "Draft ID is required");
+
+  const existingDraft = await Test.findOne({ _id: draftId, isDraft: true });
+  if (!existingDraft) throw new APIERR(404, "Draft contest not found");
+
+  // Delete associated questions
+  if (existingDraft.questions && existingDraft.questions.length > 0) {
+    await Question.deleteMany({ _id: { $in: existingDraft.questions } });
+  }
+
+  // Delete the draft
+  await Test.findByIdAndDelete(draftId);
+
+  // Invalidate caches
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.TEST_DETAILS}*`);
+
+  return res.status(200).json(new APIRES(200, "Draft deleted successfully"));
+});
+
 export {
   createTest,
   saveDraftContest,
@@ -300,4 +426,8 @@ export {
   updateContest,
   deleteContest,
   parseQuestions,
+  getDrafts,
+  getDraftById,
+  updateDraft,
+  deleteDraft,
 };

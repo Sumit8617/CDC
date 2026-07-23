@@ -1,4 +1,3 @@
-// src/hooks/useCreateContest.js
 import { useDispatch, useSelector } from "react-redux";
 import {
   createContest,
@@ -18,7 +17,7 @@ const useCreateContest = () => {
   // Function to create/publish contest
   const handleCreateContest = useCallback(
     (contestData) => {
-      dispatch(createContest(contestData));
+      return dispatch(createContest(contestData));
     },
     [dispatch]
   );
@@ -26,7 +25,7 @@ const useCreateContest = () => {
   // Function to save contest as draft
   const handleSaveDraftContest = useCallback(
     (contestData) => {
-      dispatch(saveDraftContest(contestData));
+      return dispatch(saveDraftContest(contestData));
     },
     [dispatch]
   );
@@ -40,8 +39,11 @@ const useCreateContest = () => {
     contest,
     draftContest,
     loading,
+    // "published" | "draft" | null — lets callers tell the two apart
     success,
     error,
+    isPublished: success === "published",
+    isDraftSaved: success === "draft",
     createContest: handleCreateContest,
     saveDraftContest: handleSaveDraftContest,
     resetContestState: handleReset,
