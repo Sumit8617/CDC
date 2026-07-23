@@ -6,7 +6,8 @@ import {
 
 const viewersRouter = Router();
 
-viewersRouter.route("/get-total-user").get(getTotalUser);
-viewersRouter.route("/get-total-contest").get(getTotalContest);
+viewersRouter
+  .get("/get-total-user", getTotalUser)
+  .get("/get-total-contest", getTotalContest);
 
 export default viewersRouter;

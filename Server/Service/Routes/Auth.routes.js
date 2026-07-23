@@ -20,27 +20,24 @@ import {
 
 const router = express.Router();
 
-router.post("/login", login);
-router.post("/signup", signup);
-router.post("/logout", logout);
-
-router.post("/send-otp", sendOTP);
-router.post("/verify-otp", verifyOTP);
-
-router.put(
-  "/updateProfile",
-  protectRoute,
-  upload.single("profilePic"),
-  updateProfile
-);
-router.get("/check", protectRoute, checkAuth);
-router.post("/refresh-token", refreshAccessToken);
-router.put("/change-password", protectRoute, changePassword);
-
-router.post("/forgot-password/send-otp", sendPasswordResetOTP);
-router.post("/forgot-password/verify-otp", verifyPasswordResetOTP);
-router.post("/forgot-password/change-password", protectRoute, resetPassword);
-
-router.get("/user-details", protectRoute, userDetails);
+router
+  .post("/login", login)
+  .post("/signup", signup)
+  .post("/logout", logout)
+  .post("/send-otp", sendOTP)
+  .post("/verify-otp", verifyOTP)
+  .put(
+    "/updateProfile",
+    protectRoute,
+    upload.single("profilePic"),
+    updateProfile
+  )
+  .get("/check", protectRoute, checkAuth)
+  .post("/refresh-token", refreshAccessToken)
+  .put("/change-password", protectRoute, changePassword)
+  .post("/forgot-password/send-otp", sendPasswordResetOTP)
+  .post("/forgot-password/verify-otp", verifyPasswordResetOTP)
+  .post("/forgot-password/change-password", protectRoute, resetPassword)
+  .get("/user-details", protectRoute, userDetails);
 
 export default router;

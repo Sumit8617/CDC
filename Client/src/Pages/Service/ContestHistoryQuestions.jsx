@@ -5,6 +5,17 @@ import { useContestDetails } from "../../Hooks/TestDetailsHook";
 
 const QuestionCard = ({ question, selectedOption, setSelectedOption }) => (
   <div className="bg-white p-5 rounded-xl shadow-md hover:shadow-xl transition-shadow w-full max-w-3xl border-2 border-gray-200">
+    {/* Question Image */}
+    {question.questionImage && (
+      <div className="mb-4">
+        <img
+          src={question.questionImage}
+          alt="Question"
+          className="max-w-full h-auto rounded-lg border border-gray-300"
+        />
+      </div>
+    )}
+
     <h3 className="text-lg font-semibold text-gray-800 mb-4">
       {question.questionText}
     </h3>

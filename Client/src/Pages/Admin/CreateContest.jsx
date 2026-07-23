@@ -1,12 +1,21 @@
 import React, { useState } from "react";
-import { Card, Button, Input } from "../../Components/index";
+import { Card, Button, Input, Modal, FileUpload, ImageUpload } from "../../Components/index";
 import { useForm, FormProvider, useFieldArray } from "react-hook-form";
-import { PlusCircle, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlusCircle, Trash2, ChevronLeft, ChevronRight, Upload } from "lucide-react";
 import useCreateContest from "../../Hooks/Admin/CreateContestHook";
+import { useDispatch, useSelector } from "react-redux";
+import { parseQuestionsFromFile, resetParserState } from "../../lib/Admin/QuestionParserSlice";
 
 const QUESTIONS_PER_PAGE = 1;
 
 const CreateContest = () => {
+  const dispatch = useDispatch();
+
+  // Parser state
+  const { questions: extractedQuestions, loading: parserLoading, success: parserSuccess, error: parserError } = useSelector(
+    (state) => state.questionParser
+  );
+
   const methods = useForm({
     defaultValues: {
       contestName: "",
@@ -22,12 +31,13 @@ const CreateContest = () => {
           optionC: "",
           optionD: "",
           correctAnswer: "",
+          questionImage: null,
         },
       ],
     },
   });
 
-  const { control, handleSubmit, reset } = methods;
+  const { control, handleSubmit, reset, setValue, getValues } = methods;
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -35,6 +45,9 @@ const CreateContest = () => {
   });
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
   const totalPages = Math.ceil(fields.length / QUESTIONS_PER_PAGE);
   const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE;
   const currentQuestions = fields.slice(
@@ -48,7 +61,6 @@ const CreateContest = () => {
     loading,
     success,
     error,
-    resetContestState,
   } = useCreateContest();
 
   // Format data for backend
@@ -65,28 +77,90 @@ const CreateContest = () => {
         correctOption: ["A", "B", "C", "D"].indexOf(
           q.correctAnswer.toUpperCase()
         ),
+        questionImage: q.questionImage || null,
       })),
     };
   };
 
   // Handle publish
-  const handlePublish = (data) => {
+  const handlePublish = async (data) => {
     const payload = formatContestData(data);
-    createContest(payload);
-    if (!error) {
+    try {
+      await createContest(payload).unwrap();
+      alert("Contest published successfully!");
       reset();
       setCurrentPage(1);
+    } catch (err) {
+      console.error("Publish failed:", err);
+      // Error is handled by Redux state
     }
   };
 
   // Handle save draft
-  const handleSaveDraft = (data) => {
+  const handleSaveDraft = async (data) => {
     const payload = formatContestData(data);
-    saveDraftContest(payload);
-    if (!error) {
+    try {
+      await saveDraftContest(payload).unwrap();
+      alert("Contest saved as draft successfully!");
       reset();
       setCurrentPage(1);
+    } catch (err) {
+      console.error("Save draft failed:", err);
+      // Error is handled by Redux state
     }
+  };
+
+  // File upload handlers
+  const handleFileSelect = (file) => {
+    setSelectedFile(file);
+  };
+
+  const handleExtractQuestions = async () => {
+    if (!selectedFile) return;
+    await dispatch(parseQuestionsFromFile(selectedFile));
+  };
+
+  const handleAddExtractedQuestions = () => {
+    if (extractedQuestions && extractedQuestions.length > 0) {
+      // Get current number of questions before adding
+      const currentLength = fields.length;
+
+      // Convert extracted questions to form format
+      const newQuestions = extractedQuestions.map((q) => ({
+        question: q.questionText || "",
+        optionA: q.options?.[0] || "",
+        optionB: q.options?.[1] || "",
+        optionC: q.options?.[2] || "",
+        optionD: q.options?.[3] || "",
+        correctAnswer: ["A", "B", "C", "D"][q.correctOption] || "",
+        questionImage: q.questionImage || null,
+      }));
+
+      // Append all extracted questions at once
+      for (const q of newQuestions) {
+        append(q);
+      }
+
+      // Close modal and reset state
+      setIsUploadModalOpen(false);
+      setSelectedFile(null);
+      dispatch(resetParserState());
+
+      // Navigate to the first of the new questions
+      setCurrentPage(currentLength + 1);
+    }
+  };
+
+  const openUploadModal = () => {
+    setIsUploadModalOpen(true);
+    dispatch(resetParserState());
+    setSelectedFile(null);
+  };
+
+  const closeUploadModal = () => {
+    setIsUploadModalOpen(false);
+    setSelectedFile(null);
+    dispatch(resetParserState());
   };
 
   return (
@@ -176,26 +250,39 @@ const CreateContest = () => {
               <h2 className="text-lg font-semibold text-gray-800">
                 Contest Questions
               </h2>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                round="md"
-                onClick={() => {
-                  append({
-                    question: "",
-                    optionA: "",
-                    optionB: "",
-                    optionC: "",
-                    optionD: "",
-                    correctAnswer: "",
-                  });
-                  setCurrentPage(totalPages + 1);
-                }}
-              >
-                <PlusCircle className="w-4 h-4 mr-1" />
-                Add Question
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  round="md"
+                  onClick={openUploadModal}
+                >
+                  <Upload className="w-4 h-4 mr-1" />
+                  Upload File
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  round="md"
+                  onClick={() => {
+                    append({
+                      question: "",
+                      optionA: "",
+                      optionB: "",
+                      optionC: "",
+                      optionD: "",
+                      correctAnswer: "",
+                      questionImage: null,
+                    });
+                    setCurrentPage(totalPages + 1);
+                  }}
+                >
+                  <PlusCircle className="w-4 h-4 mr-1" />
+                  Add Question
+                </Button>
+              </div>
             </div>
 
             {currentQuestions.map((field, index) => {
@@ -229,6 +316,16 @@ const CreateContest = () => {
                     placeholder="Enter the question text"
                     rules={{ required: "Question is required" }}
                   />
+
+                  {/* Question Image Display */}
+                  <div className="mb-4">
+                    <ImageUpload
+                      currentImage={getValues(`questions.${actualIndex}.questionImage`)}
+                      onImageSelect={(image) => setValue(`questions.${actualIndex}.questionImage`, image)}
+                      label="Question Image (Optional)"
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input
                       name={`questions.${actualIndex}.optionA`}
@@ -290,15 +387,92 @@ const CreateContest = () => {
           </Card>
 
           {/* API feedback */}
-          {loading && <p>Processing contest...</p>}
-          {error && <p className="text-red-500">{error}</p>}
+          {loading && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+              <p className="text-blue-700 font-medium">Processing contest...</p>
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600 font-medium">Error: {error}</p>
+            </div>
+          )}
           {success && (
-            <p className="text-green-500">
-              Contest {success === "draft" ? "saved as draft" : "published"}{" "}
-              successfully!
-            </p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-green-700 font-medium">
+                ✓ Contest {(success === "draft" || draftContest) ? "saved as draft" : "published"} successfully!
+              </p>
+            </div>
           )}
         </form>
+
+        {/* Upload Modal */}
+        <Modal
+          isOpen={isUploadModalOpen}
+          onClose={closeUploadModal}
+          title="Upload Questions from File"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Upload a Word file containing questions. The file should be
+              formatted with numbered questions and A/B/C/D options.
+            </p>
+
+            <FileUpload
+              onFileSelect={handleFileSelect}
+              isLoading={parserLoading}
+            />
+
+            {parserError && (
+              <p className="text-red-500 text-sm">{parserError}</p>
+            )}
+
+            {parserSuccess && extractedQuestions.length > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-green-700 text-sm font-medium">
+                  ✓ Successfully extracted {extractedQuestions.length} questions!
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                round="md"
+                onClick={closeUploadModal}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="indigo"
+                size="md"
+                round="md"
+                onClick={handleExtractQuestions}
+                disabled={!selectedFile || parserLoading}
+                className="flex-1"
+              >
+                {parserLoading ? "Extracting..." : "Extract Questions"}
+              </Button>
+            </div>
+
+            {parserSuccess && extractedQuestions.length > 0 && (
+              <Button
+                type="button"
+                variant="success"
+                size="md"
+                round="md"
+                onClick={handleAddExtractedQuestions}
+                className="w-full"
+              >
+                Add {extractedQuestions.length} Questions to Contest
+              </Button>
+            )}
+          </div>
+        </Modal>
       </FormProvider>
     </>
   );

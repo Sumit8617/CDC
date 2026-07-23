@@ -37,7 +37,9 @@ const initialState = {
   contest: null,
   draftContest: null,
   loading: false,
-  success: false,
+  // success is null | "published" | "draft" so the UI can tell which
+  // action just completed, instead of a plain boolean that can't.
+  success: null,
   error: null,
 };
 
@@ -49,7 +51,7 @@ const contestSlice = createSlice({
       state.contest = null;
       state.draftContest = null;
       state.loading = false;
-      state.success = false;
+      state.success = null;
       state.error = null;
     },
   },
@@ -59,17 +61,17 @@ const contestSlice = createSlice({
       .addCase(createContest.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
+        state.success = null;
       })
       .addCase(createContest.fulfilled, (state, action) => {
         state.loading = false;
-        state.success = true;
+        state.success = "published";
         state.contest = action.payload?.contest;
       })
       .addCase(createContest.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
-        state.success = false;
+        state.success = null;
       });
 
     // Save Draft contest
@@ -77,17 +79,17 @@ const contestSlice = createSlice({
       .addCase(saveDraftContest.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.success = false;
+        state.success = null;
       })
       .addCase(saveDraftContest.fulfilled, (state, action) => {
         state.loading = false;
-        state.success = true;
+        state.success = "draft";
         state.draftContest = action.payload?.contest;
       })
       .addCase(saveDraftContest.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
-        state.success = false;
+        state.success = null;
       });
   },
 });

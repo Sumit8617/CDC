@@ -48,6 +48,34 @@ export const fetchAdmins = createAsyncThunk(
   }
 );
 
+// Block user
+export const blockUser = createAsyncThunk(
+  "stats/blockUser",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.post(`/api/v1/admin/auth/block-user/${userId}`);
+      return { userId, message: res.data.message };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || "Failed to block user";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// Unblock user
+export const unblockUser = createAsyncThunk(
+  "stats/unblockUser",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.post(`/api/v1/admin/auth/unblock-user/${userId}`);
+      return { userId, message: res.data.message };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || "Failed to unblock user";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 // Slice
 
 const adminStatsSlice = createSlice({
@@ -123,6 +151,34 @@ const adminStatsSlice = createSlice({
       .addCase(fetchAdmins.rejected, (state, action) => {
         state.loading.admins = false;
         state.error.admins = action.payload || action.error.message;
+      })
+
+      // Block user
+      .addCase(blockUser.fulfilled, (state, action) => {
+        const { userId } = action.payload;
+        const user = state.userDetails.find(u => u._id === userId);
+        if (user) {
+          user.isBlocked = true;
+        }
+      })
+
+      // Unblock user
+      .addCase(unblockUser.fulfilled, (state, action) => {
+        const { userId } = action.payload;
+        const user = state.userDetails.find(u => u._id === userId);
+        if (user) {
+          user.isBlocked = false;
+        }
+      })
+
+      // Handle rejected cases (error handling is done in component)
+      .addCase(blockUser.rejected, (state, action) => {
+        // Error is passed to component via rejectWithValue
+        console.error("Block user rejected:", action.payload);
+      })
+      .addCase(unblockUser.rejected, (state, action) => {
+        // Error is passed to component via rejectWithValue
+        console.error("Unblock user rejected:", action.payload);
       });
   },
 });

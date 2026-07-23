@@ -7,9 +7,15 @@ import {
 import { User } from "../../Service/Models/User.models.js";
 import { Test } from "../Models/Contest.model.js";
 import { Leaderboard } from "../Models/Leaderboard.models.js";
+import { Block } from "../Models/BlockSchema.models.js";
 import { generateAccessAndRefreshTokens } from "../../Service/Controllers/Auth.controllers.js";
 import { InviteToken } from "../Models/InviteTokenSchema.model.js";
-import { cachedFetch, invalidateCache, CACHE_KEYS, CACHE_TTL } from "../../Utils/RedisCache.utils.js";
+import {
+  cachedFetch,
+  invalidateCache,
+  CACHE_KEYS,
+  CACHE_TTL,
+} from "../../Utils/RedisCache.utils.js";
 import crypto from "crypto-js";
 
 const adminLogin = asynchandler(async (req, res) => {
@@ -312,19 +318,28 @@ const getUser = asynchandler(async (req, res) => {
 
   const fetchUsers = async () => {
     const totalUsers = await User.countDocuments({ role: "user" });
-    const userDetails = await User.find({ role: "user" })
+    let userDetails = await User.find({ role: "user" })
       .select("-password -refreshToken -mobileNumber")
       .lean();
+
+    // Get all blocked users
+    const blockedUsers = await Block.find().select("blocked").lean();
+    const blockedUserIds = new Set(
+      blockedUsers.map((b) => b.blocked.toString())
+    );
+
+    // Mark each user as blocked or not
+    userDetails = userDetails.map((user) => ({
+      ...user,
+      isBlocked: blockedUserIds.has(user._id.toString()),
+    }));
+
     return { totalUsers, userDetails };
   };
 
   const data = await cachedFetch(cacheKey, fetchUsers, CACHE_TTL.MEDIUM);
 
-  res
-    .status(200)
-    .json(
-      new APIRES(200, data, "Successfully fetched users")
-    );
+  res.status(200).json(new APIRES(200, data, "Successfully fetched users"));
 });
 
 const getAdmin = asynchandler(async (req, res) => {
@@ -340,15 +355,17 @@ const getAdmin = asynchandler(async (req, res) => {
 
   const data = await cachedFetch(cacheKey, fetchAdmins, CACHE_TTL.LONG);
 
-  return res.status(200).json(
-    new APIRES(
-      200,
-      data,
-      data.totalAdmin === 0
-        ? "No admins found"
-        : "Successfully fetched the admin details"
-    )
-  );
+  return res
+    .status(200)
+    .json(
+      new APIRES(
+        200,
+        data,
+        data.totalAdmin === 0
+          ? "No admins found"
+          : "Successfully fetched the admin details"
+      )
+    );
 });
 
 const getContest = asynchandler(async (req, res) => {
@@ -389,13 +406,7 @@ const getContest = asynchandler(async (req, res) => {
 
   res
     .status(200)
-    .json(
-      new APIRES(
-        200,
-        data,
-        "Successfully fetched the total contest"
-      )
-    );
+    .json(new APIRES(200, data, "Successfully fetched the total contest"));
 });
 
 export {

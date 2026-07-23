@@ -7,6 +7,9 @@ import {
 import { Test } from "../Models/Contest.model.js";
 import { Question } from "../Models/Question.model.js";
 import { invalidateCache, CACHE_KEYS } from "../../Utils/RedisCache.utils.js";
+import { upload } from "../../Middleware/Multer.middleware.js";
+import { parseQuestionFile } from "../../Utils/PdfParser.utils.js";
+import fs from "fs";
 
 const createTest = asynchandler(async (req, res) => {
   const {
@@ -64,6 +67,7 @@ const createTest = asynchandler(async (req, res) => {
         questionText: q.questionText,
         options: q.options,
         correctOption: q.correctOption,
+        questionImage: q.questionImage || null,
       };
     })
   );
@@ -147,6 +151,7 @@ const saveDraftContest = asynchandler(async (req, res) => {
         questionText: q.questionText,
         options: q.options,
         correctOption: q.correctOption,
+        questionImage: q.questionImage || null,
       };
     })
   );
@@ -236,10 +241,193 @@ const deleteContest = asynchandler(async (req, res) => {
   return res.status(200).json(new APIRES(200, "Contest deleted successfully"));
 });
 
+// Parse questions from PDF/Word file
+const parseQuestions = asynchandler(async (req, res) => {
+  if (!req.file) {
+    throw new APIERR(400, "Please upload a PDF or Word file");
+  }
+
+  const filePath = req.file.path;
+
+  // Check if images were uploaded with the file
+  let uploadedImages = [];
+  if (req.files && req.files.images) {
+    // Read each image and convert to base64
+    for (const imageFile of req.files.images) {
+      try {
+        const imageBuffer = fs.readFileSync(imageFile.path);
+        const base64 = imageBuffer.toString('base64');
+        const mimeType = imageFile.mimetype;
+        uploadedImages.push({
+          url: `data:${mimeType};base64,${base64}`,
+          type: mimeType,
+          originalName: imageFile.originalname
+        });
+
+        // Clean up the image file after reading
+        try {
+          fs.unlinkSync(imageFile.path);
+        } catch (e) {}
+      } catch (e) {
+        console.error("Error reading uploaded image:", e);
+      }
+    }
+    console.log("Uploaded images count:", uploadedImages.length);
+  }
+
+  const result = await parseQuestionFile(filePath, uploadedImages);
+
+  // Clean up the uploaded file
+  try {
+    fs.unlinkSync(filePath);
+  } catch (err) {
+    console.error("Error cleaning up file:", err);
+  }
+
+  if (!result.success) {
+    throw new APIERR(400, result.message);
+  }
+
+  return res.status(200).json(
+    new APIRES(200, result, "Questions extracted successfully")
+  );
+});
+
+// Get all drafts
+const getDrafts = asynchandler(async (req, res) => {
+  const drafts = await Test.find({ isDraft: true })
+    .select("testName description date duration createdAt")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const draftsWithCount = await Promise.all(
+    drafts.map(async (draft) => {
+      const questionCount = await Question.countDocuments({ _id: { $in: draft.questions } });
+      return { ...draft, questionCount };
+    })
+  );
+
+  return res.status(200).json(
+    new APIRES(200, { drafts: draftsWithCount, total: draftsWithCount.length }, "Drafts fetched successfully")
+  );
+});
+
+// Get single draft by ID
+const getDraftById = asynchandler(async (req, res) => {
+  const { draftId } = req.params;
+  if (!draftId) throw new APIERR(400, "Draft ID is required");
+
+  const draft = await Test.findOne({ _id: draftId, isDraft: true })
+    .populate("questions")
+    .lean();
+
+  if (!draft) throw new APIERR(404, "Draft contest not found");
+
+  return res.status(200).json(
+    new APIRES(200, { contest: draft }, "Draft fetched successfully")
+  );
+});
+
+// Update draft contest
+const updateDraft = asynchandler(async (req, res) => {
+  const { draftId } = req.params;
+  if (!draftId) throw new APIERR(400, "Draft ID is required");
+
+  const { testName, description, contestDate, contestTime, duration, questions } = req.body;
+
+  // Validate required fields
+  if ([testName, description, duration].some(f => !f || f.toString().trim() === "")) {
+    throw new APIERR(400, "Please provide all required fields");
+  }
+
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new APIERR(400, "Please provide at least one question");
+  }
+
+  const existingDraft = await Test.findOne({ _id: draftId, isDraft: true });
+  if (!existingDraft) throw new APIERR(404, "Draft contest not found");
+
+  // Update contest metadata
+  let updateData = { testName, description, duration };
+
+  if (contestDate && contestTime) {
+    updateData.date = istToUtc(contestDate, contestTime);
+  }
+
+  // Delete old questions
+  if (existingDraft.questions && existingDraft.questions.length > 0) {
+    await Question.deleteMany({ _id: { $in: existingDraft.questions } });
+  }
+
+  // Create new questions
+  const createdQuestions = await Question.insertMany(
+    questions.map((q) => {
+      if (typeof q.correctOption !== "number" || q.correctOption < 0 || q.correctOption > 3) {
+        throw new APIERR(400, `Invalid correct option for question`);
+      }
+      if (!Array.isArray(q.options) || q.options.length !== 4) {
+        throw new APIERR(400, "Each question must have exactly 4 options");
+      }
+      return {
+        questionText: q.questionText,
+        options: q.options,
+        correctOption: q.correctOption,
+        questionImage: q.questionImage || null,
+      };
+    })
+  );
+
+  updateData.questions = createdQuestions.map((q) => q._id);
+
+  const updatedDraft = await Test.findByIdAndUpdate(
+    draftId,
+    { $set: updateData },
+    { new: true }
+  ).populate("questions");
+
+  // Invalidate caches
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.TEST_DETAILS}*`);
+
+  return res.status(200).json(
+    new APIRES(200, { contest: updatedDraft }, "Draft updated successfully")
+  );
+});
+
+// Delete draft contest
+const deleteDraft = asynchandler(async (req, res) => {
+  const { draftId } = req.params;
+  if (!draftId) throw new APIERR(400, "Draft ID is required");
+
+  const existingDraft = await Test.findOne({ _id: draftId, isDraft: true });
+  if (!existingDraft) throw new APIERR(404, "Draft contest not found");
+
+  // Delete associated questions
+  if (existingDraft.questions && existingDraft.questions.length > 0) {
+    await Question.deleteMany({ _id: { $in: existingDraft.questions } });
+  }
+
+  // Delete the draft
+  await Test.findByIdAndDelete(draftId);
+
+  // Invalidate caches
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.TEST_DETAILS}*`);
+
+  return res.status(200).json(new APIRES(200, "Draft deleted successfully"));
+});
+
 export {
   createTest,
   saveDraftContest,
   getContest,
   updateContest,
   deleteContest,
+  parseQuestions,
+  getDrafts,
+  getDraftById,
+  updateDraft,
+  deleteDraft,
 };

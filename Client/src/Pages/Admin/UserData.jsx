@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Card, Button, Modal, PageLoaderWrapper } from "../../Components/index";
 import { useAdminStats } from "../../Hooks/AdminStatsHook";
+import { useDispatch } from "react-redux";
+import { blockUser, unblockUser } from "../../lib/StatsSlice";
 import useSignup from "../../Hooks/AuthHooks";
 import {
   Mail,
@@ -13,11 +15,15 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  CheckCircle,
 } from "lucide-react";
 
 const ManageUsers = () => {
   const { userDetails, loading, error, refresh } = useAdminStats();
   const { handleDeleteUser } = useSignup();
+  const dispatch = useDispatch();
+
+  const [blockLoading, setBlockLoading] = useState(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -31,8 +37,25 @@ const ManageUsers = () => {
     alert(`Edit user feature coming soon with this ID : ${id}`);
   };
 
-  const handleBlock = (id) => {
-    alert(`Blocking Features Will coming Soon for this ID : ${id}`);
+  const handleBlock = async (user) => {
+    if (!user) return;
+    setBlockLoading(user._id);
+    try {
+      if (user.isBlocked) {
+        await dispatch(unblockUser(user._id)).unwrap();
+        alert("User unblocked successfully!");
+      } else {
+        await dispatch(blockUser(user._id)).unwrap();
+        alert("User blocked successfully!");
+      }
+      // Refresh the user list to get updated isBlocked status
+      await refresh();
+    } catch (err) {
+      console.error("Block/Unblock failed:", err);
+      alert(err || "Failed to update user status");
+    } finally {
+      setBlockLoading(null);
+    }
   };
 
   const openDeleteModal = (user) => {
@@ -295,14 +318,15 @@ const ManageUsers = () => {
                 {/* Actions */}
                 <div className="flex justify-between pt-4 border-t border-gray-200">
                   <Button
-                    variant={user?.status === "Active" ? "danger" : "indigo"}
+                    variant={user?.isBlocked ? "indigo" : "danger"}
                     size="sm"
                     round="md"
                     className="flex items-center gap-1.5"
-                    onClick={() => handleBlock(user._id)}
+                    onClick={() => handleBlock(user)}
+                    disabled={blockLoading === user._id}
                   >
-                    <Ban size={16} />
-                    {user?.status === "Active" ? "Block" : "Unblock"}
+                    {user?.isBlocked ? <CheckCircle size={16} /> : <Ban size={16} />}
+                    {blockLoading === user._id ? "Loading..." : (user?.isBlocked ? "Unblock" : "Block")}
                   </Button>
 
                   <Button

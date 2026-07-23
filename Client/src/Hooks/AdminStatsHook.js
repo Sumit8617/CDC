@@ -19,11 +19,13 @@ export const useAdminStats = () => {
     fetchAllStats();
   }, []);
 
-  // Dispatch all thunks
+  // Dispatch all thunks - now returns a promise for proper awaiting
   const fetchAllStats = () => {
-    dispatch(fetchContest());
-    dispatch(fetchUsers());
-    dispatch(fetchAdmins());
+    return Promise.all([
+      dispatch(fetchContest()),
+      dispatch(fetchUsers()),
+      dispatch(fetchAdmins()),
+    ]);
   };
 
   return {

@@ -16,6 +16,8 @@ import Modal from "./Common/Modal";
 import UserChangePassword from "./Password/UserPasswordChange";
 import AnimatedDigit from "./Animation/AnimateDigit";
 import CountdownTimer from "./Common/Timer";
+import FileUpload from "./Common/FileUpload";
+import ImageUpload from "./Common/ImageUpload";
 
 export {
   GeneralNav,
@@ -36,4 +38,6 @@ export {
   UserChangePassword,
   AnimatedDigit,
   CountdownTimer,
+  FileUpload,
+  ImageUpload,
 };

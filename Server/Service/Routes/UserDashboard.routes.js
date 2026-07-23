@@ -9,9 +9,10 @@ import {
 
 const router = express.Router();
 
-router.get("/stats", protectRoute, getUserStats);
-router.get("/performance", protectRoute, getUserPerformance);
-router.get("/upcoming-contests", protectRoute, getUpcomingContests);
-router.get("/recent-history", protectRoute, getRecentHistory);
+router
+  .get("/stats", protectRoute, getUserStats)
+  .get("/performance", protectRoute, getUserPerformance)
+  .get("/upcoming-contests", protectRoute, getUpcomingContests)
+  .get("/recent-history", protectRoute, getRecentHistory);
 
 export default router;
