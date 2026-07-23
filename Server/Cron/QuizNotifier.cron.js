@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { Test } from "../Admin/Models/Contest.model.js";
 import { User } from "../Service/Models/User.models.js";
 import { sendMail } from "../Utils/index.utils.js";
+import { invalidateCache, CACHE_KEYS } from "../Utils/RedisCache.utils.js";
 
 cron.schedule("0 0 * * *", async () => {
   console.log("Running Daily Check Notification check...");
@@ -98,4 +99,8 @@ cron.schedule("0 0 * * *", async () => {
     contest.notificationsSent = true;
     await contest.save();
   }
+
+  // Invalidate cache after notifications are sent
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  console.log("Cache invalidated after quiz notifications");
 });

@@ -9,6 +9,7 @@ import { Test } from "../Models/Contest.model.js";
 import { Leaderboard } from "../Models/Leaderboard.models.js";
 import { generateAccessAndRefreshTokens } from "../../Service/Controllers/Auth.controllers.js";
 import { InviteToken } from "../Models/InviteTokenSchema.model.js";
+import { cachedFetch, invalidateCache, CACHE_KEYS, CACHE_TTL } from "../../Utils/RedisCache.utils.js";
 import crypto from "crypto-js";
 
 const adminLogin = asynchandler(async (req, res) => {
@@ -114,7 +115,7 @@ const adminInvite = asynchandler(async (req, res) => {
         <div style="padding: 30px;">
           <h2 style="color: #333333; font-size: 22px;">Hello, ${fullName}!</h2>
           <p style="color: #555555; font-size: 15px; line-height: 1.7;">
-            You have been invited to join <strong>${process.env.APP_NAME}</strong> as an 
+            You have been invited to join <strong>${process.env.APP_NAME}</strong> as an
             <strong>Admin</strong>. Click the button below to complete your registration.
           </p>
 
@@ -143,8 +144,8 @@ const adminInvite = asynchandler(async (req, res) => {
           </p>
 
           <p style="color: #555555; font-size: 15px; line-height: 1.7;">
-            If you did not expect this invitation, please contact us at  
-            <a href="mailto:${process.env.SUPPORT_EMAIL}" style="color: orange; text-decoration: none;">
+            If you did not expect this invitation, please contact us at
+            <a href="mailto:${process.env.SMTP_FROM_EMAIL}" style="color: orange; text-decoration: none;">
               ${process.env.SMTP_FROM_EMAIL}
             </a>.
           </p>
@@ -307,32 +308,43 @@ const registerAdmin = asynchandler(async (req, res) => {
 
 // TODO: Some Bug fix if the user is empty it don't sent No user Found instead sending the status code and get failed
 const getUser = asynchandler(async (req, res) => {
-  const totalUsers = await User.countDocuments({ role: "user" });
-  const userDetails = await User.find({ role: "user" })
-    .select("-password -refreshToken -mobileNumber")
-    .lean();
+  const cacheKey = `${CACHE_KEYS.USER_STATS}admin:all:v1`;
+
+  const fetchUsers = async () => {
+    const totalUsers = await User.countDocuments({ role: "user" });
+    const userDetails = await User.find({ role: "user" })
+      .select("-password -refreshToken -mobileNumber")
+      .lean();
+    return { totalUsers, userDetails };
+  };
+
+  const data = await cachedFetch(cacheKey, fetchUsers, CACHE_TTL.MEDIUM);
 
   res
     .status(200)
     .json(
-      new APIRES(200, { totalUsers, userDetails }, "Successfully fetched users")
+      new APIRES(200, data, "Successfully fetched users")
     );
 });
 
 const getAdmin = asynchandler(async (req, res) => {
-  const totalAdmin = await User.countDocuments({ role: "admin" });
-  const adminDetails = await User.find({ role: "admin" }).select(
-    "-password -refreshToken"
-  );
+  const cacheKey = `${CACHE_KEYS.USER_STATS}admin:list:v1`;
+
+  const fetchAdmins = async () => {
+    const totalAdmin = await User.countDocuments({ role: "admin" });
+    const adminDetails = await User.find({ role: "admin" }).select(
+      "-password -refreshToken"
+    );
+    return { totalAdmin: totalAdmin || 0, adminDetails: adminDetails || [] };
+  };
+
+  const data = await cachedFetch(cacheKey, fetchAdmins, CACHE_TTL.LONG);
 
   return res.status(200).json(
     new APIRES(
       200,
-      {
-        totalAdmin: totalAdmin || 0,
-        adminDetails: adminDetails || [],
-      },
-      totalAdmin === 0
+      data,
+      data.totalAdmin === 0
         ? "No admins found"
         : "Successfully fetched the admin details"
     )
@@ -340,35 +352,47 @@ const getAdmin = asynchandler(async (req, res) => {
 });
 
 const getContest = asynchandler(async (req, res) => {
-  const totalContest = await Test.countDocuments().lean();
-  const recentContests = await Test.find().sort({ createdAt: -1 }).lean();
+  const cacheKey = `${CACHE_KEYS.CONTESTS}admin:all:v1`;
 
-  // If no contests exist
-  if (totalContest === 0 || !recentContests || recentContests.length === 0) {
+  const fetchContests = async () => {
+    const totalContest = await Test.countDocuments().lean();
+    const recentContests = await Test.find().sort({ createdAt: -1 }).lean();
+
+    // If no contests exist
+    if (totalContest === 0 || !recentContests || recentContests.length === 0) {
+      return { totalContest: 0, recentContests: [] };
+    }
+
+    // Check which contests have their leaderboards published
+    const leaderboardDocs = await Leaderboard.find({
+      publishedAt: { $ne: null },
+    }).lean();
+
+    const publishedContestIds = new Set(
+      leaderboardDocs.map((lb) => lb.contest.toString())
+    );
+
+    // Add isLeaderboardPublished to each contest
+    const contestsWithLeaderboard = recentContests.map((contest) => ({
+      ...contest,
+      isLeaderboardPublished: publishedContestIds.has(contest._id.toString()),
+    }));
+
+    return { totalContest, recentContests: contestsWithLeaderboard };
+  };
+
+  const data = await cachedFetch(cacheKey, fetchContests, CACHE_TTL.MEDIUM);
+
+  if (data.totalContest === 0) {
     return res.status(404).json(new APIRES(404, null, "No Contest Found"));
   }
-
-  // Check which contests have their leaderboards published
-  const leaderboardDocs = await Leaderboard.find({
-    publishedAt: { $ne: null },
-  }).lean();
-
-  const publishedContestIds = new Set(
-    leaderboardDocs.map((lb) => lb.contest.toString())
-  );
-
-  // Add isLeaderboardPublished to each contest
-  const contestsWithLeaderboard = recentContests.map((contest) => ({
-    ...contest,
-    isLeaderboardPublished: publishedContestIds.has(contest._id.toString()),
-  }));
 
   res
     .status(200)
     .json(
       new APIRES(
         200,
-        { totalContest, recentContests: contestsWithLeaderboard },
+        data,
         "Successfully fetched the total contest"
       )
     );

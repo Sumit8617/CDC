@@ -9,6 +9,11 @@ import {
   APIRES,
   sendMail,
 } from "../../Utils/index.utils.js";
+import {
+  cacheDelete,
+  cacheDeletePattern,
+} from "../../Utils/RedisCache.utils.js";
+import { CACHE_KEYS } from "../../config/redis.config.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -87,7 +92,7 @@ const signup = asynchandler(async (req, res) => {
   const welcomeHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;">
       <div style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-        
+
         <!-- Header -->
         <div style="background-color: ${process.env.BRAND_COLOR}; padding: 30px; text-align: center;">
           <h1 style="color: #ffffff; margin: 0; font-size: 26px;">${process.env.APP_NAME}</h1>
@@ -115,7 +120,7 @@ const signup = asynchandler(async (req, res) => {
 
           <!-- CTA Button -->
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.APP_URL}" 
+            <a href="${process.env.APP_URL}"
               style="background-color: ${process.env.BRAND_COLOR}; color: #ffffff; padding: 14px 32px;
                      text-decoration: none; border-radius: 6px; font-size: 15px; font-weight: bold;">
               Go to Dashboard
@@ -123,7 +128,7 @@ const signup = asynchandler(async (req, res) => {
           </div>
 
           <p style="color: #555555; font-size: 15px; line-height: 1.7;">
-            If you have any questions, feel free to reach out to our 
+            If you have any questions, feel free to reach out to our
             <a href="${process.env.SUPPORT_URL}" style="color: ${process.env.BRAND_COLOR}; text-decoration: none;">support team</a>.
           </p>
         </div>
@@ -226,6 +231,12 @@ const logout = asynchandler(async (req, res) => {
     maxAge: 0,
   });
 
+  // Clear user cache on logout
+  if (req.user?._id) {
+    await cacheDeletePattern(`${CACHE_KEYS.USER_STATS}${req.user._id}*`);
+    await cacheDeletePattern(`${CACHE_KEYS.USER_DASHBOARD}${req.user._id}*`);
+  }
+
   return res.status(200).json(new APIRES(200, "Successfully logged out"));
 });
 
@@ -309,6 +320,12 @@ const changeCurrentPassword = asynchandler(async (req, res) => {
   }
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
+
+  // Clear user session cache after password change
+  if (req.user?._id) {
+    await cacheDeletePattern(`${CACHE_KEYS.USER_STATS}${req.user._id}*`);
+  }
+
   return res
     .status(200)
     .json(new APIRES(200, user, "Password changed successfully"));

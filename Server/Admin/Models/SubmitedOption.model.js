@@ -27,6 +27,18 @@ const submittedOptionSchema = new mongoose.Schema(
         isCorrect: { type: Boolean, default: false },
       },
     ],
+    // Store the shuffle mapping for each user
+    positionMap: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
+    // Original shuffle data for grading
+    shuffleData: {
+      originalOrder: { type: Boolean, default: false }, // true if questions were shuffled
+      shuffledAt: { type: Date },
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    },
     score: { type: Number, default: 0 },
   },
   { timestamps: true }
@@ -37,6 +49,9 @@ submittedOptionSchema.index(
   { autoDeleteAt: 1 },
   { expireAfterSeconds: 60 * 60 * 24 }
 );
+
+// Compound index for efficient queries
+submittedOptionSchema.index({ contest: 1, user: 1 }, { unique: true });
 
 export const SubmittedOption = mongoose.model(
   "SubmittedOption",

@@ -6,6 +6,7 @@ import {
   CountdownTimer,
 } from "../../Components/index";
 import useUpcomingContests from "../../Hooks/UpcomingContestHook";
+import useShuffledQuestions from "../../Hooks/ShuffledQuestionsHook";
 import useContestSubmission from "../../Hooks/SubmitContestHook";
 import useSignup from "../../Hooks/AuthHooks";
 import useCheckSubmission from "../../Hooks/CheckSubmissionHook";
@@ -36,6 +37,7 @@ const Contest = () => {
     checkSubmission,
   } = useCheckSubmission(contestIdToCheck);
 
+  // Shuffled questions state
   const [selectedOption, setSelectedOption] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -45,12 +47,15 @@ const Contest = () => {
   const [showFullscreenModal, setShowFullscreenModal] = useState(false);
   const [contestStarted, setContestStarted] = useState(false);
   const [frozenContest, setFrozenContest] = useState(null);
+  const [frozenQuestions, setFrozenQuestions] = useState(null);
   const frozenContestRef = useRef(null);
+  const frozenQuestionsRef = useRef(null);
   const [faceDetectorReady, setFaceDetectorReady] = useState(false);
   const [faceWarning, setFaceWarning] = useState(null);
   const [faceViolationCount, setFaceViolationCount] = useState(0);
   const [cameraMinimized, setCameraMinimized] = useState(false);
   const [showEscWarning, setShowEscWarning] = useState(false);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
 
   // Refs
   const faceDetectorRef = useRef(null);
@@ -120,7 +125,7 @@ const Contest = () => {
   const hasContestEnded =
     !contestStarted && !!contestToShow && currentTime > contestEnd;
 
-  // Refresh contests periodically to get updated status and questions
+  // Refresh contests periodically to get updated status
   useEffect(() => {
     if (isContestUpcoming || isContestOngoing) {
       const interval = setInterval(() => {
@@ -187,6 +192,9 @@ const Contest = () => {
 
       const currentUser = userRef.current;
       if (!currentUser || !contest) return;
+
+      // Use shuffled questions for submission
+      const questionsToSubmit = frozenQuestionsRef.current || [];
 
       const questionsPayload = Object.entries(selectedOptionRef.current).map(
         ([questionId, option]) => ({
@@ -309,7 +317,7 @@ const Contest = () => {
     if (contestStarted && faceDetectorReady) startFaceDetection();
   }, [contestStarted, faceDetectorReady, startFaceDetection]);
 
-  // ── General effects ───────────────────────────────────────────────────────
+  // ── General effects ─────────────────────────────────────────────────────
   useEffect(() => {
     const ended = localStorage.getItem("contestEnded");
     if (ended) {
@@ -459,6 +467,28 @@ const Contest = () => {
     };
   }, [contestStarted]);
 
+  // ── Fetch shuffled questions when contest starts ──────────────────────────
+  const fetchShuffledQuestions = useCallback(async (contestId) => {
+    if (!contestId) return null;
+
+    setQuestionsLoading(true);
+    try {
+      const response = await fetch(
+        `/api/v1/user/shuffled-questions/${contestId}`,
+        {
+          credentials: "include",
+        }
+      );
+      const result = await response.json();
+      setQuestionsLoading(false);
+      return result.data;
+    } catch (err) {
+      console.error("Error fetching shuffled questions:", err);
+      setQuestionsLoading(false);
+      return null;
+    }
+  }, []);
+
   // ── Enter fullscreen & start ──────────────────────────────────────────────
   const handleStartContest = async () => {
     if (contestAlreadySubmitted || finished) return;
@@ -467,32 +497,29 @@ const Contest = () => {
     const contestSnapshot = contestToShow || contestDataRef.current;
     if (!contestSnapshot) return;
 
-    if (!contestSnapshot.questions || contestSnapshot.questions.length === 0) {
-      await refreshContests();
-      const updatedContest = contests.find(
-        (c) => c._id === contestSnapshot._id
-      );
-      if (updatedContest?.questions?.length > 0) {
-        contestSnapshot.questions = updatedContest.questions;
-      }
-    }
+    console.log("Starting contest:", contestSnapshot._id);
 
-    console.log("Contest snapshot:", JSON.stringify(contestSnapshot, null, 2));
-    console.log("Questions:", contestSnapshot?.questions);
-    console.log("First question:", contestSnapshot?.questions?.[0]);
+    // Fetch shuffled questions from server
+    const shuffledData = await fetchShuffledQuestions(contestSnapshot._id);
 
-    // Check if questions exist before starting
-    if (!contestSnapshot.questions || contestSnapshot.questions.length === 0) {
+    if (!shuffledData || !shuffledData.questions || shuffledData.questions.length === 0) {
       alert("Questions not loaded yet. Please wait and try again.");
       return;
     }
 
-    // ✅ Set ref synchronously BEFORE any await or setState
-    contestDataRef.current = contestSnapshot;
-    frozenContestRef.current = contestSnapshot; // synchronous
-    setFrozenContest(contestSnapshot); // triggers re-render
+    console.log("Shuffled questions received:", shuffledData.questions.length);
+    console.log("First shuffled question:", shuffledData.questions[0]);
 
-    // Wait for state to update before entering fullscreen
+    // Set contest data
+    contestDataRef.current = contestSnapshot;
+    frozenContestRef.current = contestSnapshot;
+    setFrozenContest(contestSnapshot);
+
+    // Set shuffled questions (different for each user!)
+    frozenQuestionsRef.current = shuffledData.questions;
+    setFrozenQuestions(shuffledData.questions);
+
+    // Wait for state to update
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     setContestStarted(true);
@@ -512,8 +539,8 @@ const Contest = () => {
   };
 
   const handleNext = () => {
-    const contest = frozenContest || frozenContestRef.current;
-    if (contest && currentQuestion < contest.questions.length - 1)
+    const questions = frozenQuestions || frozenQuestionsRef.current;
+    if (questions && currentQuestion < questions.length - 1)
       setCurrentQuestion((p) => p + 1);
   };
 
@@ -527,6 +554,9 @@ const Contest = () => {
     const s = seconds % 60;
     return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
+
+  // Get questions from state or ref
+  const currentQuestions = frozenQuestions || frozenQuestionsRef.current || [];
 
   const QuestionCard = ({ question }) => (
     <div className="bg-white mt-5 p-4 sm:p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 w-full border-2 border-gray-200">
@@ -554,8 +584,8 @@ const Contest = () => {
     </div>
   );
 
-  if (loading || submitting || loadingUser || checkingSubmission)
-    return <PageLoaderWrapper loading={loading} />;
+  if (loading || submitting || loadingUser || checkingSubmission || questionsLoading)
+    return <PageLoaderWrapper loading={loading || questionsLoading} />;
   if (error) return <p>Error: {error}</p>;
 
   return (
@@ -788,12 +818,13 @@ const Contest = () => {
                 <p className="text-sm text-gray-500 leading-relaxed">
                   You must stay in fullscreen for the entire contest. Exiting
                   will auto-submit your answers. Your camera is used for live
-                  proctoring.
+                  proctoring. Questions are randomized for each user.
                 </p>
                 <ul className="text-xs text-left text-gray-500 space-y-1.5 bg-gray-50 rounded-lg p-3">
                   <li>📷 Stay visible in the camera at all times</li>
                   <li>👤 Only one face should be visible</li>
                   <li>🔲 Do not exit fullscreen</li>
+                  <li>🔀 Questions are randomized per user</li>
                   <li>
                     ⚠️ {MAX_FACE_VIOLATIONS} violations trigger auto-submission
                   </li>
@@ -842,6 +873,9 @@ const Contest = () => {
                   <li>Ensure a stable internet connection before starting.</li>
                   <li>Each participant can attempt the contest only once.</li>
                   <li>
+                    Questions are randomized - different for each participant.
+                  </li>
+                  <li>
                     Malpractice or unfair means will lead to disqualification.
                   </li>
                   <li>
@@ -866,8 +900,9 @@ const Contest = () => {
       {contestStarted &&
         !finished &&
         (frozenContest || frozenContestRef.current) &&
+        currentQuestions.length > 0 &&
         (() => {
-          const contest = frozenContest || frozenContestRef.current; // ✅ never undefined
+          const contest = frozenContest || frozenContestRef.current;
           return (
             <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 md:pl-64">
               {/* Topbar */}
@@ -901,7 +936,7 @@ const Contest = () => {
                 >
                   <div className="w-full max-w-3xl mt-20">
                     <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center mb-4">
-                      {contest.questions.map((q, idx) => (
+                      {currentQuestions.map((q, idx) => (
                         <button
                           key={q._id}
                           onClick={() => setCurrentQuestion(idx)}
@@ -919,10 +954,10 @@ const Contest = () => {
                     </div>
                   </div>
 
-                  {/* ✅ Guard question access so it's never undefined */}
-                  {contest.questions[currentQuestion] && (
+                  {/* Question Card */}
+                  {currentQuestions[currentQuestion] && (
                     <QuestionCard
-                      question={contest.questions[currentQuestion]}
+                      question={currentQuestions[currentQuestion]}
                     />
                   )}
 
@@ -934,7 +969,7 @@ const Contest = () => {
                     >
                       Previous
                     </Button>
-                    {currentQuestion === contest.questions.length - 1 ? (
+                    {currentQuestion === currentQuestions.length - 1 ? (
                       <Button
                         variant="primary"
                         onClick={handleSubmit}

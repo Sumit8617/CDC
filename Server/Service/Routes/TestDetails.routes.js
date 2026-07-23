@@ -3,7 +3,7 @@ import {
   fetchContestDetails,
   fetchPreviousQuestions,
 } from "../Controllers/TestDetails.controller.js";
-import { getUpcomingContests } from "../Controllers/UpcomingContest.controller.js";
+import { getUpcomingContests, getShuffledQuestions } from "../Controllers/UpcomingContest.controller.js";
 import { checkUserSubmission } from "../Controllers/CheckSubmission.controller.js";
 import { protectRoute } from "../../Middleware/Auth.middleware.js";
 
@@ -16,6 +16,9 @@ contestDetailsRouter
 contestDetailsRouter
   .route("/upcoming-contests")
   .get(protectRoute, getUpcomingContests);
+contestDetailsRouter
+  .route("/shuffled-questions/:contestId")
+  .get(protectRoute, getShuffledQuestions);
 contestDetailsRouter
   .route("/check-submission/:contestId")
   .get(protectRoute, checkUserSubmission);

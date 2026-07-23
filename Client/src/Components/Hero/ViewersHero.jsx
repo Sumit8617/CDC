@@ -8,15 +8,14 @@ import { useNavigate } from "react-router-dom";
 const HeroSection = () => {
   const navigate = useNavigate();
   const [animate, setAnimate] = useState(false);
+  const [totalUser, setTotalUser] = useState(0);
+  const [totalContest, setTotalContest] = useState(0);
 
   useEffect(() => {
     // Trigger underline animation once component mounts
     const timer = setTimeout(() => setAnimate(true), 300);
     return () => clearTimeout(timer);
   }, []);
-
-  const [totalUser, setTotalUser] = useState(0);
-  const [totalContest, setTotalContest] = useState(0);
 
   useEffect(() => {
     const fetchTotalUser = async () => {
@@ -99,7 +98,7 @@ const HeroSection = () => {
 
         <div>
           <h2 className="text-4xl font-extrabold text-indigo-600">
-            <CountUp end={totalUser - 1} duration={3} separator="," />+
+            <CountUp end={totalUser} duration={3} separator="," />+
           </h2>
           <p className="text-gray-500 mt-2 text-lg">Active Students</p>
         </div>

@@ -8,7 +8,7 @@ import {
   verifyAdminInvite,
   registerAdmin,
 } from "../Controllers/Auth.controller.js";
-import { deleteUser } from "../Controllers/User.controller.js";
+import { blockUser, unblockUser, getBlockUser, deleteUser } from "../Controllers/User.controller.js";
 import { adminOnly, protectRoute } from "../../Middleware/Auth.middleware.js";
 
 const adminAuthRoute = Router();
@@ -22,6 +22,24 @@ adminAuthRoute.delete(
   protectRoute,
   adminOnly,
   deleteUser
+);
+adminAuthRoute.post(
+  "/block-user/:userId",
+  protectRoute,
+  adminOnly,
+  blockUser
+);
+adminAuthRoute.post(
+  "/unblock-user/:userId",
+  protectRoute,
+  adminOnly,
+  unblockUser
+);
+adminAuthRoute.get(
+  "/blocked-users",
+  protectRoute,
+  adminOnly,
+  getBlockUser
 );
 adminAuthRoute.get("/get-user", protectRoute, adminOnly, getUser);
 adminAuthRoute.get("/get-admin", protectRoute, adminOnly, getAdmin);

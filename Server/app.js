@@ -12,6 +12,7 @@ import viewersRouter from "./Service/Routes/Statistic.routes.js";
 import contactRouter from "./Service/Routes/Contact.routes.js";
 import userDashboardRouter from "./Service/Routes/UserDashboard.routes.js";
 import "./Admin/Controllers/CheckCorrectAnswer.controller.js";
+import { checkRedisHealth, getCacheStats } from "./Utils/RedisHealth.utils.js";
 
 const app = express();
 
@@ -143,6 +144,21 @@ app.use("/api/v1/viewer/", viewersRouter);
 // Contact routes
 console.log("📌 /api/v1/contact");
 app.use("/api/v1/contact", contactRouter);
+
+// ========== Health Check Routes ==========
+app.get("/health", async (req, res) => {
+  const redisHealth = await checkRedisHealth();
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    redis: redisHealth,
+  });
+});
+
+app.get("/health/cache", async (req, res) => {
+  const stats = await getCacheStats();
+  res.status(200).json(stats);
+});
 
 // ========== 404 Handler ==========
 app.use((req, res, next) => {

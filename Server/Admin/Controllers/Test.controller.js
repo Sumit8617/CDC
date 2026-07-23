@@ -6,6 +6,7 @@ import {
 } from "../../Utils/index.utils.js";
 import { Test } from "../Models/Contest.model.js";
 import { Question } from "../Models/Question.model.js";
+import { invalidateCache, CACHE_KEYS } from "../../Utils/RedisCache.utils.js";
 
 const createTest = asynchandler(async (req, res) => {
   const {
@@ -79,6 +80,11 @@ const createTest = asynchandler(async (req, res) => {
     status: "pending",
     isPublished: true,
   });
+
+  // Invalidate contests cache after creating new contest
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.TEST_DETAILS}*`);
 
   return res
     .status(201)
@@ -159,6 +165,9 @@ const saveDraftContest = asynchandler(async (req, res) => {
     isPublished: false,
   });
 
+  // Invalidate cache
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+
   return res.status(201).json(
     new APIRES(201, "Contest saved as draft successfully", {
       contest: draftContest,
@@ -200,6 +209,12 @@ const updateContest = asynchandler(async (req, res) => {
     { new: true }
   );
 
+  // Invalidate cache after update
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.TEST_DETAILS}*`);
+  await invalidateCache(`${CACHE_KEYS.QUESTION_DETAILS}${contestId}*`);
+
   return res
     .status(200)
     .json(new APIRES(200, "Contest updated successfully", { updatedContest }));
@@ -208,7 +223,16 @@ const updateContest = asynchandler(async (req, res) => {
 const deleteContest = asynchandler(async (req, res) => {
   const { contestId } = req.params;
   if (!contestId) throw new APIERR(404, "Contest ID is NOT FOUND");
+
   await Test.findByIdAndDelete(contestId);
+
+  // Invalidate cache after deletion
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.TEST_DETAILS}*`);
+  await invalidateCache(`${CACHE_KEYS.QUESTION_DETAILS}${contestId}*`);
+  await invalidateCache(`${CACHE_KEYS.LEADERBOARD}${contestId}*`);
+
   return res.status(200).json(new APIRES(200, "Contest deleted successfully"));
 });
 
