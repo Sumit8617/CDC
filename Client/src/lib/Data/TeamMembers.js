@@ -2,9 +2,9 @@ export const webTeam = [
   {
     name: "Subhas Mondal",
     role: "Web Team",
-    image: "/Team/My Picture3.jpg",
+    image: "/Team/myPicture.jpeg",
     description:
-      "Project Lead | MERN Stack Developer | Intern at QuantamHash Corporation",
+      "Project Lead | Fullstack Engineer at QuantamHash Corporation",
     socials: {
       linkedin: "https://www.linkedin.com/in/subhas-mondal-bubai6033",
       email: "mailto:sm2733@it.jgec.ac.in",
