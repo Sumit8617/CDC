@@ -9,6 +9,7 @@ import verifyAdminInviteReducer from "../lib/Admin/VerifyAdminSlice";
 import registerAdminReducer from "../lib/Admin/RegisterAdmin";
 import ManageContestReducer from "../lib/Admin/ManageContestSlice";
 import CreateContestReducer from "../lib/Admin/CreateContestSlice";
+import questionParserReducer from "../lib/Admin/QuestionParserSlice";
 import leaderboardReducer from "../lib/LeaderBoardSlice";
 import upcomingContestReducer from "../lib/UpcomingContestSlice";
 import submitContestReducer from "../lib/SubmitContestSlice";
@@ -26,6 +27,7 @@ const store = configureStore({
     registerAdmin: registerAdminReducer,
     manageContest: ManageContestReducer,
     createContest: CreateContestReducer,
+    questionParser: questionParserReducer,
     leaderboard: leaderboardReducer,
     upcomingContest: upcomingContestReducer,
     submitContest: submitContestReducer,

@@ -6,7 +6,9 @@ import {
   updateContest,
   deleteContest,
   saveDraftContest,
+  parseQuestions,
 } from "../Controllers/Test.controller.js";
+import { upload, uploadWithImages } from "../../Middleware/Multer.middleware.js";
 
 const adminRouter = Router();
 
@@ -22,5 +24,16 @@ adminRouter
 adminRouter
   .route("/delete-contest/:contestId")
   .delete(protectRoute, adminOnly, deleteContest);
+
+// Route for parsing PDF/Word files (original - no images)
+adminRouter
+  .route("/parse-questions")
+  .post(upload.single("file"), parseQuestions);
+
+// NEW: Route for parsing PDF/Word files with associated images
+// Images should be uploaded as 'images' field in same order as [Image] markers
+adminRouter
+  .route("/parse-questions-with-images")
+  .post(uploadWithImages, parseQuestions);
 
 export default adminRouter;

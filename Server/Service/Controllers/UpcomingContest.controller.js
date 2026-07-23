@@ -148,6 +148,7 @@ const getShuffledQuestions = asynchandler(async (req, res) => {
     _id: q._id,
     questionText: q.questionText,
     options: q.options,
+    questionImage: q.questionImage || null,
     // DO NOT include correctOption - this is critical for anti-cheating!
   }));
 

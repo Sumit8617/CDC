@@ -15,6 +15,11 @@ const questionSchema = new mongoose.Schema({
     correctOption: {
         type: Number,
         required: true,
+    },
+    questionImage: {
+        type: String,
+        required: false,
+        default: null
     }
 }, { timestamps: true });
 export const Question = mongoose.model('Question', questionSchema);

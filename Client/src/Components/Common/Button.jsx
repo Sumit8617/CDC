@@ -35,6 +35,8 @@ const Button = forwardRef(
         "bg-purple-600 text-white shadow-lg hover:bg-purple-700 focus:ring-purple-400",
       blue: "bg-blue-600 text-white shadow-lg hover:bg-blue-700 focus:ring-blue-400",
       dark: "bg-gray-900 text-white shadow-lg hover:bg-black focus:ring-gray-700",
+      success:
+        "bg-green-600 text-white shadow-lg hover:bg-green-700 focus:ring-green-400",
     };
 
     const sizes = {

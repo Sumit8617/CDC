@@ -555,6 +555,17 @@ const Contest = () => {
 
   const QuestionCard = ({ question }) => (
     <div className="bg-white mt-5 p-4 sm:p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 w-full border-2 border-gray-200">
+      {/* Render question image if available */}
+      {question?.questionImage && (
+        <div className="mb-4">
+          <img
+            src={question.questionImage}
+            alt="Question"
+            className="max-w-full h-auto rounded-lg border border-gray-200"
+            style={{ maxHeight: '400px', objectFit: 'contain' }}
+          />
+        </div>
+      )}
       <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
         {question?.questionText}
       </h3>
