@@ -14,6 +14,19 @@ export const getContests = createAsyncThunk(
   }
 );
 
+// Get single contest by ID action
+export const getContestById = createAsyncThunk(
+  "contests/getContestById",
+  async (contestId, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.get(`/api/v1/admin/get-contest/${contestId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 // Update contest action
 export const updateContest = createAsyncThunk(
   "contests/updateContest",
@@ -22,6 +35,37 @@ export const updateContest = createAsyncThunk(
       const response = await axiosClient.put(
         `/api/v1/admin/update-contest/${contestId}`,
         updatedData
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+// Update draft contest action
+export const updateDraft = createAsyncThunk(
+  "contests/updateDraft",
+  async ({ contestId, updatedData }, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.put(
+        `/api/v1/admin/drafts/${contestId}`,
+        updatedData
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+// Publish draft contest action
+export const publishDraft = createAsyncThunk(
+  "contests/publishDraft",
+  async (contestId, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.put(
+        `/api/v1/admin/drafts/${contestId}/publish`
       );
       return response.data;
     } catch (error) {
@@ -49,6 +93,7 @@ export const deleteContest = createAsyncThunk(
 const initialState = {
   contests: [],
   totalContests: 0,
+  currentContest: null,
   loading: false,
   error: null,
 };
@@ -57,7 +102,11 @@ const initialState = {
 const contestsSlice = createSlice({
   name: "contests",
   initialState,
-  reducers: {},
+  reducers: {
+    clearCurrentContest: (state) => {
+      state.currentContest = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Get contests
@@ -71,6 +120,19 @@ const contestsSlice = createSlice({
       })
 
       .addCase(getContests.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Get single contest by ID
+      .addCase(getContestById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getContestById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentContest = action.payload.data.contest;
+      })
+      .addCase(getContestById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -93,6 +155,42 @@ const contestsSlice = createSlice({
         state.error = action.payload;
       })
 
+      // Update draft contest
+      .addCase(updateDraft.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateDraft.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.contests.findIndex(
+          (contest) => contest._id === action.payload.contest._id
+        );
+        if (index >= 0) {
+          state.contests[index] = action.payload.contest;
+        }
+      })
+      .addCase(updateDraft.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Publish draft contest
+      .addCase(publishDraft.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(publishDraft.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.contests.findIndex(
+          (contest) => contest._id === action.payload.contest._id
+        );
+        if (index >= 0) {
+          state.contests[index] = action.payload.contest;
+        }
+      })
+      .addCase(publishDraft.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
       // Delete contest
       .addCase(deleteContest.pending, (state) => {
         state.loading = true;
@@ -111,4 +209,5 @@ const contestsSlice = createSlice({
 });
 
 // Reducer
+export const { clearCurrentContest } = contestsSlice.actions;
 export default contestsSlice.reducer;

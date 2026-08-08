@@ -12,8 +12,10 @@ import { parseQuestionFile } from "../../Utils/PdfParser.utils.js";
 import fs from "fs";
 
 const createTest = asynchandler(async (req, res) => {
+  // Support both contestName and testName (frontend sends testName)
   const {
     contestName,
+    testName,
     description,
     contestDate,
     contestTime,
@@ -21,9 +23,12 @@ const createTest = asynchandler(async (req, res) => {
     questions,
   } = req.body;
 
+  // Use testName if contestName is not provided
+  const finalContestName = contestName || testName;
+
   // Basic validation
   if (
-    [contestName, description, duration, contestDate, contestTime].some(
+    [finalContestName, description, duration, contestDate, contestTime].some(
       (f) => !f || f.toString().trim() === ""
     )
   ) {
@@ -40,7 +45,8 @@ const createTest = asynchandler(async (req, res) => {
 
   const contestDateUTC = istToUtc(contestDate, contestTime);
 
-  if (contestDateUTC <= new Date()) {
+  // Compare using UTC timestamps
+  if (contestDateUTC.getTime() <= Date.now()) {
     throw new APIERR(400, "Contest time must be in the future");
   }
 
@@ -76,7 +82,7 @@ const createTest = asynchandler(async (req, res) => {
 
   // Save contest with IST date
   const newTest = await Test.create({
-    testName: contestName,
+    testName: finalContestName,
     description,
     duration,
     date: contestDateUTC,
@@ -98,8 +104,10 @@ const createTest = asynchandler(async (req, res) => {
 });
 
 const saveDraftContest = asynchandler(async (req, res) => {
+  // Support both contestName and testName (frontend sends testName)
   const {
     contestName,
+    testName,
     description,
     contestDate,
     contestTime,
@@ -107,9 +115,12 @@ const saveDraftContest = asynchandler(async (req, res) => {
     questions,
   } = req.body;
 
+  // Use testName if contestName is not provided
+  const finalContestName = contestName || testName;
+
   // Basic Validation
   if (
-    [contestName, description, duration, contestDate, contestTime].some(
+    [finalContestName, description, duration, contestDate, contestTime].some(
       (f) => !f || f.toString().trim() === ""
     )
   ) {
@@ -160,7 +171,7 @@ const saveDraftContest = asynchandler(async (req, res) => {
 
   // Save as draft (status: draft)
   const draftContest = await Test.create({
-    testName: contestName,
+    testName: finalContestName,
     description,
     duration,
     date: contestDateUTC,
@@ -195,6 +206,20 @@ const getContest = asynchandler(async (req, res) => {
       },
       "Contest details fetched successfully"
     )
+  );
+});
+
+// Get single contest by ID
+const getContestById = asynchandler(async (req, res) => {
+  const { contestId } = req.params;
+  if (!contestId) throw new APIERR(400, "Contest ID is required");
+
+  const contest = await Test.findById(contestId).populate("questions").lean();
+
+  if (!contest) throw new APIERR(404, "Contest not found");
+
+  return res.status(200).json(
+    new APIRES(200, { contest }, "Contest fetched successfully")
   );
 });
 
@@ -333,7 +358,9 @@ const updateDraft = asynchandler(async (req, res) => {
   const { draftId } = req.params;
   if (!draftId) throw new APIERR(400, "Draft ID is required");
 
-  const { testName, description, contestDate, contestTime, duration, questions } = req.body;
+  // Support both direct body and nested updatedData (from Redux)
+  const body = req.body?.updatedData || req.body || {};
+  const { testName, description, contestDate, contestTime, duration, questions } = body;
 
   // Validate required fields
   if ([testName, description, duration].some(f => !f || f.toString().trim() === "")) {
@@ -419,10 +446,47 @@ const deleteDraft = asynchandler(async (req, res) => {
   return res.status(200).json(new APIRES(200, "Draft deleted successfully"));
 });
 
+// Publish draft contest (convert draft to published contest)
+const publishDraft = asynchandler(async (req, res) => {
+  const { draftId } = req.params;
+  if (!draftId) throw new APIERR(400, "Draft ID is required");
+
+  const existingDraft = await Test.findOne({ _id: draftId, isDraft: true });
+  if (!existingDraft) throw new APIERR(404, "Draft contest not found");
+
+  // Validate that draft has questions
+  if (!existingDraft.questions || existingDraft.questions.length === 0) {
+    throw new APIERR(400, "Cannot publish a draft with no questions");
+  }
+
+  // Update draft to published contest
+  const publishedContest = await Test.findByIdAndUpdate(
+    draftId,
+    {
+      $set: {
+        isDraft: false,
+        isPublished: true,
+        status: "pending"
+      }
+    },
+    { new: true }
+  ).populate("questions");
+
+  // Invalidate caches
+  await invalidateCache(`${CACHE_KEYS.CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.UPCOMING_CONTESTS}*`);
+  await invalidateCache(`${CACHE_KEYS.TEST_DETAILS}*`);
+
+  return res.status(200).json(
+    new APIRES(200, { contest: publishedContest }, "Contest published successfully")
+  );
+});
+
 export {
   createTest,
   saveDraftContest,
   getContest,
+  getContestById,
   updateContest,
   deleteContest,
   parseQuestions,
@@ -430,4 +494,5 @@ export {
   getDraftById,
   updateDraft,
   deleteDraft,
+  publishDraft,
 };

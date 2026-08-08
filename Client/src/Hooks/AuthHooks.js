@@ -87,9 +87,9 @@ const useSignup = () => {
 
   // VERIFY OTP
   const handleVerifyOtp = useCallback(
-    async (otp) => {
+    async (otp, email) => {
       try {
-        return await dispatch(verifyOtp({ otp })).unwrap();
+        return await dispatch(verifyOtp({ otp, email })).unwrap();
       } catch (err) {
         console.error("OTP verification failed:", err);
         throw err;

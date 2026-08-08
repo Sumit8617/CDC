@@ -2,8 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Card, Button, Modal, PageLoaderWrapper } from "../../Components/index";
 import { useAdminStats } from "../../Hooks/AdminStatsHook";
 import { useDispatch } from "react-redux";
-import { blockUser, unblockUser } from "../../lib/StatsSlice";
-import useSignup from "../../Hooks/AuthHooks";
+import { blockUser, unblockUser, deleteUserAdmin } from "../../lib/StatsSlice";
 import {
   Mail,
   Shield,
@@ -20,7 +19,6 @@ import {
 
 const ManageUsers = () => {
   const { userDetails, loading, error, refresh } = useAdminStats();
-  const { handleDeleteUser } = useSignup();
   const dispatch = useDispatch();
 
   const [blockLoading, setBlockLoading] = useState(null);
@@ -74,12 +72,11 @@ const ManageUsers = () => {
     setDeleteLoading(true);
     setDeleteMessage("");
     try {
-      await handleDeleteUser(selectedUser._id);
+      await dispatch(deleteUserAdmin(selectedUser._id)).unwrap();
       setDeleteMessage("User deleted successfully!");
-      await refresh();
       setModalOpen(false);
     } catch (err) {
-      setDeleteMessage("Failed to delete user. Try again.");
+      setDeleteMessage(err || "Failed to delete user. Try again.");
     } finally {
       setDeleteLoading(false);
     }

@@ -219,7 +219,7 @@ const verifyAdminInvite = asynchandler(async (req, res) => {
     )
   );
 });
-// TODO: Sent the welcome mail to the Admin
+
 const registerAdmin = asynchandler(async (req, res) => {
   const { token, mobileNumber, rollNumber, dob, password, confirmPassword } =
     req.body;
@@ -251,9 +251,6 @@ const registerAdmin = asynchandler(async (req, res) => {
 
   const fullName = invite.fullName;
   const role = "admin";
-  console.log("Registering admin with email:", email);
-  console.log("Full Name:", fullName);
-  console.log("Role:", role);
 
   // Check if user already exists
   const existedUser = await User.findOne({ email });
@@ -271,8 +268,6 @@ const registerAdmin = asynchandler(async (req, res) => {
       dob,
       password,
     });
-
-    console.log("Created Admin:", createdAdmin);
   } catch (error) {
     console.log("Error while creating admin:", error);
     throw new APIERR(500, "Error while creating admin");
@@ -290,6 +285,281 @@ const registerAdmin = asynchandler(async (req, res) => {
   const sentCreatedAdmin = await User.findById(createdAdmin._id).select(
     "-password -refreshToken"
   );
+
+  const adminWelcomeMail = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to ${process.env.APP_NAME}</title>
+</head>
+
+<body style="
+  margin: 0;
+  padding: 0;
+  background-color: #f4f6f8;
+  font-family: Arial, Helvetica, sans-serif;
+">
+
+  <div style="
+    width: 100%;
+    padding: 40px 15px;
+    box-sizing: border-box;
+  ">
+
+    <div style="
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    ">
+
+      <!-- Header -->
+      <div style="
+        background-color: orange;
+        padding: 35px 25px;
+        text-align: center;
+      ">
+
+        <h1 style="
+          margin: 0;
+          color: #ffffff;
+          font-size: 28px;
+          font-weight: 700;
+        ">
+          ${process.env.APP_NAME}
+        </h1>
+
+        <p style="
+          margin: 10px 0 0;
+          color: #ffffff;
+          font-size: 14px;
+        ">
+          Career & Development Cell
+        </p>
+
+      </div>
+
+      <!-- Body -->
+      <div style="padding: 35px 30px;">
+
+        <h2 style="
+          margin: 0 0 15px;
+          color: #222222;
+          font-size: 24px;
+        ">
+          Welcome, ${fullName}! 👋
+        </h2>
+
+        <p style="
+          margin: 0 0 18px;
+          color: #555555;
+          font-size: 15px;
+          line-height: 1.7;
+        ">
+          Your administrator account has been successfully created.
+          Welcome to <strong>${process.env.APP_NAME}</strong>!
+        </p>
+
+        <p style="
+          margin: 0 0 25px;
+          color: #555555;
+          font-size: 15px;
+          line-height: 1.7;
+        ">
+          You now have access to the administration panel where you can
+          manage contests, users, placement activities, leaderboards and
+          other administrative operations.
+        </p>
+
+        <!-- Account Details -->
+        <div style="
+          background-color: #fff8ed;
+          border-left: 4px solid orange;
+          border-radius: 7px;
+          padding: 18px;
+          margin: 25px 0;
+        ">
+
+          <h3 style="
+            margin: 0 0 12px;
+            color: #333333;
+            font-size: 17px;
+          ">
+            Account Details
+          </h3>
+
+          <p style="
+            margin: 7px 0;
+            color: #555555;
+            font-size: 14px;
+          ">
+            <strong>Name:</strong> ${fullName}
+          </p>
+
+          <p style="
+            margin: 7px 0;
+            color: #555555;
+            font-size: 14px;
+          ">
+            <strong>Email:</strong> ${email}
+          </p>
+
+          <p style="
+            margin: 7px 0;
+            color: #555555;
+            font-size: 14px;
+          ">
+            <strong>Role:</strong>
+            <span style="
+              color: orange;
+              font-weight: bold;
+            ">
+              Administrator
+            </span>
+          </p>
+
+          <p style="
+            margin: 7px 0;
+            color: #555555;
+            font-size: 14px;
+          ">
+            <strong>Account Status:</strong>
+            <span style="
+              color: #198754;
+              font-weight: bold;
+            ">
+              Active
+            </span>
+          </p>
+
+        </div>
+
+        <!-- CTA -->
+        <div style="
+          text-align: center;
+          margin: 30px 0;
+        ">
+
+          <a
+            href="${process.env.FRONTEND_URL}/admin/login"
+            style="
+              display: inline-block;
+              background-color: orange;
+              color: #ffffff;
+              padding: 14px 35px;
+              text-decoration: none;
+              border-radius: 7px;
+              font-size: 15px;
+              font-weight: bold;
+            "
+          >
+            Go to Admin Panel
+          </a>
+
+        </div>
+
+        <!-- Security Notice -->
+        <div style="
+          background-color: #f8f9fa;
+          border-radius: 7px;
+          padding: 18px;
+          margin-top: 25px;
+        ">
+
+          <h3 style="
+            margin: 0 0 10px;
+            color: #333333;
+            font-size: 16px;
+          ">
+            🔐 Security Reminder
+          </h3>
+
+          <p style="
+            margin: 0;
+            color: #666666;
+            font-size: 13px;
+            line-height: 1.6;
+          ">
+            Please keep your administrator credentials confidential.
+            Never share your password or authentication tokens with anyone.
+            If you notice any suspicious activity, contact the system
+            administrator immediately.
+          </p>
+
+        </div>
+
+        <p style="
+          margin: 25px 0 0;
+          color: #555555;
+          font-size: 14px;
+          line-height: 1.7;
+        ">
+          If you have any questions or experience any issues accessing
+          the admin panel, please contact us at
+          <a
+            href="mailto:${process.env.SMTP_FROM_EMAIL}"
+            style="
+              color: orange;
+              text-decoration: none;
+              font-weight: bold;
+            "
+          >
+            ${process.env.SMTP_FROM_EMAIL}
+          </a>.
+        </p>
+
+        <p style="
+          margin: 25px 0 0;
+          color: #555555;
+          font-size: 14px;
+        ">
+          Best regards,<br />
+          <strong>${process.env.APP_NAME} Team</strong>
+        </p>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="
+        background-color: #f1f3f5;
+        padding: 20px;
+        text-align: center;
+      ">
+
+        <p style="
+          margin: 0;
+          color: #999999;
+          font-size: 12px;
+          line-height: 1.6;
+        ">
+          © ${new Date().getFullYear()} ${process.env.APP_NAME}.
+          All rights reserved.
+        </p>
+
+        <p style="
+          margin: 8px 0 0;
+          color: #aaaaaa;
+          font-size: 11px;
+        ">
+          This is an automated email. Please do not reply directly to this message.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
+`;
+
+  // Send the welcome mail
+  await sendMail(email, `Welcome to CDC Admin Portal`, adminWelcomeMail);
 
   // Set cookies
   res.cookie("refreshToken", refreshToken, {
@@ -312,7 +582,6 @@ const registerAdmin = asynchandler(async (req, res) => {
     .json(new APIRES(200, sentCreatedAdmin, "Admin registered successfully"));
 });
 
-// TODO: Some Bug fix if the user is empty it don't sent No user Found instead sending the status code and get failed
 const getUser = asynchandler(async (req, res) => {
   const cacheKey = `${CACHE_KEYS.USER_STATS}admin:all:v1`;
 

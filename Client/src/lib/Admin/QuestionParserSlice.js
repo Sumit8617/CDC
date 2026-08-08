@@ -7,19 +7,22 @@ export const parseQuestionsFromFile = createAsyncThunk(
   async (file, { rejectWithValue }) => {
     try {
       const formData = new FormData();
+
       formData.append("file", file);
 
       const response = await axiosClient.post(
         "/api/v1/admin/parse-questions",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        formData
       );
-      return response.data.data; // Return the questions array from the response
+
+      return response.data.data;
     } catch (err) {
+      console.error("PDF parsing error:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+
       return rejectWithValue(
         err.response?.data?.message || err.message || "Failed to parse file"
       );
@@ -38,12 +41,15 @@ export const parseQuestionsWithImages = createAsyncThunk(
       // Append each image to the form
       images.forEach((image, index) => {
         // Convert base64 to blob if needed
-        if (typeof image === 'string' && image.startsWith('data:')) {
+        if (typeof image === "string" && image.startsWith("data:")) {
           fetch(image)
-            .then(res => res.blob())
-            .then(blob => {
-              const fileName = `image_${index}.${blob.type.split('/')[1] || 'png'}`;
-              formData.append("images", new File([blob], fileName, { type: blob.type }));
+            .then((res) => res.blob())
+            .then((blob) => {
+              const fileName = `image_${index}.${blob.type.split("/")[1] || "png"}`;
+              formData.append(
+                "images",
+                new File([blob], fileName, { type: blob.type })
+              );
             });
         } else if (image instanceof File) {
           formData.append("images", image);
@@ -51,7 +57,7 @@ export const parseQuestionsWithImages = createAsyncThunk(
       });
 
       // Wait a bit for the blob conversions to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const response = await axiosClient.post(
         "/api/v1/admin/parse-questions-with-images",
@@ -65,7 +71,9 @@ export const parseQuestionsWithImages = createAsyncThunk(
       return response.data.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || err.message || "Failed to parse file with images"
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to parse file with images"
       );
     }
   }
@@ -108,7 +116,8 @@ const questionParserSlice = createSlice({
         state.loading = false;
         state.success = true;
         state.questions = action.payload.questions || [];
-        state.totalQuestions = action.payload.totalQuestions || state.questions.length;
+        state.totalQuestions =
+          action.payload.totalQuestions || state.questions.length;
       })
       // Parse questions rejected
       .addCase(parseQuestionsFromFile.rejected, (state, action) => {
@@ -127,7 +136,8 @@ const questionParserSlice = createSlice({
         state.loading = false;
         state.success = true;
         state.questions = action.payload.questions || [];
-        state.totalQuestions = action.payload.totalQuestions || state.questions.length;
+        state.totalQuestions =
+          action.payload.totalQuestions || state.questions.length;
       })
       // Parse questions with images rejected
       .addCase(parseQuestionsWithImages.rejected, (state, action) => {
@@ -138,5 +148,6 @@ const questionParserSlice = createSlice({
   },
 });
 
-export const { resetParserState, clearExtractedQuestions } = questionParserSlice.actions;
+export const { resetParserState, clearExtractedQuestions } =
+  questionParserSlice.actions;
 export default questionParserSlice.reducer;

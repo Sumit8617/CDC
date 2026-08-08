@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { User } from "../Models/User.models.js";
 import { SubmittedOption } from "../../Admin/Models/SubmitedOption.model.js";
 import { Leaderboard } from "../../Admin/Models/Leaderboard.models.js";
+import { mailVerification } from "../../Service/Models/mailVerfication.models.js";
 import { Test } from "../../Admin/Models/Contest.model.js";
 import {
   asynchandler,
@@ -33,29 +34,8 @@ const signup = asynchandler(async (req, res) => {
   const { fullName, email, mobileNumber, password, role, rollNumber, dob } =
     req.body;
 
-  if (
-    [fullName, email, mobileNumber, password, role, rollNumber, dob].some(
-      (f) => !f || String(f).trim() === ""
-    )
-  ) {
-    throw new APIERR(400, "Please provide the required fields");
-  }
-
-  if (password.length < 6) {
-    throw new APIERR(400, "Password length must be 6");
-  }
-
-  const existeduser = await User.findOne({ mobileNumber });
-  if (existeduser) {
-    throw new APIERR(400, "User already exist. Please login instead of Signup");
-  }
-
-  const isVerified = req.cookies?.isEmailVerified;
-  if (!isVerified) {
-    throw new APIERR(400, "Please verify your email");
-  }
-
-  const createUser = await User.create({
+  // Validate required fields
+  const requiredFields = [
     fullName,
     email,
     mobileNumber,
@@ -63,32 +43,76 @@ const signup = asynchandler(async (req, res) => {
     role,
     rollNumber,
     dob,
+  ];
+  if (requiredFields.some((f) => !f || String(f).trim() === "")) {
+    throw new APIERR(400, "Please provide all required fields");
+  }
+
+  if (password.length < 6) {
+    throw new APIERR(400, "Password must be at least 6 characters long");
+  }
+
+  // Check if user exists
+  const existingUser = await User.findOne({
+    $or: [{ mobileNumber }, { email: email.toLowerCase() }],
   });
 
-  const createdUser = await User.findOne(createUser._id).select(
+  if (existingUser) {
+    throw new APIERR(400, "User already exists. Please login instead");
+  }
+
+  // Check email verification from database
+  const isVerified = await mailVerification.findOne({
+    email: email.toLowerCase(),
+    verified: true,
+  });
+
+  if (!isVerified) {
+    throw new APIERR(400, "Please verify your email first");
+  }
+
+  // Create user
+  const user = await User.create({
+    fullName,
+    email: email.toLowerCase(),
+    mobileNumber,
+    password,
+    role,
+    rollNumber,
+    dob,
+  });
+
+  const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
 
+  // Generate tokens
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    createUser._id
+    user._id
   );
 
+  // Set cookies
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     path: "/",
-    maxAge: 1000 * 60 * 60 * 24,
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
   };
 
   res.cookie("accessToken", accessToken, cookieOptions);
   res.cookie("refreshToken", refreshToken, cookieOptions);
 
-  if (!accessToken) {
-    throw new APIERR(502, "Internal Server ERR! While setting the accesstoken");
-  }
+  // Send welcome email (asynchronously)
+  sendWelcomeEmail(email, fullName, role, rollNumber).catch(console.error);
 
-  // Welcome email HTML
+  res
+    .status(200)
+    .json(new APIRES(200, { user: createdUser }, "User created successfully"));
+});
+
+// Helper function for welcome email
+async function sendWelcomeEmail(email, fullName, role, rollNumber) {
   const welcomeHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;">
       <div style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
@@ -144,23 +168,12 @@ const signup = asynchandler(async (req, res) => {
     </div>
   `;
 
-  try {
-    await sendMail(
-      email,
-      `Welcome to ${process.env.APP_NAME}, ${fullName}!`,
-      welcomeHtml
-    );
-    console.log("Welcome email sent");
-  } catch (error) {
-    console.error("ERR while sending welcome email:", error);
-  }
-
-  res
-    .status(200)
-    .json(
-      new APIRES(200, { user: createdUser }, "Successfully Created the User")
-    );
-});
+  await sendMail(
+    email,
+    `Welcome to ${process.env.APP_NAME}, ${fullName}!`,
+    welcomeHtml
+  );
+}
 
 const login = asynchandler(async (req, res) => {
   const { email, password } = req.body;

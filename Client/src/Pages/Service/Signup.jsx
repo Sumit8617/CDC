@@ -50,8 +50,9 @@ const Signup = () => {
 
   const onVerifyOtp = async () => {
     const otp = methods.getValues("otp");
-    if (!otp) return alert("Enter OTP first");
-    await handleVerifyOtp(otp);
+    const mail = methods.getValues("email");
+    if (!otp || !mail) return alert("Enter OTP first");
+    await handleVerifyOtp(otp, mail);
   };
 
   const onSubmit = async (data) => {

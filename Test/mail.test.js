@@ -29,14 +29,14 @@ if (result.error) {
   process.exit(1);
 }
 
-console.log("✅ .env loaded successfully!\n");
+console.log(" .env loaded successfully!\n");
 
 // Display loaded variables
 console.log("=== Environment Variables ===");
 console.log("SMTP_HOST:", process.env.SMTP_HOST || "❌ NOT SET");
 console.log("SMTP_PORT:", process.env.SMTP_PORT || "❌ NOT SET");
 console.log("SMTP_USER:", process.env.SMTP_USER || "❌ NOT SET");
-console.log("SMTP_PASS:", process.env.SMTP_PASS ? "✅ SET" : "❌ NOT SET");
+console.log("SMTP_PASS:", process.env.SMTP_PASS ? " SET" : "❌ NOT SET");
 console.log("SMTP_FROM_NAME:", process.env.SMTP_FROM_NAME || "❌ NOT SET");
 console.log("SMTP_FROM_EMAIL:", process.env.SMTP_FROM_EMAIL || "❌ NOT SET");
 console.log("APP_NAME:", process.env.APP_NAME || "❌ NOT SET");
@@ -70,7 +70,7 @@ const result_email = await sendEmailAsync(
   `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background-color: #4F46E5; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">✅ Email Working!</h1>
+            <h1 style="color: white; margin: 0;"> Email Working!</h1>
         </div>
         <div style="background-color: #f4f4f4; padding: 30px; border-radius: 0 0 10px 10px;">
             <p style="font-size: 16px;">If you're seeing this, your email configuration is working correctly!</p>
@@ -81,7 +81,7 @@ const result_email = await sendEmailAsync(
 );
 
 if (result_email.success) {
-  console.log("✅ Test email sent successfully!");
+  console.log(" Test email sent successfully!");
   console.log("Message ID:", result_email.messageId);
   console.log("\nCheck your inbox (and spam folder) for the test email.");
 } else {
@@ -104,7 +104,7 @@ if (result_email.success) {
   );
 
   if (result.success) {
-    console.log("✅ Email sent successfully!");
+    console.log(" Email sent successfully!");
   } else {
     console.error("❌ Email failed:", result.error);
   }

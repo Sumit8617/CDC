@@ -1,21 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Button, Input, Modal, FileUpload, ImageUpload } from "../../Components/index";
 import { useForm, FormProvider, useFieldArray } from "react-hook-form";
-import { PlusCircle, Trash2, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { PlusCircle, Trash2, ChevronLeft, ChevronRight, Upload, ArrowLeft } from "lucide-react";
 import useCreateContest from "../../Hooks/Admin/CreateContestHook";
 import { useDispatch, useSelector } from "react-redux";
 import { parseQuestionsFromFile, resetParserState } from "../../lib/Admin/QuestionParserSlice";
+import { getContestById, clearCurrentContest } from "../../lib/Admin/ManageContestSlice";
+import { useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const QUESTIONS_PER_PAGE = 1;
 
 const CreateContest = () => {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const editContestId = searchParams.get("edit");
+
+  // Check if we're in edit mode
+  const isEditMode = Boolean(editContestId);
+
+  // Get current contest for editing
+  const { currentContest, loading: contestLoading } = useSelector(
+    (state) => state.manageContest
+  );
 
   // Parser state
   const { questions: extractedQuestions, loading: parserLoading, success: parserSuccess, error: parserError } = useSelector(
     (state) => state.questionParser
   );
 
+  // Initialize form FIRST (before using reset)
   const methods = useForm({
     defaultValues: {
       contestName: "",
@@ -48,6 +62,63 @@ const CreateContest = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
+  // Load contest data when in edit mode
+  useEffect(() => {
+    if (editContestId) {
+      dispatch(getContestById(editContestId));
+    }
+    return () => {
+      if (editContestId) {
+        dispatch(clearCurrentContest());
+      }
+    };
+  }, [editContestId, dispatch]);
+
+  // Populate form when contest data is loaded
+  useEffect(() => {
+    if (isEditMode && currentContest) {
+      // Convert date from UTC to IST for display
+      const contestDate = new Date(currentContest.date);
+      const istDate = new Date(contestDate.getTime() + (5 * 60 + 30) * 60 * 1000);
+      // Use locale methods to get correct date/time in IST without timezone issues
+      const dateStr = istDate.toLocaleDateString("en-CA"); // YYYY-MM-DD format
+      const timeStr = istDate.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }); // HH:MM format
+
+      // Format questions for form
+      const formattedQuestions = (currentContest.questions || []).map((q) => ({
+        question: q.questionText || "",
+        optionA: q.options?.[0] || "",
+        optionB: q.options?.[1] || "",
+        optionC: q.options?.[2] || "",
+        optionD: q.options?.[3] || "",
+        correctAnswer: ["A", "B", "C", "D"][q.correctOption] || "",
+        questionImage: q.questionImage || null,
+      }));
+
+      // Add empty question if none exist
+      if (formattedQuestions.length === 0) {
+        formattedQuestions.push({
+          question: "",
+          optionA: "",
+          optionB: "",
+          optionC: "",
+          optionD: "",
+          correctAnswer: "",
+          questionImage: null,
+        });
+      }
+
+      reset({
+        contestName: currentContest.testName || "",
+        description: currentContest.description || "",
+        duration: currentContest.duration?.toString() || "",
+        contestDate: dateStr,
+        contestTime: timeStr,
+        questions: formattedQuestions,
+      });
+    }
+  }, [isEditMode, currentContest, reset]);
+
   const totalPages = Math.ceil(fields.length / QUESTIONS_PER_PAGE);
   const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE;
   const currentQuestions = fields.slice(
@@ -58,6 +129,8 @@ const CreateContest = () => {
   const {
     createContest,
     saveDraftContest,
+    updateDraft,
+    publishDraft,
     loading,
     success,
     error,
@@ -66,7 +139,7 @@ const CreateContest = () => {
   // Format data for backend
   const formatContestData = (data) => {
     return {
-      contestName: data.contestName,
+      testName: data.contestName,
       description: data.description,
       contestDate: data.contestDate,
       contestTime: data.contestTime,
@@ -87,12 +160,14 @@ const CreateContest = () => {
     const payload = formatContestData(data);
     try {
       await createContest(payload).unwrap();
-      alert("Contest published successfully!");
+      toast.success("Contest published successfully!");
       reset();
       setCurrentPage(1);
+      // Navigate to manage contests
+      window.location.href = "/admin/manage-contests";
     } catch (err) {
       console.error("Publish failed:", err);
-      // Error is handled by Redux state
+      toast.error(err?.message || err || "Failed to publish contest");
     }
   };
 
@@ -101,12 +176,41 @@ const CreateContest = () => {
     const payload = formatContestData(data);
     try {
       await saveDraftContest(payload).unwrap();
-      alert("Contest saved as draft successfully!");
+      toast.success("Contest saved as draft successfully!");
       reset();
       setCurrentPage(1);
+      // Navigate to manage contests
+      window.location.href = "/admin/manage-contests";
     } catch (err) {
       console.error("Save draft failed:", err);
-      // Error is handled by Redux state
+      toast.error(err?.message || err || "Failed to save contest as draft");
+    }
+  };
+
+  // Handle update contest (edit mode)
+  const handleUpdate = async (data) => {
+    const payload = formatContestData(data);
+    try {
+      await updateDraft({ contestId: editContestId, updatedData: payload }).unwrap();
+      toast.success("Contest updated successfully!");
+      // Navigate back to manage contests
+      window.location.href = "/admin/manage-contests";
+    } catch (err) {
+      console.error("Update failed:", err);
+      toast.error(err?.message || err || "Failed to update contest");
+    }
+  };
+
+  // Handle publish draft (edit mode - publish existing draft)
+  const handlePublishDraft = async () => {
+    try {
+      await publishDraft(editContestId).unwrap();
+      toast.success("Contest published successfully!");
+      // Navigate back to manage contests
+      window.location.href = "/admin/manage-contests";
+    } catch (err) {
+      console.error("Publish failed:", err);
+      toast.error(err?.message || err || "Failed to publish contest");
     }
   };
 
@@ -165,40 +269,83 @@ const CreateContest = () => {
 
   return (
     <>
-      <title>CDC JGEC | Create Contest</title>
-      <meta name="description" content="This is the create contest page" />
+      <title>CDC JGEC | {isEditMode ? "Edit Contest" : "Create Contest"}</title>
+      <meta name="description" content={isEditMode ? "Edit contest details" : "Create a new contest"} />
       <FormProvider {...methods}>
         <form className="min-h-screen flex flex-col space-y-6 md:pl-64">
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">
-                Create New Contest
+                {isEditMode ? "Edit Contest" : "Create New Contest"}
               </h1>
               <p className="text-gray-500 text-sm">
-                Add contest details and questions for participants.
+                {isEditMode ? "Update contest details and questions." : "Add contest details and questions for participants."}
               </p>
             </div>
             <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                size="md"
-                round="md"
-                onClick={handleSubmit(handleSaveDraft)}
-              >
-                Save as Draft
-              </Button>
-              <Button
-                type="button"
-                variant="indigo"
-                size="md"
-                round="md"
-                onClick={handleSubmit(handlePublish)}
-              >
-                <PlusCircle className="w-5 h-5 mr-2" />
-                Publish Contest
-              </Button>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  round="md"
+                  onClick={() => window.location.href = "/admin/manage-contests"}
+                >
+                  <ArrowLeft className="w-5 h-5 mr-2" />
+                  Back
+                </Button>
+              )}
+              {isEditMode ? (
+                <>
+                  {currentContest?.isDraft && (
+                    <Button
+                      type="button"
+                      variant="success"
+                      size="md"
+                      round="md"
+                      onClick={handlePublishDraft}
+                      disabled={contestLoading}
+                    >
+                      <PlusCircle className="w-5 h-5 mr-2" />
+                      Publish Contest
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="indigo"
+                    size="md"
+                    round="md"
+                    onClick={handleSubmit(handleUpdate)}
+                    disabled={contestLoading}
+                  >
+                    <PlusCircle className="w-5 h-5 mr-2" />
+                    Update Contest
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    round="md"
+                    onClick={handleSubmit(handleSaveDraft)}
+                  >
+                    Save as Draft
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="indigo"
+                    size="md"
+                    round="md"
+                    onClick={handleSubmit(handlePublish)}
+                  >
+                    <PlusCircle className="w-5 h-5 mr-2" />
+                    Publish Contest
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
