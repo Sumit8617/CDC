@@ -37,12 +37,12 @@ export const sendOtp = createAsyncThunk(
 // VERIFY OTP
 export const verifyOtp = createAsyncThunk(
   "auth/verifyOtp",
-  async ({ otp }, thunkAPI) => {
+  async ({ otp, email }, thunkAPI) => {
     const { rejectWithValue } = thunkAPI;
     try {
       const res = await axiosClient.post(
         `/api/v1/user/verify-otp`,
-        { otp },
+        { otp, email },
         { withCredentials: true }
       );
       return res.data;

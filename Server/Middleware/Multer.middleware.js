@@ -1,46 +1,72 @@
 import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+const uploadDir = "./public/temp";
+
+// Make sure upload directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, "./public/temp")
-    },
-    filename: function (req, file, cb) {
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
 
-      cb(null, file.originalname)
-    }
-  })
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
 
-// File filter for Word documents only
 const fileFilter = (req, file, cb) => {
+  const extension = path.extname(file.originalname).toLowerCase();
+
+  const allowedExtensions = [".docx", ".doc"];
+
   const allowedMimeTypes = [
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-    'application/msword', // .doc
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+    "application/octet-stream",
   ];
 
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  console.log("Uploaded file:", {
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    extension,
+  });
+
+  if (
+    allowedExtensions.includes(extension) &&
+    allowedMimeTypes.includes(file.mimetype)
+  ) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only Word documents (.docx, .doc) are allowed.'), false);
+    cb(
+      new Error(
+        "Invalid file type. Only Word documents (.docx, .doc) are allowed."
+      ),
+      false
+    );
   }
 };
 
 export const upload = multer({
-    storage,
-    fileFilter,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit
-    }
-})
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+});
 
-// For parsing questions with Word files only
 export const uploadWithImages = multer({
-    storage,
-    fileFilter,
-    limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit
-        files: 20 // Max 20 files (1 Word file + 19 images)
-    }
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 20,
+  },
 }).fields([
-  { name: 'file', maxCount: 1 }, // Word file
-  { name: 'images', maxCount: 20 } // Image files
-])
+  { name: "file", maxCount: 1 },
+  { name: "images", maxCount: 20 },
+]);

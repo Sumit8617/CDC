@@ -20,7 +20,6 @@ export const fetchUsers = createAsyncThunk("stats/fetchUsers", async () => {
   try {
     const res = await axiosClient.get(`/api/v1/admin/auth/get-user`);
     const data = res.data.data;
-    console.log("User Stats Response:", data);
 
     return {
       totalUsers: data.totalUsers || 0,
@@ -48,15 +47,35 @@ export const fetchAdmins = createAsyncThunk(
   }
 );
 
+// Delete user
+export const deleteUserAdmin = createAsyncThunk(
+  "stats/deleteUserAdmin",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.delete(
+        `/api/v1/admin/auth/delete-user/${userId}`
+      );
+      return { userId, message: res.data.message };
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || err.message || "Failed to delete user";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 // Block user
 export const blockUser = createAsyncThunk(
   "stats/blockUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(`/api/v1/admin/auth/block-user/${userId}`);
+      const res = await axiosClient.post(
+        `/api/v1/admin/auth/block-user/${userId}`
+      );
       return { userId, message: res.data.message };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to block user";
+      const errorMessage =
+        err.response?.data?.message || err.message || "Failed to block user";
       return rejectWithValue(errorMessage);
     }
   }
@@ -67,10 +86,13 @@ export const unblockUser = createAsyncThunk(
   "stats/unblockUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(`/api/v1/admin/auth/unblock-user/${userId}`);
+      const res = await axiosClient.post(
+        `/api/v1/admin/auth/unblock-user/${userId}`
+      );
       return { userId, message: res.data.message };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to unblock user";
+      const errorMessage =
+        err.response?.data?.message || err.message || "Failed to unblock user";
       return rejectWithValue(errorMessage);
     }
   }
@@ -153,10 +175,22 @@ const adminStatsSlice = createSlice({
         state.error.admins = action.payload || action.error.message;
       })
 
+      // Delete user
+      .addCase(deleteUserAdmin.fulfilled, (state, action) => {
+        const { userId } = action.payload;
+        // Remove the deleted user from userDetails array
+        state.userDetails = state.userDetails.filter((u) => u._id !== userId);
+        // Also update total count
+        state.stats[1].value = String(parseInt(state.stats[1].value) - 1);
+      })
+      .addCase(deleteUserAdmin.rejected, (state, action) => {
+        console.error("Delete user rejected:", action.payload);
+      })
+
       // Block user
       .addCase(blockUser.fulfilled, (state, action) => {
         const { userId } = action.payload;
-        const user = state.userDetails.find(u => u._id === userId);
+        const user = state.userDetails.find((u) => u._id === userId);
         if (user) {
           user.isBlocked = true;
         }
@@ -165,7 +199,7 @@ const adminStatsSlice = createSlice({
       // Unblock user
       .addCase(unblockUser.fulfilled, (state, action) => {
         const { userId } = action.payload;
-        const user = state.userDetails.find(u => u._id === userId);
+        const user = state.userDetails.find((u) => u._id === userId);
         if (user) {
           user.isBlocked = false;
         }

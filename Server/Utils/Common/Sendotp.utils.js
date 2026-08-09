@@ -1,7 +1,8 @@
 import { asynchandler, APIERR, APIRES, sendMail } from "../index.utils.js";
 import { User } from "../../Service/Models/User.models.js";
+import { redis } from "../../config/redis.config.js";
+import { mailVerification } from "../../Service/Models/mailVerfication.models.js";
 
-// Parse allowed domains from .env safely (mirrors the same logic in user.model.js)
 let allowedDomains = [];
 try {
   allowedDomains = JSON.parse(process.env.COLLEGE_EMAIL_DOMAINS || "[]");
@@ -12,24 +13,29 @@ try {
 }
 
 const isAllowedDomain = (email) => {
-  if (!allowedDomains.length) return true; // no restriction configured → allow all
+  // If no domains are configured, allow all emails
+  if (!allowedDomains.length) return true;
 
-  const pattern = `^[a-zA-Z0-9._%+-]+@(${allowedDomains
-    .map((d) => d.replace(/^[^@]*@/, "").replace(/\./g, "\\."))
-    .join("|")})$`;
+  // Extract domain from email
+  const domain = email.split("@")[1];
+  if (!domain) {
+    return false;
+  }
 
-  return new RegExp(pattern).test(email);
+  // Check if domain is in allowed list
+  return allowedDomains.some((allowedDomain) => {
+    // Handle domains that might include the @ symbol
+    const cleanDomain = allowedDomain.replace(/^[^@]*@/, "");
+    return domain.toLowerCase() === cleanDomain.toLowerCase();
+  });
 };
 
-const sendOTP = asynchandler(async (req, res) => {
+export const sendOTP = asynchandler(async (req, res) => {
   const { fullName, email } = req.body;
-  console.log("Coming from Body", fullName, email);
-
   if (!fullName || !email) {
     throw new APIERR(400, "Please provide the required fields");
   }
 
-  // ── 1. Domain validation ─────────────────────────────────────────────────
   if (!isAllowedDomain(email)) {
     throw new APIERR(
       400,
@@ -37,8 +43,8 @@ const sendOTP = asynchandler(async (req, res) => {
     );
   }
 
-  // ── 2. User existence check ──────────────────────────────────────────────
-  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  const normalizedMail = email.toLowerCase().trim();
+  const existingUser = await User.findOne({ email: normalizedMail });
   if (existingUser) {
     throw new APIERR(
       409,
@@ -46,12 +52,11 @@ const sendOTP = asynchandler(async (req, res) => {
     );
   }
 
-  // ── Everything below is UNCHANGED ────────────────────────────────────────
-  const generatedOTP = Math.floor(1000 + Math.random() * 9000);
+  const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+  const expiry = parseInt(process.env.OTP_EXPIRY) || 10;
+  const expiresAt = new Date(Date.now() + expiry * 60 * 1000);
 
-  const expiry = process.env.OTP_EXPIRY;
-
-  // OTP email HTML
+  // OTP email template
   const otpHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;">
       <div style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
@@ -102,21 +107,34 @@ const sendOTP = asynchandler(async (req, res) => {
     `Your OTP for ${process.env.APP_NAME}`,
     otpHtml
   );
+  console.log("OTP Mail Send Successfully");
+
   if (!sendingOTP) {
-    throw new APIERR(500, "Err While Sending the OTP");
+    throw new APIERR(500, "Error While Sending the OTP");
   }
 
-  res.cookie("OTP", generatedOTP, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: expiry * 60 * 1000,
+  // Save to Database
+  await mailVerification.create({
+    email: normalizedMail,
+    otp: generatedOTP,
+    expiresAt: expiresAt,
+    verified: false,
+    attempts: 0,
   });
+
+  // Save to Redis with proper structure
+  await redis.set(
+    `otp:${normalizedMail}`,
+    JSON.stringify({
+      otp: generatedOTP,
+      attempts: 0,
+      expiresAt: expiresAt.toISOString(),
+    }),
+    "EX",
+    expiry * 60
+  );
 
   res
     .status(200)
-    .json(new APIRES(200, "Successfully Sent the OTP to the User"));
+    .json(new APIRES(200, null, "OTP sent successfully to your email"));
 });
-
-export { sendOTP };

@@ -4,6 +4,7 @@ import {
   saveDraftContest,
   resetContestState,
 } from "../../lib/Admin/CreateContestSlice";
+import { updateDraft as updateDraftApi, publishDraft as publishDraftApi } from "../../lib/Admin/ManageContestSlice";
 import { useCallback } from "react";
 
 const useCreateContest = () => {
@@ -30,6 +31,22 @@ const useCreateContest = () => {
     [dispatch]
   );
 
+  // Function to update a draft contest
+  const handleUpdateDraft = useCallback(
+    (contestId, contestData) => {
+      return dispatch(updateDraftApi({ contestId, updatedData: contestData }));
+    },
+    [dispatch]
+  );
+
+  // Function to publish a draft contest
+  const handlePublishDraft = useCallback(
+    (contestId) => {
+      return dispatch(publishDraftApi(contestId));
+    },
+    [dispatch]
+  );
+
   // Function to reset state
   const handleReset = useCallback(() => {
     dispatch(resetContestState());
@@ -46,6 +63,8 @@ const useCreateContest = () => {
     isDraftSaved: success === "draft",
     createContest: handleCreateContest,
     saveDraftContest: handleSaveDraftContest,
+    updateDraft: handleUpdateDraft,
+    publishDraft: handlePublishDraft,
     resetContestState: handleReset,
   };
 };

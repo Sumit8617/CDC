@@ -21,7 +21,7 @@ export const redis = new Redis({
 
 // Handle Redis connection events
 redis.on("connect", () => {
-  console.log("✅ Redis connected successfully");
+  console.log(" Redis connected successfully");
 });
 
 redis.on("error", (err) => {

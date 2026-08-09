@@ -3,6 +3,7 @@ import { adminOnly, protectRoute } from "../../Middleware/Auth.middleware.js";
 import {
   createTest,
   getContest,
+  getContestById,
   updateContest,
   deleteContest,
   saveDraftContest,
@@ -11,6 +12,7 @@ import {
   getDraftById,
   updateDraft,
   deleteDraft,
+  publishDraft,
 } from "../Controllers/Test.controller.js";
 import {
   upload,
@@ -25,6 +27,7 @@ adminRouter
   .route("/save-draft-contest")
   .post(saveDraftContest);
 adminRouter.route("/get-contest").get(protectRoute, adminOnly, getContest);
+adminRouter.route("/get-contest/:contestId").get(protectRoute, adminOnly, getContestById);
 adminRouter
   .route("/update-contest/:contestId")
   .put(protectRoute, adminOnly, updateContest);
@@ -52,5 +55,10 @@ adminRouter.route("/drafts/:draftId").put(protectRoute, adminOnly, updateDraft);
 adminRouter
   .route("/drafts/:draftId")
   .delete(protectRoute, adminOnly, deleteDraft);
+
+// Publish draft contest
+adminRouter
+  .route("/drafts/:draftId/publish")
+  .put(protectRoute, adminOnly, publishDraft);
 
 export default adminRouter;
