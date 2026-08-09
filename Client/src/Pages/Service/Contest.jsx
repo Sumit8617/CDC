@@ -474,7 +474,9 @@ const Contest = () => {
 
     setQuestionsLoading(true);
     try {
-      const response = await axiosClient.get(`/api/v1/user/shuffled-questions/${contestId}`);
+      const response = await axiosClient.get(
+        `/api/v1/user/shuffled-questions/${contestId}`
+      );
       setQuestionsLoading(false);
       return response.data.data;
     } catch (err) {
@@ -497,7 +499,11 @@ const Contest = () => {
     // Fetch shuffled questions from server
     const shuffledData = await fetchShuffledQuestions(contestSnapshot._id);
 
-    if (!shuffledData || !shuffledData.questions || shuffledData.questions.length === 0) {
+    if (
+      !shuffledData ||
+      !shuffledData.questions ||
+      shuffledData.questions.length === 0
+    ) {
       alert("Questions not loaded yet. Please wait and try again.");
       return;
     }
@@ -562,7 +568,7 @@ const Contest = () => {
             src={question.questionImage}
             alt="Question"
             className="max-w-full h-auto rounded-lg border border-gray-200"
-            style={{ maxHeight: '400px', objectFit: 'contain' }}
+            style={{ maxHeight: "400px", objectFit: "contain" }}
           />
         </div>
       )}
@@ -590,7 +596,13 @@ const Contest = () => {
     </div>
   );
 
-  if (loading || submitting || loadingUser || checkingSubmission || questionsLoading)
+  if (
+    loading ||
+    submitting ||
+    loadingUser ||
+    checkingSubmission ||
+    questionsLoading
+  )
     return <PageLoaderWrapper loading={loading || questionsLoading} />;
   if (error) return <p>Error: {error}</p>;
 

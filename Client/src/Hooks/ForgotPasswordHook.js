@@ -2,7 +2,12 @@
 
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { sendResetEmail, resetState } from "../lib/ForgotPasswordSlice";
+import {
+  sendResetEmail,
+  verifyResetOTP,
+  resetPassword as resetPasswordThunk,
+  resetState,
+} from "../lib/ForgotPasswordSlice";
 
 export const useForgotPassword = () => {
   const dispatch = useDispatch();
@@ -16,7 +21,7 @@ export const useForgotPassword = () => {
     async (email) => {
       try {
         const res = await dispatch(sendResetEmail(email)).unwrap();
-        return res; // in case you want to use response later
+        return res;
       } catch (err) {
         console.error("Failed to send reset email:", err);
         throw err;
@@ -25,7 +30,37 @@ export const useForgotPassword = () => {
     [dispatch]
   );
 
-  // Clear slice state (used in ForgotPassword.jsx)
+  // Verify OTP
+  const handleVerifyOTP = useCallback(
+    async ({ otp }) => {
+      try {
+        const res = await dispatch(verifyResetOTP({ otp })).unwrap();
+        return res;
+      } catch (err) {
+        console.error("Failed to verify OTP:", err);
+        throw err;
+      }
+    },
+    [dispatch]
+  );
+
+  // Reset password (set new password after OTP verified)
+  const handleResetPassword = useCallback(
+    async ({ newPassword, confirmPassword }) => {
+      try {
+        const res = await dispatch(
+          resetPasswordThunk({ newPassword, confirmPassword })
+        ).unwrap();
+        return res;
+      } catch (err) {
+        console.error("Failed to reset password:", err);
+        throw err;
+      }
+    },
+    [dispatch]
+  );
+
+  // Clear slice state
   const clearState = useCallback(() => {
     dispatch(resetState());
   }, [dispatch]);
@@ -36,6 +71,8 @@ export const useForgotPassword = () => {
     error,
     message,
     handleSendEmail,
+    handleVerifyOTP,
+    handleResetPassword,
     clearState,
   };
 };

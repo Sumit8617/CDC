@@ -37,7 +37,7 @@ router
   .put("/change-password", protectRoute, changePassword)
   .post("/forgot-password/send-otp", sendPasswordResetOTP)
   .post("/forgot-password/verify-otp", verifyPasswordResetOTP)
-  .post("/forgot-password/change-password", protectRoute, resetPassword)
+  .post("/forgot-password/change-password", resetPassword)
   .get("/user-details", protectRoute, userDetails);
 
 export default router;

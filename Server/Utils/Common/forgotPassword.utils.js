@@ -135,7 +135,7 @@ export const verifyPasswordResetOTP = asynchandler(async (req, res) => {
     throw new APIERR(400, "OTP Expired. Please try again");
   }
 
-  if (string(otp) !== string(storedOTP)) {
+  if (String(otp) !== String(storedOTP)) {
     throw new APIERR(400, "Invalid OTP. Please try again");
   }
 
@@ -153,7 +153,7 @@ export const verifyPasswordResetOTP = asynchandler(async (req, res) => {
 
 export const resetPassword = asynchandler(async (req, res) => {
   const { newPassword, confirmPassword } = req.body;
-  const email = res.cookies?.fp_verified;
+  const email = req.cookies?.fp_verified;
 
   if (!newPassword || !confirmPassword) {
     throw new APIERR(400, "Please provide the required fields");
