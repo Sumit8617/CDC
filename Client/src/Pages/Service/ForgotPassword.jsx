@@ -155,7 +155,9 @@ const ForgotPassword = () => {
   const onVerifyOTP = async (data) => {
     if (loading) return;
 
-    await handleVerifyOTP({ otp: data.otp });
+    const email = getValues("email");
+
+    await handleVerifyOTP({ email, otp: data.otp });
   };
 
   /*
@@ -164,7 +166,10 @@ const ForgotPassword = () => {
   const onResetPassword = async (data) => {
     if (loading) return;
 
+    const email = getValues("email");
+
     await handleResetPassword({
+      email,
       newPassword: data.newPassword,
       confirmPassword: data.confirmPassword,
     });
@@ -442,9 +447,7 @@ const ForgotPassword = () => {
                       onClick={() => setShowConfirmPassword((s) => !s)}
                       className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
                       aria-label={
-                        showConfirmPassword
-                          ? "Hide password"
-                          : "Show password"
+                        showConfirmPassword ? "Hide password" : "Show password"
                       }
                     >
                       {showConfirmPassword ? (

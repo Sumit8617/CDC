@@ -25,11 +25,11 @@ export const sendResetEmail = createAsyncThunk(
 // Verify OTP
 export const verifyResetOTP = createAsyncThunk(
   "forgotPassword/verifyResetOTP",
-  async ({ otp }, { rejectWithValue }) => {
+  async ({ email, otp }, { rejectWithValue }) => {
     try {
       const res = await axiosClient.post(
         "/api/v1/user/forgot-password/verify-otp",
-        { otp }
+        { email, otp }
       );
       return res.data;
     } catch (error) {
@@ -46,11 +46,14 @@ export const verifyResetOTP = createAsyncThunk(
 // Reset password (set new password after OTP verified)
 export const resetPassword = createAsyncThunk(
   "forgotPassword/resetPassword",
-  async ({ newPassword, confirmPassword }, { rejectWithValue }) => {
+  async (
+    { email, newPassword, confirmPassword },
+    { rejectWithValue }
+  ) => {
     try {
       const res = await axiosClient.post(
         "/api/v1/user/forgot-password/change-password",
-        { newPassword, confirmPassword }
+        { email, newPassword, confirmPassword }
       );
       return res.data;
     } catch (error) {

@@ -1,5 +1,13 @@
 import { User } from "../../Service/Models/User.models.js";
 import { asynchandler, APIERR, sendMail } from "../index.utils.js";
+import redis from "../../config/redis.config.js";
+
+// Redis key prefixes for forgot-password flow
+const FP_OTP_KEY = (email) => `fp:otp:${email.toLowerCase()}`;
+const FP_VERIFIED_KEY = (email) => `fp:verified:${email.toLowerCase()}`;
+
+// TTL: 5 minutes (matches the previous cookie maxAge)
+const FP_TTL_SECONDS = 5 * 60;
 
 export const sendPasswordResetOTP = asynchandler(async (req, res) => {
   const { email } = req.body;
@@ -42,8 +50,8 @@ export const sendPasswordResetOTP = asynchandler(async (req, res) => {
           Hello, ${user.fullName.split(" ")[0]}!
         </h2>
         <p style="color: #666666; font-size: 15px; line-height: 1.8; margin: 0 0 28px 0;">
-          We received a request to reset your password. Use the OTP below to proceed. 
-          For your security, this code will expire in 
+          We received a request to reset your password. Use the OTP below to proceed.
+          For your security, this code will expire in
           <strong style="color: #FF6B00;">5 minutes</strong>.
         </p>
 
@@ -61,8 +69,8 @@ export const sendPasswordResetOTP = asynchandler(async (req, res) => {
         <!-- Warning Box -->
         <div style="background-color: #fff8f2; border-left: 4px solid #FF6B00; border-radius: 6px; padding: 14px 18px; margin: 0 0 28px 0;">
           <p style="margin: 0; color: #888; font-size: 13px; line-height: 1.7;">
-            ⚠️ <strong>Did not request this?</strong> If you did not request a password reset, 
-            please ignore this email or immediately contact our  
+            ⚠️ <strong>Did not request this?</strong> If you did not request a password reset,
+            please ignore this email or immediately contact our
             <a href="mailto:${process.env.SUPPORT_EMAIL}" style="color: #FF6B00; text-decoration: none; font-weight: 600;">
               support team
             </a>.
@@ -70,7 +78,7 @@ export const sendPasswordResetOTP = asynchandler(async (req, res) => {
         </div>
 
         <p style="color: #aaaaaa; font-size: 13px; line-height: 1.7; margin: 0;">
-          For security reasons, never share this OTP with anyone. 
+          For security reasons, never share this OTP with anyone.
           Our team will never ask you for this code.
         </p>
       </div>
@@ -80,10 +88,10 @@ export const sendPasswordResetOTP = asynchandler(async (req, res) => {
 
       <!-- Footer -->
       <div style="padding: 24px 40px; text-align: center;">
-        <p style="color: #bbbbbb; font-size: 12px; margin: 0 0 6px 0;">
+        <p style="color: #bbbbbb; font-size: 13px; margin: 0 0 6px 0;">
           This is an automated email, please do not reply.
         </p>
-        <p style="color: #bbbbbb; font-size: 12px; margin: 0;">
+        <p style="color: #bbbbbb; font-size: 13px; margin: 0;">
           © ${new Date().getFullYear()} <strong style="color: #FF6B00;">${process.env.APP_NAME}</strong>. All rights reserved.
         </p>
       </div>
@@ -101,21 +109,9 @@ export const sendPasswordResetOTP = asynchandler(async (req, res) => {
     throw new APIERR(500, "Error while sending the OTP email");
   }
 
-  res.cookie("fp_otp", otp, {
-    httpOnly: true,
-    secure: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
-    path: "/",
-    maxAge: 5 * 60 * 1000,
-  });
-
-  res.cookie("fp_email", email, {
-    httpOnly: true,
-    secure: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
-    path: "/",
-    maxAge: 5 * 60 * 1000,
-  });
+  // Also clear any stale verified marker from a previous attempt.
+  await redis.set(FP_OTP_KEY(email), String(otp), "EX", FP_TTL_SECONDS);
+  await redis.del(FP_VERIFIED_KEY(email));
 
   return res
     .status(200)
@@ -123,15 +119,18 @@ export const sendPasswordResetOTP = asynchandler(async (req, res) => {
 });
 
 export const verifyPasswordResetOTP = asynchandler(async (req, res) => {
-  const { otp } = req.body;
-  const storedOTP = req.cookies?.fp_otp;
-  const email = req.cookies?.fp_email;
+  const { email, otp } = req.body;
 
+  if (!email) {
+    throw new APIERR(400, "Email is required to verify the OTP");
+  }
   if (!otp) {
     throw new APIERR(400, "Please provide the OTP");
   }
 
-  if (!storedOTP || !email) {
+  const storedOTP = await redis.get(FP_OTP_KEY(email));
+
+  if (!storedOTP) {
     throw new APIERR(400, "OTP Expired. Please try again");
   }
 
@@ -139,31 +138,31 @@ export const verifyPasswordResetOTP = asynchandler(async (req, res) => {
     throw new APIERR(400, "Invalid OTP. Please try again");
   }
 
-  res.cookie("fp_verified", email, {
-    httpOnly: true,
-    secure: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
-    path: "/",
-    maxAge: 5 * 60 * 1000,
-  });
-  res.clearCookie("fp_otp");
-  res.clearCookie("fp_email");
+  // OTP is correct: move it to a verified marker (same TTL) and clear the OTP key.
+  await redis.set(FP_VERIFIED_KEY(email), "1", "EX", FP_TTL_SECONDS);
+  await redis.del(FP_OTP_KEY(email));
+
   return res.status(200).json(new APIERR(200, {}, "OTP verified successfully"));
 });
 
 export const resetPassword = asynchandler(async (req, res) => {
-  const { newPassword, confirmPassword } = req.body;
-  const email = req.cookies?.fp_verified;
+  const { email, newPassword, confirmPassword } = req.body;
 
+  if (!email) {
+    throw new APIERR(400, "Email is required to reset the password");
+  }
   if (!newPassword || !confirmPassword) {
     throw new APIERR(400, "Please provide the required fields");
   }
   if (newPassword !== confirmPassword) {
     throw new APIERR(400, "Password and Confirm Password do not match");
   }
-  if (!email) {
+
+  const isVerified = await redis.get(FP_VERIFIED_KEY(email));
+  if (!isVerified) {
     throw new APIERR(400, "OTP verification required");
   }
+
   const user = await User.findOne({ email });
   if (!user) {
     throw new APIERR(404, "User not found");
@@ -171,7 +170,8 @@ export const resetPassword = asynchandler(async (req, res) => {
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
 
-  res.clearCookie("fp_verified");
+  // Clear the verified marker now that the password has been reset.
+  await redis.del(FP_VERIFIED_KEY(email));
 
   return res
     .status(200)

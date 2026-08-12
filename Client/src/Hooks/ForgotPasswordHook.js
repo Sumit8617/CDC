@@ -32,9 +32,9 @@ export const useForgotPassword = () => {
 
   // Verify OTP
   const handleVerifyOTP = useCallback(
-    async ({ otp }) => {
+    async ({ email, otp }) => {
       try {
-        const res = await dispatch(verifyResetOTP({ otp })).unwrap();
+        const res = await dispatch(verifyResetOTP({ email, otp })).unwrap();
         return res;
       } catch (err) {
         console.error("Failed to verify OTP:", err);
@@ -46,10 +46,10 @@ export const useForgotPassword = () => {
 
   // Reset password (set new password after OTP verified)
   const handleResetPassword = useCallback(
-    async ({ newPassword, confirmPassword }) => {
+    async ({ email, newPassword, confirmPassword }) => {
       try {
         const res = await dispatch(
-          resetPasswordThunk({ newPassword, confirmPassword })
+          resetPasswordThunk({ email, newPassword, confirmPassword })
         ).unwrap();
         return res;
       } catch (err) {

@@ -44,9 +44,56 @@ export const getRedisInfo = async () => {
 export const getCacheStats = async () => {
   try {
     const keys = await redis.keys("*");
+
+    const cache = await Promise.all(
+      keys.slice(0, 10).map(async (key) => {
+        try {
+          const type = await redis.type(key);
+
+          let value;
+
+          switch (type) {
+            case "string":
+              value = await redis.get(key);
+              break;
+
+            case "hash":
+              value = await redis.hGetAll(key);
+              break;
+
+            case "list":
+              value = await redis.lRange(key, 0, -1);
+              break;
+
+            case "set":
+              value = await redis.sMembers(key);
+              break;
+
+            case "zset":
+              value = await redis.zRangeWithScores(key, 0, -1);
+              break;
+
+            default:
+              value = `Unsupported Redis type: ${type}`;
+          }
+
+          return {
+            key,
+            type,
+            value,
+          };
+        } catch (error) {
+          return {
+            key,
+            error: error.message,
+          };
+        }
+      })
+    );
+
     return {
       totalKeys: keys.length,
-      keys: keys.slice(0, 10), // First 10 keys for preview
+      // cache, 
       timestamp: new Date().toISOString(),
     };
   } catch (error) {

@@ -72,9 +72,7 @@ export default function NotFoundPage() {
                   size="md"
                   round="sm"
                   className="border-slate-300 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  onClick={() =>
-                    window.location.replace("mailto:support@example.com")
-                  }
+                  onClick={() => window.open("/contact")}
                 >
                   Contact Support
                 </Button>
