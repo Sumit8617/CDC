@@ -115,7 +115,7 @@ const getShuffledQuestions = asynchandler(async (req, res) => {
   const cachedQuestions = await cacheGet(userQuestionCacheKey);
 
   if (cachedQuestions) {
-    console.log(`📦 Serving cached shuffled questions for user ${userId}`);
+    console.log(`Serving cached shuffled questions for user ${userId}`);
     return res.status(200).json(
       new APIRES(200, cachedQuestions, "Questions fetched from cache")
     );
@@ -183,7 +183,7 @@ const getShuffledQuestions = asynchandler(async (req, res) => {
   await cacheSet(userQuestionCacheKey, clientResponseData, cacheTTL);
   await cacheSet(gradingDataKey, gradingData, cacheTTL);
 
-  console.log(`🔀 Shuffled questions for user ${userId}: ${shuffledData.originalCount} questions`);
+  console.log(`Shuffled questions for user ${userId}: ${shuffledData.originalCount} questions`);
 
   return res.status(200).json(
     new APIRES(200, clientResponseData, "Questions fetched and shuffled")

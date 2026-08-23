@@ -12,6 +12,11 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  dkim : {
+    domainName : process.env.CORS_ORIGIN,
+    keySelector : 'default',
+    privateKey : process.env.DKIM_PRIVATE_KEY
+  },
   connectionTimeout: 10_000, // 10s to establish TCP
   greetingTimeout: 10_000, // 10s for server greeting
   socketTimeout: 15_000, // 15s inactivity on socket

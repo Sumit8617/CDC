@@ -30,7 +30,7 @@ if (!fs.existsSync(logsDir)) {
 }
 
 // Log file paths
-const accessLogPath = path.join(logsDir, "access.log");
+const accessLogPath = path.join(logsDir, "access.log")
 const errorLogPath = path.join(logsDir, "error.log");
 const rateLimitLogPath = path.join(logsDir, "ratelimit.log");
 
